@@ -9,7 +9,7 @@ version_tag = '1.0.0'
 
 
 setup(
-    name='cloudian-s3',
+    name='cloudians3',
     version=version_tag,
     description='Neo Cloudian S3 Library',
     author='BiznetGio',
