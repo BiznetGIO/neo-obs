@@ -12,14 +12,18 @@ Install and update using [pip](https://pip.pypa.io/en/stable/quickstart/)
 NEO OBS only support Python3.
 
 ``` bash
-pip3 install -U neo-cli
+pip install neo-obs
 ```
 
 Usage
 -----
 
+```
 from obs.client import CloudianClient, S3Client
+```
 
+Cloudian Client Example: 
+```
 obsclient = CloudianClient(
     url="<YOUR-URL-ADDRESS",
     user=<user>,
@@ -27,9 +31,28 @@ obsclient = CloudianClient(
     port=1000
 )
 
-s3client = S3Client(
-    region=<region>,
-    endpoint=<s3 endpoint>,
-    key=<s3 key>,
-    secret=<s3 secret key>
-)
+
+# get list Users
+list_params = {
+    "groupId": "testing",
+    "userType": "all",
+    "userStatus": "active"
+}
+print(obsclient.user.list(data=list_params))
+
+
+# get detail user
+get_params = {
+    "userId": "<USERID>",
+    "groupId": "testing",
+}
+print(obsclient.user.get(data=get_params))
+
+
+# create new user
+create_params = {
+    "userId": "<USERID>",
+    "groupId": "testing",
+    "userType": "User"
+}
+print(obsclient.user.create(data=None, json=create_params, method="PUT"))
