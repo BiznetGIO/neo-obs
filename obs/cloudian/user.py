@@ -25,3 +25,12 @@ class User(object):
                                              method=method)
 
         return get_user
+
+    def create(self, data=None, json=None, method='PUT'):
+        create_user = CloudianRequestor.request(self.requestor,
+                                                url=self.base_url,
+                                                data=data,
+                                                json=json,
+                                                method=method)
+
+        return create_user
