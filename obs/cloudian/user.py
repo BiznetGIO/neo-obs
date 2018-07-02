@@ -16,3 +16,12 @@ class User(object):
                                               method=method)
 
         return list_user
+
+    def get(self, data=None, json=None, method='GET'):
+        get_user = CloudianRequestor.request(self.requestor,
+                                             url=self.base_url,
+                                             data=data,
+                                             json=json,
+                                             method=method)
+
+        return get_user
