@@ -85,3 +85,12 @@ class Credentials(object):
                                                      method=method)
 
         return user_credentials
+
+    def update(self, data=None, json=None, method='POST'):
+        user_credentials = CloudianRequestor.request(self.requestor,
+                                                     url=User.base_url + '/credentials',
+                                                     data=data,
+                                                     json=json,
+                                                     method=method)
+
+        return user_credentials
