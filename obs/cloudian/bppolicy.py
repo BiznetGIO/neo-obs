@@ -7,8 +7,11 @@ class BucketPolicy(object):
     def __init__(self, requestor):
         self.requestor = requestor
 
-    def listpolicy(self):
-        pass
+    def list(self, data=None, json=None, method='GET'):
+        list_policy = CloudianRequestor.request(self.requestor,
+                                                url=self.base_url + '/listpolicy',
+                                                data=data,
+                                                json=json,
+                                                method=method)
 
-    def bucketsperpolicy(self):
-        pass
+        return list_policy
