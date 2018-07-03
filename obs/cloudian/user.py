@@ -6,6 +6,7 @@ class User(object):
 
     def __init__(self, requestor):
         self.requestor = requestor
+        self.credentials = Credentials(requestor)
 
     def list(self, data=None, json=None, method='GET'):
         base_url = self.base_url + '/list'
@@ -34,3 +35,12 @@ class User(object):
                                                 method=method)
 
         return create_user
+
+    def update(self, data=None, json=None, method='DELETE'):
+        update_user = CloudianRequestor.request(self.requestor,
+                                                url=self.base_url,
+                                                data=data,
+                                                json=json,
+                                                method=method)
+
+        return update_user
