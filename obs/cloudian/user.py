@@ -104,7 +104,7 @@ class Credentials(object):
 
         return user_credentials
 
-    def remove(self, data=None, json=None, method='DELETE'):
+    def delete(self, data=None, json=None, method='DELETE'):
         user_credentials = CloudianRequestor.request(self.requestor,
                                                      url=User.base_url + '/credentials',
                                                      data=data,
