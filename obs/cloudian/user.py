@@ -76,3 +76,12 @@ class Credentials(object):
                                                      method=method)
 
         return user_credentials
+
+    def create(self, data=None, json=None, method='PUT'):
+        user_credentials = CloudianRequestor.request(self.requestor,
+                                                     url=User.base_url + '/credentials',
+                                                     data=data,
+                                                     json=json,
+                                                     method=method)
+
+        return user_credentials
