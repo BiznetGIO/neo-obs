@@ -53,3 +53,17 @@ class User(object):
                                                 method=method)
 
         return delete_user
+
+
+class Credentials(object):
+    def __init__(self, requestor):
+        self.requestor = requestor
+
+    def get(self, data=None, json=None, method='GET'):
+        credentials = CloudianRequestor.request(self.requestor,
+                                                url=User.base_url + '/credentials',
+                                                data=data,
+                                                json=json,
+                                                method=method)
+
+        return credentials
