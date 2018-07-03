@@ -1,4 +1,6 @@
 from .cloudian.user import User
+from .cloudian.qos import Qos
+from .cloudian.bppolicy import BucketPolicy
 
 from .cloudian.requestors import CloudianRequestor
 
@@ -15,6 +17,7 @@ class CloudianClient(object):
                                             self._password)
 
         self.user = User(self._requestor)
+        self.qos = Qos(self._requestor)
 
 
 class S3Client(object):
