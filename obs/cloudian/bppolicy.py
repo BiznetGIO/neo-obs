@@ -15,3 +15,12 @@ class BucketPolicy(object):
                                                 method=method)
 
         return list_policy
+
+    def get(self, data=None, json=None, method='GET'):
+        detail_policy = CloudianRequestor.request(self.requestor,
+                                                  url=self.base_url,
+                                                  data=data,
+                                                  json=json,
+                                                  method=method)
+
+        return detail_policy
