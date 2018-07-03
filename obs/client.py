@@ -18,6 +18,7 @@ class CloudianClient(object):
 
         self.user = User(self._requestor)
         self.qos = Qos(self._requestor)
+        self.bppolicy = BucketPolicy(self._requestor)
 
 
 class S3Client(object):
