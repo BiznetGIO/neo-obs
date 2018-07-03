@@ -36,7 +36,7 @@ class User(object):
 
         return create_user
 
-    def update(self, data=None, json=None, method='DELETE'):
+    def update(self, data=None, json=None, method='POST'):
         update_user = CloudianRequestor.request(self.requestor,
                                                 url=self.base_url,
                                                 data=data,
@@ -44,3 +44,12 @@ class User(object):
                                                 method=method)
 
         return update_user
+
+    def delete(self, data=None, json=None, method='DELETE'):
+        delete_user = CloudianRequestor.request(self.requestor,
+                                                url=self.base_url,
+                                                data=data,
+                                                json=json,
+                                                method=method)
+
+        return delete_user
