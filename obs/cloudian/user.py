@@ -67,3 +67,12 @@ class Credentials(object):
                                                 method=method)
 
         return credentials
+
+    def list(self, data=None, json=None, method='GET'):
+        user_credentials = CloudianRequestor.request(self.requestor,
+                                                     url=User.base_url + '/credentials/list',
+                                                     data=data,
+                                                     json=json,
+                                                     method=method)
+
+        return user_credentials
