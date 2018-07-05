@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 
 base_url = 'https://github.com/BiznetGIO/neo-obs'
-version_tag = '1.0.0'
+version_tag = '0.1.0'
 
 
 setup(
