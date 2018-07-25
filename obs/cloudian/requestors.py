@@ -10,8 +10,9 @@ class CloudianRequestor(object):
         self.warn = warn
 
     def request(self, url, data=None, json=None, method='GET'):
-        request = {}
+        request = dict()
         request['method'] = method
+
         if data is not None:
             request['data'] = data.pop('data', None)
             for index, (key, value) in enumerate(data.items()):
@@ -39,16 +40,25 @@ class CloudianRequestor(object):
 
             if response.status_code == 200:
                 try:
-                    return response.json()
+                    return {
+                        'status_code': response.status_code,
+                        'status_message': 'ok',
+                        'data': response.json()
+                    }
                 except ValueError:
-                    # GET /system/version
-                    return response.text
+                    return {
+                        'status_code': response.status_code,
+                        'status_message': response.text,
+                        'data': {}
+                    }
             else:
                 return {
-                    'reason': response.reason,
                     'status_code': response.status_code,
-                    'url': response.request.url
+                    'status_message': response.reason,
                 }
+
         except requests.exceptions.ConnectionError as err:
-            print(str(err.message))
-            exit(1)
+            return {
+                'status_code': err.errno,
+                'status_message': err.message,
+            }
