@@ -3,6 +3,9 @@ from .cloudian.qos import Qos
 from .cloudian.bppolicy import BucketPolicy
 
 from .s3.bucket import Bucket
+from .s3.put import PutStack
+from .s3.get import GetStack
+from .s3.delete import DeleteStack
 
 from .cloudian.requestors import CloudianRequestor
 from .s3.requestors import S3Requestor
@@ -38,3 +41,6 @@ class S3Client(object):
                                       self.secret)
 
         self.bucket = Bucket(self._requestor)
+        self.put = PutStack(self._requestor)
+        self.get = GetStack(self._requestor)
+        self.delete = DeleteStack(self._requestor)

@@ -7,34 +7,6 @@ class Bucket(object):
     def __init__(self, requestor):
         self.requestor = requestor
 
-    def call(self, command, method=None):
-        status_code = command['ResponseMetadata']['HTTPStatusCode']
-        status_message = 'Command executed.'
-
-        if method is None:
-            data = command
-        elif method == 'error':
-            status_message = command['Error']['Message']
-            data = []
-        else:
-            data = command[method]
-
-        del command['ResponseMetadata']
-
-        return {
-            'status_code': status_code,
-            'status_message': status_message,
-            'data': data
-        }
-
-    def list_bucket(self):
-        s3 = S3Requestor.request(self.requestor)
-
-        try:
-            return self.call(s3.list_buckets(), 'Buckets')
-        except botocore.exceptions.ClientError as e:
-            return self.call(e.response, 'error')
-
     def create_bucket(self, json=None):
         try:
             s3 = S3Requestor.request(self.requestor)
@@ -78,26 +50,12 @@ class Bucket(object):
                 return {
                     'status_code': 400,
                     'status_message': str(err),
-                    'data': []
+                    'data': {}
                 }
 
         except KeyError as e:
             return {
                 'status_code': 400,
-                'status_message': 'Required parameter ' + str(e) + ' is missing.',
-                'data': []
+                'status_message': 'Required parameter {} is missing.'.format(str(e)),
+                'data': {}
             }
-
-    def delete_bucket(self, json=None):
-        s3 = S3Requestor.request(self.requestor)
-
-        try:
-            return self.call(s3.delete_bucket(Bucket=json['bucket']))
-        except KeyError as e:
-            return {
-                'status_code': 400,
-                'status_message': 'Required parameter ' + str(e) + ' is missing.',
-                'data': []
-            }
-        except botocore.exceptions.ClientError as e:
-            return self.call(e.response, 'error')
