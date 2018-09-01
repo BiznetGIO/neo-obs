@@ -1,0 +1,18 @@
+user:
+  groupId: testing
+  parameter:
+    list:
+      userType: all
+      userStatus: active
+    get:
+      userId: user_264_18957_stage_t2m1
+
+create:
+  template: cloudian
+  parameter:
+    name:
+
+update:
+  template: cloudian
+  parameter:
+    name:
