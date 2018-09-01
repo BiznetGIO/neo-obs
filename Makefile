@@ -3,7 +3,7 @@
 all: build upload clean
 
 test:
-			pytest --cov=neo --cov-report=term-missing
+			pytest --cov=obs --cov-report=term-missing
 
 build:
 			rm -rf dist

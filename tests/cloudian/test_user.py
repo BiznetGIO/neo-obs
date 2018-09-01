@@ -1,6 +1,5 @@
 import pytest
-
-from obs.client import CloudianClient
+from obs.libs import CloudianClient
 
 
 class TestUser:

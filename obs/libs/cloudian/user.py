@@ -1,5 +1,5 @@
 from .requestors import CloudianRequestor
-
+from obs.libs.cloudian import requestors
 
 class User(object):
     base_url = 'user'

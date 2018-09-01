@@ -10,6 +10,7 @@ class CloudianRequestor(object):
         self.warn = warn
 
     def request(self, url, data=None, json=None, method='GET'):
+        print(url)
         request = dict()
         request['method'] = method
 
@@ -25,6 +26,7 @@ class CloudianRequestor(object):
         api_call = '{url}:{port}/{call}'.format(
             url=self.url, port=self.port, call=url
         )
+        print(url)
 
         try:
             response = requests.request(
