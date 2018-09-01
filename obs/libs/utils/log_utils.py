@@ -34,15 +34,3 @@ def get_log(title=None):
 
 def get_pass(title=None):
     return getpass.getpass(title)
-
-# def get_secret():
-#     return getpass.getpass("password: ")
-
-# def get_port():
-#     return input("port: ")
-
-# def get_key():
-#     return input("key: ")
-
-# def get_region():
-#     return input("region: ")
