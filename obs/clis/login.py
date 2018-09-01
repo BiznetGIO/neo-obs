@@ -2,7 +2,6 @@ from obs.clis.base import Base
 from obs.libs.utils import log_utils
 from obs.libs.utils import env_utils
 
-
 class Login(Base):
     """
     Usage:
@@ -15,10 +14,8 @@ class Login(Base):
 
     def execute(self):
         if self.args['cloudian']:
-            port = self.default_port
-            url = self.default_url
             if not env_utils.check_env('cloudian') :
-                log_utils("No Env")
+                log_utils.log_warn("No Env Found")
                 question = log_utils.question("Create Env? ")
                 if question :
                     username = log_utils.get_log("Username : ")
@@ -26,13 +23,18 @@ class Login(Base):
                     env_utils.create_env_file_cloudian(
                         username="",
                         password="",
-                        port=port,
-                        url=url
+                        port= self.default_port,
+                        url= self.default_url
                     )
                 else:
                     exit()
-            env_data = env_utils.get_env_values_cloudian()
-            log_utils.log_info(env_data)
+            # env_data = env_utils.get_env_values_cloudian()
+            # try:
+            #     url = env_data['root_url']
+            #     port = env_data['port']
+            # except Exception as e:
+            #     url = self.default_url
+            #     port = self.default_port
 
         if self.args['s3']:
             print(env_utils.check_env('s3'))
