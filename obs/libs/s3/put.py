@@ -1,20 +1,16 @@
-from .requestors import S3Requestor
-from .parser import get_resource, get_method, parser
-
+from obs.libs.s3 import requestors, parser
 import os
 
 
-class PutStack(object):
-    def __init__(self, requestor):
-        self.requestor = requestor
+def do_put(self, json_data=None):
+    resource = parser.get_resource(json_data)
+    method = parser.get_method(json_data)
 
-    def do_put(self, json_data=None):
-        resource = get_resource(json_data)
-        method = get_method(json_data)
+    APP_STATIC = os.path.dirname(__file__)
+    parameters = {}
+    if json_data[resource][method]['parameters']:
+        parameters = parser.parser(json_data, APP_STATIC)
 
-        APP_STATIC = os.path.dirname(__file__)
-        parameters = {}
-        if json_data[resource][method]['parameters']:
-            parameters = parser(json_data, APP_STATIC)
+    result = requestors.request(method,parameters)
 
-        return S3Requestor.call_fn(self.requestor, method, parameters)
+    return result
