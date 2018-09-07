@@ -6,11 +6,12 @@ class Login(Base):
     """
     Usage:
     login cloudian
+    login cloudian [-u URL] [-p PORT]
     login s3
 
     """
-    default_port = 19443
-    default_url = "http://103.77.104.76"
+    default_port_cloudian = 19443
+    default_url_cloudian = "http://103.77.104.76"
 
     def execute(self):
         if self.args['cloudian']:
@@ -21,10 +22,10 @@ class Login(Base):
                     username = log_utils.get_log("Username : ")
                     password = log_utils.get_pass("pass : ")
                     env_utils.create_env_file_cloudian(
-                        username="",
-                        password="",
-                        port= self.default_port,
-                        url= self.default_url
+                        username=username,
+                        password=password,
+                        port= self.default_port_cloudian,
+                        url= self.default_url_cloudian
                     )
                 else:
                     exit()
