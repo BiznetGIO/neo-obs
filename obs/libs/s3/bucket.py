@@ -1,4 +1,4 @@
-from .requestors import S3Requestor
+from obs.libs.s3 import requestors
 import requests, os, json
 import botocore
 
@@ -9,7 +9,7 @@ class Bucket(object):
 
     def create_bucket(self, json=None):
         try:
-            s3 = S3Requestor.request(self.requestor)
+            s3 = requestors.init()
 
             url = s3.generate_presigned_url('create_bucket',
                                             Params={
