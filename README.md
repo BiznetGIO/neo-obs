@@ -41,11 +41,26 @@ from obs.libs.cloudian import requestors
 from obs.libs.cloudian import user
 
 list_params = {
-            "groupId": "testing",
-            "userType": "all",
-            "userStatus": "active"
-        }
-        list_user = user.list(data=list_params)
+    "groupId": "testing",
+    "userType": "all",
+    "userStatus": "active"
+}
+list_user = user.list(data=list_params)
+print(list_user)
+
+list_params = {
+    "groupId": "testing",
+    "userId": "user_264_18957_stage_t2m1",
+}
+get_user = user.get(data=list_params)
+print(get_user)
+
+create_params = {
+    "userId": "<USERID>",
+    "groupId": "testing",
+    "userType": "User"
+}
+create_user = user.get(data=None, json=create_params)
 ```
 
 
