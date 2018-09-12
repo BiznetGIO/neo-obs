@@ -103,5 +103,3 @@ ENV/
 .mypy_cache/
 
 .vscode
-
-tests/s3/*
