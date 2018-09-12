@@ -34,3 +34,18 @@ get user identity
 obs ls user -g your_group_id -i your_id
 ```
 
+## Using Library
+after your login on cloudian
+``` bash
+from obs.libs.cloudian import requestors
+from obs.libs.cloudian import user
+
+list_params = {
+            "groupId": "testing",
+            "userType": "all",
+            "userStatus": "active"
+        }
+        list_user = user.list(data=list_params)
+```
+
+
