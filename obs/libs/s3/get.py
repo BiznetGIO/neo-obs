@@ -3,7 +3,7 @@ import os
 
 
 
-def do_get(self, json_data=None):
+def do_get(json_data=None):
     resource = ps.get_resource(json_data)
     method = ps.get_method(json_data)
 

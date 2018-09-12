@@ -2,7 +2,7 @@ from obs.libs.s3 import requestors, parser
 import os
 
 
-def do_put(self, json_data=None):
+def do_put(json_data=None):
     resource = parser.get_resource(json_data)
     method = parser.get_method(json_data)
 
