@@ -1,19 +1,12 @@
 import pytest
-
-from obs.client import CloudianClient
-
+from obs.libs.cloudian import qos
 
 class TestQos:
     def test_get(self):
-        client = CloudianClient(
-            url="http://103.77.104.76",
-            user="sysadmin",
-            password="public",
-            port=19443
-        )
         list_params = {
             "groupId": "testing",
             "userId": "user_264_18957_stage_t2m1",
         }
-        list_qos = client.qos.get(data=list_params)
+        list_qos = qos.get(data=list_params)
+        print(list_qos)
         assert list_qos
