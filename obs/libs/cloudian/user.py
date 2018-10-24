@@ -1,28 +1,40 @@
 from obs.libs.cloudian import requestors
+from obs.libs.utils import log_utils
 
 
 base_url = 'user'
 
 
-def list(data=None, json=None, method='GET'):
+def get_list(data=None, json=None, method='GET'):
     base_url_list = base_url+'/list'
     list_user = requestors.request(
                         url=base_url_list,
                         data=data,
                         json=json,
                         method=method)
+    try:
+        data_user = list_user['data']
+    except Exception as e:
+        log_utils.log_err(list_user['status_message'])
+        return None
+    else:
+        return data_user
 
-    return list_user
 
-
-def get(data=None, json=None, method='GET'):
+def detail(data=None, json=None, method='GET'):
     get_user = requestors.request(
                         url=base_url,
                         data=data,
                         json=json,
                         method=method)
 
-    return get_user
+    try:
+        data_user = get_user['data']
+    except Exception as e:
+        log_utils.log_err(get_user['status_message'])
+        return None
+    else:
+        return data_user
 
 
 def create(data=None, json=None, method='PUT'):
@@ -32,7 +44,13 @@ def create(data=None, json=None, method='PUT'):
                             json=json,
                             method=method)
 
-    return create_user
+    try:
+        data_user = create_user['data']
+    except Exception as e:
+        log_utils.log_err(create_user['status_message'])
+        return None
+    else:
+        return data_user
 
 
 def update(data=None, json=None, method='POST'):
@@ -42,7 +60,13 @@ def update(data=None, json=None, method='POST'):
                                 json=json,
                                 method=method)
 
-    return update_user
+    try:
+        data_user = update_user['data']
+    except Exception as e:
+        log_utils.log_err(update_user['status_message'])
+        return None
+    else:
+        return data_user
 
 
 def delete(data=None, json=None, method='DELETE'):
@@ -52,7 +76,13 @@ def delete(data=None, json=None, method='DELETE'):
                                 json=json,
                                 method=method)
 
-    return delete_user
+    try:
+        data_user = delete_user['data']
+    except Exception as e:
+        log_utils.log_err(delete_user['status_message'])
+        return None
+    else:
+        return data_user
 
 
 
