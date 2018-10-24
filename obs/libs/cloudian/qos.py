@@ -16,6 +16,7 @@ def get(data=None, json=None, method='GET'):
         qos_data = qos_details['data']
     except Exception as e:
         log_utils.log_err(qos_details['status_message'])
+        return None
     else:
         return qos_data
 
@@ -31,6 +32,7 @@ def update(data=None, json=None, method='POST'):
         qos_data = qos_details['data']
     except Exception as e:
         log_utils.log_err(qos_details['status_message'])
+        return None
     else:
         return qos_data
 
@@ -46,5 +48,6 @@ def delete(data=None, json=None, method='DELETE'):
         qos_data = qos_details['data']
     except Exception as e:
         log_utils.log_err(qos_details['status_message'])
+        return None
     else:
         return qos_data
