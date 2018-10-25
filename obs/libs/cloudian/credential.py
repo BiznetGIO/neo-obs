@@ -1,23 +1,30 @@
 from obs.libs.cloudian import requestors
 from obs.libs.cloudian import user
+from obs.libs.utils import log_utils
 
-def get(data=None, json=None, method='GET'):
+
+def get_credential(data=None, json=None, method='GET'):
+    url = user.base_url
+    if 'accessKey' in data:
+        url = url + '/credentials'
+    elif 'userId' in data and 'groupId' in data:
+        url = url + '/credentials/list'
+        if 'active' in data:
+            url = url + '/active'
+
     credentials = requestors.request(
-                        url=user.base_url + '/credentials',
+                        url=url,
                         data=data,
                         json=json,
                         method=method)
 
-    return credentials
+    try:
+        credentials_data = credentials['data']
+    except Exception as e:
+        log_utils.log_err(credentials['status_message'])
+    else:
+        return credentials_data
 
-def list(data=None, json=None, method='GET'):
-    user_credentials = requestors.request(
-                            url=user.base_url + '/credentials/list',
-                            data=data,
-                            json=json,
-                            method=method)
-
-    return user_credentials
 
 def create(data=None, json=None, method='PUT'):
     user_credentials = requestors.request(
@@ -28,6 +35,7 @@ def create(data=None, json=None, method='PUT'):
 
     return user_credentials
 
+
 def update(data=None, json=None, method='POST'):
     user_credentials = requestors.request(
                             url=user.base_url + '/credentials',
@@ -37,6 +45,7 @@ def update(data=None, json=None, method='POST'):
 
     return user_credentials
 
+
 def status(data=None, json=None, method='POST'):
     user_credentials = requestors.request(
                             url=user.base_url + '/credentials/status',
@@ -45,6 +54,7 @@ def status(data=None, json=None, method='POST'):
                             method=method)
 
     return user_credentials
+
 
 def delete(data=None, json=None, method='DELETE'):
     user_credentials = requestors.request(
