@@ -32,9 +32,13 @@ def create(data=None, json=None, method='PUT'):
                             data=data,
                             json=json,
                             method=method)
-
-    return user_credentials
-
+    
+    try:
+        user_credentials_data = user_credentials['data']
+    except Exception:
+        log_utils.log_err(user_credentials['status_message'])
+    else:
+        return user_credentials_data
 
 def update(data=None, json=None, method='POST'):
     user_credentials = requestors.request(
