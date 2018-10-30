@@ -20,7 +20,7 @@ def get_credential(data=None, json=None, method='GET'):
 
     try:
         credentials_data = credentials['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(credentials['status_message'])
     else:
         return credentials_data
