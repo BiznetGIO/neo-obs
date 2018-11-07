@@ -14,7 +14,7 @@ def get_list(data=None, json=None, method='GET'):
                         method=method)
     try:
         data_user = list_user['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(list_user['status_message'])
         return None
     else:
@@ -30,7 +30,7 @@ def detail(data=None, json=None, method='GET'):
 
     try:
         data_user = get_user['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(get_user['status_message'])
         return None
     else:
@@ -46,7 +46,7 @@ def create(data=None, json=None, method='PUT'):
 
     try:
         data_user = create_user['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(create_user['status_message'])
         return None
     else:
@@ -62,7 +62,7 @@ def update(data=None, json=None, method='POST'):
 
     try:
         data_user = update_user['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(update_user['status_message'])
         return None
     else:
@@ -78,7 +78,7 @@ def delete(data=None, json=None, method='DELETE'):
 
     try:
         data_user = delete_user['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(delete_user['status_message'])
         return None
     else:

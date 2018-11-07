@@ -20,7 +20,7 @@ def get_credential(data=None, json=None, method='GET'):
 
     try:
         credentials_data = credentials['data']
-    except Exception as e:
+    except Exception:
         log_utils.log_err(credentials['status_message'])
     else:
         return credentials_data
@@ -32,29 +32,27 @@ def create(data=None, json=None, method='PUT'):
                             data=data,
                             json=json,
                             method=method)
-
-    return user_credentials
-
+    
+    try:
+        user_credentials_data = user_credentials['data']
+    except Exception:
+        log_utils.log_err(user_credentials['status_message'])
+    else:
+        return user_credentials_data
 
 def update(data=None, json=None, method='POST'):
-    user_credentials = requestors.request(
-                            url=user.base_url + '/credentials',
-                            data=data,
-                            json=json,
-                            method=method)
-
-    return user_credentials
-
-
-def status(data=None, json=None, method='POST'):
     user_credentials = requestors.request(
                             url=user.base_url + '/credentials/status',
                             data=data,
                             json=json,
                             method=method)
 
-    return user_credentials
-
+    try:
+        user_credentials_data = user_credentials['data']
+    except Exception:
+        log_utils.log_err(user_credentials['status_message'])
+    else:
+        return user_credentials_data
 
 def delete(data=None, json=None, method='DELETE'):
     user_credentials = requestors.request(
@@ -63,4 +61,9 @@ def delete(data=None, json=None, method='DELETE'):
                             json=json,
                             method=method)
 
-    return user_credentials
+    try:
+        user_credentials_data = user_credentials['data']
+    except Exception:
+        log_utils.log_err(user_credentials['status_message'])
+    else:
+        return user_credentials_data

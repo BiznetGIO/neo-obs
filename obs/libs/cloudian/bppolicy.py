@@ -1,27 +1,38 @@
 from obs.libs.cloudian import requestors
+from obs.libs.utils import log_utils
 
 
 base_url = 'bppolicy'
-def list(data=None, json=None, method='GET'):
-    list_policy = requestors.request(
-                    url=base_url + '/listpolicy',
+def get_policy(data=None, json=None, method='GET'):
+    url = base_url
+    if data is None:
+        url = base_url + '/listpolicy'
+    elif 'policyId' in data:
+        url = base_url
+
+    policy = requestors.request(
+                    url=url,
                     data=data,
                     json=json,
                     method=method)
-    return list_policy
 
-def get(data=None, json=None, method='GET'):
-    detail_policy = requestors.request(
-                    url=base_url,
-                    data=data,
-                    json=json,
-                    method=method)
-    return detail_policy
+    try:
+        policy_data = policy['data']
+    except Exception:
+        log_utils.log_err(policy['status_message'])
+    else:
+        return policy_data
 
-def buckets(data=None, json=None, method='GET'):
+def buckets_policy(data=None, json=None, method='GET'):
     bucket_policy = requestors.request(
                     url=base_url + '/bucketsperpolicy',
                     data=data,
                     json=json,
                     method=method)
-    return bucket_policy
+
+    try:
+        bucket_policy_data = bucket_policy['data']
+    except Exception:
+        log_utils.log_err(bucket_policy['status_message'])
+    else:
+        return bucket_policy_data
