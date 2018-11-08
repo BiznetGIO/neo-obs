@@ -71,6 +71,22 @@ def delete_bucket(session=None, name=None):
         log_utils.log_err(e)
         exit()
 
-def put_bucket(session=None):
-    pass
+def put_bucket_acl(session=None, name=None, aclParams=None):
+    if not session:
+        session = login_lib.get_client_session()
+
+    try:
+        bucket = None
+        if aclParams.get('acp') is None:
+            bucket = session.put_bucket_acl(Bucket=name,
+                                        ACL=aclParams['acl'])
+        else:
+            bucket = session.put_bucket_acl(Bucket=name,
+                                        ACL=aclParams['acl'],
+                                        AccessControlPolicy=aclParams['acp'])
+
+        return bucket
+    except Exception as e:
+        log_utils.log_err(e)
+        exit()
     
