@@ -1,5 +1,7 @@
 from obs.libs.s3 import login as login_lib
 from obs.libs.utils import log_utils
+import mimetypes
+import os
 
 
 def list_object(session=None, bucket=None):
@@ -26,34 +28,51 @@ def get_object(session=None, bucket=None, key=None, gettype=None):
     if not session:
         session = login_lib.get_client_session()
 
-    if gettype is None:
-        detail_object = session.get_object(Bucket=bucket, Key=key)
-    elif gettype == 'acl':
-        detail_object = session.get_object_acl(Bucket=bucket, Key=key)
-    elif gettype == 'tagging':
-        detail_object = session.get_object_tagging(Bucket=bucket, Key=key)
-    elif gettype == 'torrent':
-        detail_object = session.get_object_torrent(Bucket=bucket, Key=key)
+    try:
+        if gettype is None:
+            detail_object = session.get_object(Bucket=bucket, Key=key)
+        elif gettype == 'acl':
+            detail_object = session.get_object_acl(Bucket=bucket, Key=key)
+        elif gettype == 'tagging':
+            detail_object = session.get_object_tagging(Bucket=bucket, Key=key)
+        elif gettype == 'torrent':
+            detail_object = session.get_object_torrent(Bucket=bucket, Key=key)
 
-    return detail_object
+        return detail_object
+    except Exception as e:
+        log_utils.log_err(e)
+        exit()
 
 
 def put_object(session=None, bucket=None, key=None, acl=None, tagging=None):
     if not session:
         session = login_lib.get_client_session()
+    
+    try:
+        if acl is None and tagging is None:
+            # put_object
+            with open(key, 'rb') as data:
+                object = session.put_object(Bucket=bucket, 
+                                            Key=key,
+                                            ContentType=mimetypes.MimeTypes().guess_type(key)[0],
+                                            Body=data)
+        elif acl is not None and tagging is None:
+            # put object acl
+            object = session.put_object_acl(Bucket=bucket, Key=key, ACL=acl)
+        elif acl is None and tagging is None:
+            # put object tagging
+            object = session.put_object_tagging(Bucket=bucket, Key=key, Tagging=tagging)
+        else:
+            # put object acl tagging
+            with open(key, 'rb') as data:
+                object = session.put_object(Bucket=bucket, 
+                                            Key=key,
+                                            ContentType=mimetypes.MimeTypes().guess_type(key)[0],
+                                            Body=data,
+                                            ACL=acl,
+                                            Tagging=tagging)
 
-    object = None
-    if acl is None and tagging is None:
-        # put_object
-        object = session.put_object(Bucket=bucket, Key=key)
-    elif acl is not None and tagging is None:
-        # put object acl
-        object = session.put_object_acl(Bucket=bucket, Key=key, ACL=acl)
-    elif acl is None and tagging is None:
-        # put object tagging
-        object = session.put_object_tagging(Bucket=bucket, Key=key, Tagging=tagging)
-    else:
-        # put object acl tagging
-        object = session.put_object(Bucket=bucket, Key=key, ACL=acl, Tagging=tagging)
-
-    return object
+        return object
+    except Exception as e:
+        log_utils.log_err(e)
+        exit()
