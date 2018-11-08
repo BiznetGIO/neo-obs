@@ -26,13 +26,34 @@ def get_object(session=None, bucket=None, key=None, gettype=None):
     if not session:
         session = login_lib.get_client_session()
 
-    if type is None:
+    if gettype is None:
         detail_object = session.get_object(Bucket=bucket, Key=key)
-    elif type == 'acl':
+    elif gettype == 'acl':
         detail_object = session.get_object_acl(Bucket=bucket, Key=key)
-    elif type == 'tagging':
+    elif gettype == 'tagging':
         detail_object = session.get_object_tagging(Bucket=bucket, Key=key)
-    elif type == 'torrent':
+    elif gettype == 'torrent':
         detail_object = session.get_object_torrent(Bucket=bucket, Key=key)
 
     return detail_object
+
+
+def put_object(session=None, bucket=None, key=None, acl=None, tagging=None):
+    if not session:
+        session = login_lib.get_client_session()
+
+    object = None
+    if acl is None and tagging is None:
+        # put_object
+        object = session.put_object(Bucket=bucket, Key=key)
+    elif acl is not None and tagging is None:
+        # put object acl
+        object = session.put_object_acl(Bucket=bucket, Key=key, ACL=acl)
+    elif acl is None and tagging is None:
+        # put object tagging
+        object = session.put_object_tagging(Bucket=bucket, Key=key, Tagging=tagging)
+    else:
+        # put object acl tagging
+        object = session.put_object(Bucket=bucket, Key=key, ACL=acl, Tagging=tagging)
+
+    return object
