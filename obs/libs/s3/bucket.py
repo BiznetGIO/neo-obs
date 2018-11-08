@@ -1,7 +1,4 @@
-from obs.libs.s3 import requestors
 import requests, os, json
-import botocore
-import boto3
 from obs.libs.s3 import login as login_lib
 from obs.libs.utils import log_utils
 
