@@ -1,6 +1,8 @@
 """
 Usage:
     obs <command> [<args>...]
+    obs login cloudian
+    obs login s3
 """
 
 from inspect import getmembers, isclass
