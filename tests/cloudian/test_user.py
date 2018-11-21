@@ -95,7 +95,7 @@ class TestUser:
             "emailAddr": "jgarc@geemail.com",
             "fullName": "Jerry Garcia",
             "groupId": "testing",
-            "userId": "neoobs2",
+            "userId": "neoobs3",
             "state": "NH",
             "country": "USA"
         }
