@@ -8,6 +8,7 @@ class Login(Base):
     login cloudian
     login cloudian [-u URL] [-p PORT]
     login s3
+    login s3 [-u URL] [-a ACCESSKEY] [-s SECRETKEY]
 
     """
     default_port_cloudian = 19443
@@ -29,22 +30,19 @@ class Login(Base):
                     )
                 else:
                     exit()
-            # env_data = env_utils.get_env_values_cloudian()
-            # try:
-            #     url = env_data['root_url']
-            #     port = env_data['port']
-            # except Exception as e:
-            #     url = self.default_url
-            #     port = self.default_port
 
         if self.args['s3']:
-            print(env_utils.check_env('s3'))
-            key = log_utils.get_log("Key : ")
-            secret = log_utils.get_pass("Secret : ")
-            region = log_utils.get_log("Region : ")
-            endpoint = log_utils.get_log("Endpoint : ")
-
-            log_utils.log_info(key)
-            log_utils.log_info(secret)
-            log_utils.log_info(region)
-            log_utils.log_info(endpoint)
+            if not env_utils.check_env('s3'):
+                log_utils.log_warn("No Env Found")
+                question = log_utils.question("Create Env? ")
+                if question:
+                    endpoint = log_utils.get_log("Endpoint URL: ")
+                    access_key = log_utils.get_log("Access Key: ")
+                    secret_key = log_utils.get_log("Secret Key: ")
+                    env_utils.create_env_file_s3(
+                        endpoint = endpoint,
+                        access_key = access_key,
+                        secret_key = secret_key
+                    )
+                else:
+                    exit()

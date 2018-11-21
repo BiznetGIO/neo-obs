@@ -23,14 +23,13 @@ def create_env_file_cloudian(username, password, port=None, url=None):
     except:
         return False
 
-def create_env_file_s3(key, secret, region=None, endpoint=None):
+def create_env_file_s3(endpoint, access_key, secret_key):
 
     try:
         env_file = open("{}/.obs/s3.env".format(home), "w+")
-        env_file.write("OS_KEY=%s\n" % key)
-        env_file.write("OS_SECRET=%s\n" % secret)
-        env_file.write("OS_REGION=%s\n" % region)
-        env_file.write("OS_ENDPOINT=%s\n" % endpoint)
+        env_file.write("OS_ENDPOINT_URL=%s\n" % endpoint)
+        env_file.write("OS_ACCESS_KEY=%s\n" % access_key)
+        env_file.write("OS_SECRETKEY=%s\n" % secret_key)
         env_file.close()
         return True
     except:
