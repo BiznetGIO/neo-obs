@@ -1,5 +1,6 @@
 from obs.clis.base import Base
 from obs.libs.cloudian import user, qos, credential
+from obs.libs.s3 import bucket, object
 from obs.libs.utils import log_utils
 from tabulate import tabulate
 
@@ -15,6 +16,8 @@ class Ls(Base):
     ls credential [-g GROUP_ID] [-i ID]
     ls credential [-g GROUP_ID] [-i ID] [-s STATUS]
     ls credential [-k KEY]
+    ls bucket
+    ls object [-b bucket]
 
     Options:
     -h --help                             Print usage
@@ -22,11 +25,12 @@ class Ls(Base):
     -i ID --id=ID                         Set obs User Id
     -k KEY --key=KEY                      Set obs Secret Key
     -s STATUS --status=STATUS
+    -b BUCKET --bucket=BUCKET
 
     '''
     def execute(self):
         if self.args['user']:
-            if self.args['--g                                                                                                                                                                                                                                                                                                                     roup_id'] and self.args['--id']:
+            if self.args['--group_id'] and self.args['--id']:
                 tab_data = list()
                 data = {
                     'groupId': self.args['--group_id'],
@@ -166,6 +170,16 @@ class Ls(Base):
                     print(tabulate(tab_data, headers='keys', tablefmt='grid'))
                     exit()
 
+            else:
+                log_utils.log_err('Missing parameter.')
+                exit()
+
+        if self.args['bucket']:
+            print(bucket.bucket_list())
+
+        if self.args['object']:
+            if self.args['--bucket']:
+                print(object.list_object(bucket=self.args['--bucket']))
             else:
                 log_utils.log_err('Missing parameter.')
                 exit()
