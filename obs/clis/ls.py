@@ -175,11 +175,37 @@ class Ls(Base):
                 exit()
 
         if self.args['bucket']:
-            print(bucket.bucket_list())
+            tab_data = list()
+            list_bucket = bucket.bucket_list()
+            number = 1
+            for item in list_bucket:
+                data_item = {
+                    'No.': number,
+                    'Name': item['Name'],
+                    'Created': item['CreationDate']
+                }
+                number = number+1
+                tab_data.append(data_item)
+
+            print(tabulate(tab_data, headers='keys', tablefmt='grid'))
 
         if self.args['object']:
             if self.args['--bucket']:
-                print(object.list_object(bucket=self.args['--bucket']))
+                tab_data = list()
+                list_object = object.list_object(bucket=self.args['--bucket'])
+                number = 1
+                for item in list_object:
+                    data_item = {
+                        'No.': number,
+                        'Name': item['Key'],
+                        'LastModified': item['LastModified'],
+                        'Size': '{} B'.format(item['Size']),
+                        'OwnerName': item['Owner']['DisplayName'],
+                    }
+                    number = number+1
+                    tab_data.append(data_item)
+
+                print(tabulate(tab_data, headers='keys', tablefmt='grid'))
             else:
                 log_utils.log_err('Missing parameter.')
                 exit()
