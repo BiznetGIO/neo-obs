@@ -1,8 +1,16 @@
 """
 Usage:
     obs <command> [<args>...]
-    obs login cloudian
-    obs login s3
+    
+Options:
+    -h, --help          display this help and exit
+    -v, --version       Print version information and quit
+
+Commands:
+    login
+    ls
+
+    Run 'obs COMMAND --help' for more information on a command.
 """
 
 from inspect import getmembers, isclass
