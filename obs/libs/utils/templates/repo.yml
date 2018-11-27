@@ -1,0 +1,28 @@
+cloudian:
+  user:
+    description: Admin API for create User
+    parameters:
+      groupId:
+        type: string
+        label: Group ID
+        description: Cloudian Group ID
+        dependences: func:group_list
+      userType:
+        type: string
+        label: User Type
+        description: Cloudian User Type (e.g. User)
+        dependences: func:user_type_list
+      active:
+        type: string
+        label: Active Status
+        description: Cloudian User Status (e.g. true)
+        dependences: func:active_status
+      emailAddr:
+        type: string
+        label: Email Address
+        description: User Email
+      fullName:
+        type: string
+        label: User Full Name
+        description: User Full Name
+      
