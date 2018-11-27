@@ -2,6 +2,7 @@ from obs.libs.utils import prompt
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 import os
+import npyscreen
 
 def question(word):
     answer = False
@@ -49,3 +50,19 @@ def prompt_generator(form_title, fields):
         print('------------------------------')
     
     return data
+
+def form_generator(form_title, fields):
+    def myFunction(*args):
+        form = npyscreen.Form(name=form_title)
+        result = {}
+        for field in fields:
+            t = field["type"]
+            k = field["key"]
+            del field["type"]
+            del field["key"]
+
+            result[k] = form.add(getattr(npyscreen, t), **field)
+        form.edit()
+        return result
+
+    return npyscreen.wrapper_basic(myFunction)
