@@ -48,7 +48,7 @@ def create(data=None, json=None, method='PUT'):
         data_user = create_user['data']
     except Exception:
         log_utils.log_err(create_user['status_message'])
-        return None
+        raise
     else:
         return data_user
 

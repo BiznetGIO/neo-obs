@@ -41,6 +41,8 @@ def get_project(templates):
 def setup_form(stack, project, parent=None):
     init = {
         "form": [],
+        "depend": [],
+        "number": [],
         "stack": stack,
         "project": project,
         "parent": parent
@@ -50,7 +52,7 @@ def setup_form(stack, project, parent=None):
         init["parent"] = parent
 
     repo = yaml_utils.repodata()[stack][project]
-    default_form_name = {"type": "TitleText", "name": "userId", "key": "userId"}
+    default_form_name = {}
     if yaml_utils.check_key(repo, "lists"):
         repo_lists = repo["lists"]
         """
@@ -77,8 +79,6 @@ def setup_form(stack, project, parent=None):
                 })
             else:
                 init["form"].append(default_form_name)
-    else:
-        init["form"].append(default_form_name)
 
     if yaml_utils.check_key(repo, "parameters"):
         param = repo["parameters"]
@@ -124,6 +124,15 @@ def exec_form(stack, project):
     f_init = list()
     parent_form = setup_form(stack, project)
     f_init.append(parent_form)
+    if len(parent_form["depend"]) > 0:
+        for depend in parent_form["depend"]:
+            repo = depend["repo"].split(".")
+            depend_stack = repo[0]
+            depend_project = repo[1]
+            depend_parent = depend["key"]
+            depend_form = setup_form(
+                depend_stack, depend_project, parent=depend_parent)
+            f_init.append(depend_form)
     form["init"] = list(reversed(f_init))
     return form
 
@@ -135,16 +144,16 @@ def dump(data):
         if d_yml["just_child_val"]:
             d_depend.append({"key": d_yml["parent"], "val": d_yml["name"]})
         else:
-            pre_yml = {d_yml["userId"]: {"template": d_yml["template"]}}
+            pre_yml = {d_yml["template"]: {"template": d_yml["template"]}}
             for k, v in d_yml.items():
                 if k not in [
                         "name", "template", "stack", "parent", "just_child_val"
                 ]:
-                    if not yaml_utils.check_key(pre_yml[d_yml["userId"]],
+                    if not yaml_utils.check_key(pre_yml[d_yml["template"]],
                                            "parameters"):
-                        pre_yml[d_yml["userId"]]["parameters"] = {k: v}
+                        pre_yml[d_yml["template"]]["parameters"] = {k: v}
                     else:
-                        pre_yml[d_yml["userId"]]["parameters"].update({k: v})
+                        pre_yml[d_yml["template"]]["parameters"].update({k: v})
 
             if not yaml_utils.check_key(d_dump, d_yml["stack"]):
                 d_dump[d_yml["stack"]] = pre_yml
@@ -156,7 +165,7 @@ def dump(data):
             else:
                 if len(d_depend) > 0:
                     for k_depend in d_depend:
-                        pre_yml[d_yml["userId"]]["parameters"].update({
+                        pre_yml[d_yml["template"]]["parameters"].update({
                             k_depend["key"]:
                             k_depend["val"]
                         })
@@ -176,6 +185,7 @@ def init(stack=None, project=None):
         select_project = get_project(select_stack)
 
     fields = exec_form(select_stack, select_project)
+
     data = list()
     for field in fields["init"]:
         validate = False
@@ -217,7 +227,6 @@ def init(stack=None, project=None):
                 for k_data, v_data in form.items():
                     if v_data == "":
                         null_data += 1
-                    '''
                     if len(field["number"]) > 0:
                         if k_data in field["number"]:
                             if vars_utils.isint(v_data):
@@ -226,7 +235,6 @@ def init(stack=None, project=None):
                                 form[k_data] = float(v_data)
                             else:
                                 null_data += 1
-                    '''
 
                 if null_data == 0:
                     validate = True

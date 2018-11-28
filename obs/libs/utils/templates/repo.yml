@@ -2,6 +2,10 @@ cloudian:
   user:
     description: Admin API for create User
     parameters:
+      userId:
+        type: string
+        label: User ID
+        description: Cloudian User ID
       groupId:
         type: string
         label: Group ID

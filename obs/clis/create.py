@@ -1,5 +1,6 @@
 from obs.clis.base import Base
-from obs.libs.utils import orchestration, log_utils, cli_utils, prompt, ncurses
+from obs.libs.utils import orchestration, log_utils, cli_utils, prompt, ncurses, yaml_utils
+from tabulate import tabulate
 
 import os
 
@@ -60,3 +61,23 @@ class Create(Base):
                 default_file = "obs.yml"
             else:
                 exit()
+
+        deploy_init = yaml_utils.file_parser(default_file)
+        try:
+            orchestration.do_create(deploy_init)
+        except Exception as e:
+            log_utils.log_err("Deploying Stack failed...")
+            exit()
+
+        stack = list(deploy_init.keys())[0]
+        stack_name = list(deploy_init[stack])[0]
+        parameters = deploy_init[stack][stack_name]['parameters']
+        project_list = list()
+        data = {}
+        for key in parameters:
+            data[key] = parameters[key]
+
+        project_list.append(data)
+            
+        if len(project_list) > 0:
+            print(tabulate(project_list, headers='keys', tablefmt="grid"))
