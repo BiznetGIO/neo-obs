@@ -1,7 +1,7 @@
 import os
 
 from obs.libs.utils import cli_utils, log_utils, yaml_utils
-from obs.libs.cloudian import user
+from obs.libs.cloudian import user, credential
 
 
 def check_manifest_file():
@@ -23,6 +23,14 @@ def do_create(initialize):
             if initialize[stack][stack_name]['template'] == 'user':
                 parameters = initialize[stack][stack_name]['parameters']
                 create_data = user.create(data=None, json=parameters)
+            
+            if initialize[stack][stack_name]['template'] == 'credentials':
+                parameters = initialize[stack][stack_name]['parameters']
+                method = 'POST'
+                if 'accessKey' not in parameters:
+                    method = 'PUT'
+
+                create_data = credential.create(data=parameters, json=None, method=method)
 
         return create_data
 

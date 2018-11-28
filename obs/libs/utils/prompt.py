@@ -85,13 +85,21 @@ def setup_form(stack, project, parent=None):
         param_index = yaml_utils.get_index(param)
         for index in param_index:
             prop = param[index]
+            
             if not yaml_utils.check_key(prop, "default"):
                 if not yaml_utils.check_key(prop, "dependences"):
-                    init["form"].append({
+                    formItem = {
                         "type": "TitleText",
                         "name": prop["label"],
-                        "key": index
-                    })
+                        "key": index,
+                    }
+                    
+                    if 'required' not in prop:
+                        formItem['required'] = True
+                    else:
+                        formItem['required'] = prop['required']
+
+                    init["form"].append(formItem)
                     if prop["type"] == "number":
                         init["number"].append(index)
                 else:
@@ -116,6 +124,7 @@ def setup_form(stack, project, parent=None):
                             "key": index,
                             "repo": repo_name
                         })
+
     return init
 
 
@@ -185,7 +194,6 @@ def init(stack=None, project=None):
         select_project = get_project(select_stack)
 
     fields = exec_form(select_stack, select_project)
-
     data = list()
     for field in fields["init"]:
         validate = False
@@ -219,14 +227,15 @@ def init(stack=None, project=None):
             else:
                 form["parent"] = None
 
-            if not form["just_child_val"]:
+            if not form['just_child_val']:
                 form["stack"] = field["stack"]
                 form["template"] = field["project"]
                 """ Check if data is null """
                 null_data = 0
-                for k_data, v_data in form.items():
-                    if v_data == "":
+                for v_data in field['form']:
+                    if yaml_utils.check_key(v_data, 'required') and v_data['required'] is True and form[v_data['key']] == '':
                         null_data += 1
+                for k_data, v_data in form.items():
                     if len(field["number"]) > 0:
                         if k_data in field["number"]:
                             if vars_utils.isint(v_data):
@@ -235,7 +244,7 @@ def init(stack=None, project=None):
                                 form[k_data] = float(v_data)
                             else:
                                 null_data += 1
-
+                
                 if null_data == 0:
                     validate = True
 

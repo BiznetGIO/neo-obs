@@ -75,7 +75,8 @@ class Create(Base):
         project_list = list()
         data = {}
         for key in parameters:
-            data[key] = parameters[key]
+            if parameters[key] != '':
+                data[key] = parameters[key]
 
         project_list.append(data)
             
