@@ -1,8 +1,17 @@
 """
 Usage:
     obs <command> [<args>...]
-    obs login cloudian
-    obs login s3
+    
+Options:
+    -h, --help          display this help and exit
+    -v, --version       Print version information and quit
+
+Commands:
+    login
+    ls
+    create
+
+    Run 'obs COMMAND --help' for more information on a command.
 """
 
 from inspect import getmembers, isclass
@@ -25,16 +34,20 @@ def main():
         args = {}
 
     try:
-        module = getattr(obs.clis, command_name)
-        obs.clis = getmembers(module, isclass)
-        command_class = [command[1] for command in obs.clis
-                   if command[0] != 'Base'][0]
-    except AttributeError as e:
-        print(e)
-        raise DocoptExit()
+        try:
+            module = getattr(obs.clis, command_name)
+            obs.clis = getmembers(module, isclass)
+            command_class = [command[1] for command in obs.clis
+                    if command[0] != 'Base'][0]
+        except AttributeError as e:
+            print(e)
+            raise DocoptExit()
 
-    command = command_class(options, args)
-    command.execute()
+        command = command_class(options, args)
+        command.execute()
+    except KeyboardInterrupt as e:
+        print(e)
+        exit()
 
 
 if __name__ == '__main__':

@@ -17,7 +17,10 @@ jmespath==0.9.3
 lazy-object-proxy==1.3.1
 mccabe==0.6.1
 more-itertools==4.2.0
+-e git+https://github.com/ramadhanrezza/neo-obs.git@85efd3531c38a330e622ad8697faf049ddd3dd08#egg=neo_obs
+npyscreen==4.10.5
 pluggy==0.6.0
+prompt-toolkit==2.0.7
 py==1.5.4
 pyaml==17.12.1
 pylint==2.1.1
@@ -31,4 +34,5 @@ s3transfer==0.1.13
 six==1.11.0
 tabulate==0.8.2
 urllib3==1.23
+wcwidth==0.1.7
 wrapt==1.10.11

@@ -5,9 +5,11 @@ def mkdir(dir):
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
+
 def read_file(file):
     with open(file, 'r') as outfile:
         return outfile.read()
+
 
 def list_dir(dirname):
     listdir = list()

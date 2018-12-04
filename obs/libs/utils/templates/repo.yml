@@ -1,0 +1,53 @@
+cloudian:
+  user:
+    description: Admin API for create User
+    parameters:
+      userId:
+        type: string
+        label: User ID
+        description: Cloudian User ID
+      groupId:
+        type: string
+        label: Group ID
+        description: Cloudian Group ID
+        dependences: func:group_list
+      userType:
+        type: string
+        label: User Type
+        description: Cloudian User Type (e.g. User)
+        dependences: func:user_type_list
+      active:
+        type: string
+        label: Active Status
+        description: Cloudian User Status (e.g. true)
+        dependences: func:active_status
+      emailAddr:
+        type: string
+        label: Email Address
+        description: User Email
+      fullName:
+        type: string
+        label: User Full Name
+        description: User Full Name
+  credentials:
+    description: Admin API for create user credentials
+    parameters:
+      userId:
+        type: string
+        label: User ID
+        description: Cloudian User ID
+      groupId:
+        type: string
+        label: Group ID
+        description: Cloudian Group ID
+        dependences: func:group_list
+      accessKey:
+        type: string
+        label: S3 Access Key
+        description: Your S3 Access Key
+        required: false
+      secretKey:
+        type: string
+        label: S3 Secret Key
+        description: Your S3 Secret Key
+        required: false
