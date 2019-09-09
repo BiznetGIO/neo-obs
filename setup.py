@@ -1,68 +1,39 @@
-"""Packaging settings."""
+import io
+import re
 
-from codecs import open
-from os.path import abspath, dirname, join
-from subprocess import call
-from setuptools import Command, find_packages, setup
-from obs import __version__
+from setuptools import find_packages, setup
 
-this_dir = abspath(dirname(__file__))
-with open(join(this_dir, 'README.md'), encoding='utf-8') as file:
-    long_description = file.read()
+with io.open("README.rst", "rt", encoding="utf8") as f:
+    readme = f.read()
 
-with open(join(this_dir, 'requirements.txt'), encoding='utf-8') as fp:
-    install_requires = fp.read()
+with io.open("requirements.txt", "rt", encoding="utf8") as f:
+    requirements = f.read()
 
-
-class RunTests(Command):
-    """Run all tests."""
-    description = 'run tests'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        """Run all tests!"""
-        errno = call(['pytest', '--cov=obs', '-vv'])
-        raise SystemExit(errno)
-
+with io.open("obs/__init__.py", "rt", encoding="utf8") as f:
+    version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 setup(
-    name='neo-obs',
-    version=__version__,
-    description='A OBS command line tools',
-    long_description=long_description,
-    url='https://github.com/BiznetGIO',
-    author='BiznetGio',
-    author_email='support@biznetgio.com',
-    license='MIT',
+    name="neo-obs",
+    version=version,
+    description="A OBS command line tools",
+    long_description=readme,
+    url="https://github.com/BiznetGIO/neo-obs",
+    author="BiznetGio",
+    author_email="support@biznetgio.com",
+    license="MIT",
     classifiers=[
-        'Intended Audience :: Developers', 'Topic :: Utilities',
-        'License :: Public Domain', 'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6'
+        "Intended Audience :: Developers",
+        "Topic :: Utilities",
+        "License :: MIT",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
     ],
-    keywords='cli',
+    keywords="cli",
     include_package_data=True,
-    packages=find_packages(exclude=['docs', 'tests*']),
-    install_requires=install_requires,
-    extras_require={
-        'test': ['coverage', 'pytest', 'pytest-cov', 'pytest-ordering',
-                 'testfixtures'],
-    },
-    entry_points={
-        'console_scripts': [
-            'obs=obs.cli:main',
-        ],
-    },
-    cmdclass={'test': RunTests},
+    packages=find_packages(exclude=["docs", "tests*"]),
+    install_requires=requirements,
+    extras_require={"test": ["pytest", "pytest-cov"]},
+    entry_points={"console_scripts": ["obs=obs.cli:main"]},
 )
