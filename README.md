@@ -1,11 +1,8 @@
-NEO-OBS
-==========
+# NEO-OBS
 
 NEO-OBS is python based library for cloudian and s3 usage.
 
-
-Installing
------
+## Installation
 
 Install and update using [pip](https://pip.pypa.io/en/stable/quickstart/)
 
@@ -15,27 +12,28 @@ NEO OBS only support Python3.
 pip install neo-obs
 ```
 
-
-Usage Cloudian (User Now)
------
+## Usage Cloudian (User Now)
 
 Login and setup env
+
 ``` bash
 obs login cloudian
 ```
 
-now check your env
+Now check your env
+
 ``` bash
 cat ~/.obs/cloudian.env
 ```
 
-get user identity
+Get user identity
+
 ``` bash
 obs ls user -g your_group_id -i your_id
 ```
 
-## Using Library
-after your login on cloudian
+## Using neo-obs as a library
+
 ``` bash
 from obs.libs.cloudian import requestors
 from obs.libs.cloudian import user
