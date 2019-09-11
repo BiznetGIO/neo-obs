@@ -1,54 +1,24 @@
-"""
-Usage:
-    obs <command> [<args>...]
-    
-Options:
-    -h, --help          display this help and exit
-    -v, --version       Print version information and quit
+import click
 
-Commands:
-    login
-    ls
-    create
-
-    Run 'obs COMMAND --help' for more information on a command.
-"""
-
-from inspect import getmembers, isclass
-from docopt import docopt, DocoptExit
-from obs import __version__ as VERSION
+from obs.clis import config
 
 
-def main():
-    """Main CLI entrypoint."""
-    import obs.clis
-    options = docopt(__doc__, version=VERSION, options_first=True)
-    command_name = ""
-    args = ""
-    command_class =""
+@click.group(invoke_without_command=True)
+@click.option(
+    "--configure",
+    is_flag=True,
+    default=False,
+    help="Configure object storage service values",
+)
+@click.version_option()
+def cli(configure):
+    """neo-obs
 
-    command_name = options.pop('<command>')
-    args = options.pop('<args>')
-
-    if args is None:
-        args = {}
-
-    try:
-        try:
-            module = getattr(obs.clis, command_name)
-            obs.clis = getmembers(module, isclass)
-            command_class = [command[1] for command in obs.clis
-                    if command[0] != 'Base'][0]
-        except AttributeError as e:
-            print(e)
-            raise DocoptExit()
-
-        command = command_class(options, args)
-        command.execute()
-    except KeyboardInterrupt as e:
-        print(e)
-        exit()
+    Command line tool for neo object storage.
+    """
+    if configure:
+        config.run_configure()
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    cli()

@@ -3,7 +3,7 @@ import re
 
 from setuptools import find_packages, setup
 
-with io.open("README.rst", "rt", encoding="utf8") as f:
+with io.open("README.md", "rt", encoding="utf8") as f:
     readme = f.read()
 
 with io.open("requirements.txt", "rt", encoding="utf8") as f:
@@ -34,6 +34,5 @@ setup(
     include_package_data=True,
     packages=find_packages(exclude=["docs", "tests*"]),
     install_requires=requirements,
-    extras_require={"test": ["pytest", "pytest-cov"]},
-    entry_points={"console_scripts": ["obs=obs.cli:main"]},
+    entry_points={"console_scripts": ["obs=obs.cli:cli"]},
 )
