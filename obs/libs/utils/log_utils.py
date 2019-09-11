@@ -2,6 +2,7 @@ import coloredlogs
 import logging
 import getpass
 
+
 def log_info(stdin):
     coloredlogs.install()
     logging.info(stdin)
@@ -15,6 +16,7 @@ def log_warn(stdin):
 def log_err(stdin):
     coloredlogs.install()
     logging.error(stdin)
+
 
 def question(word):
     answer = False

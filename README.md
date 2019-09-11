@@ -1,5 +1,7 @@
 # NEO-OBS
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+
 NEO-OBS is python based library for cloudian and s3 usage.
 
 ## Installation

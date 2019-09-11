@@ -22,39 +22,39 @@ def question(word):
 
 
 def prompt_generator(form_title, fields):
-    if os.name == 'nt':
-        os.system('cls')
+    if os.name == "nt":
+        os.system("cls")
     else:
-        os.system('clear')
+        os.system("clear")
 
     print(form_title)
     data = {}
     for field in fields:
-        if field['type'] == 'TitleSelectOne':
-            print('{} : '.format(field['name']))
-            completer = WordCompleter(field['values'], ignore_case=True)
-            for v in field['values']:
-                print('- {}'.format(v))
+        if field["type"] == "TitleSelectOne":
+            print("{} : ".format(field["name"]))
+            completer = WordCompleter(field["values"], ignore_case=True)
+            for v in field["values"]:
+                print("- {}".format(v))
             text = None
 
-            while text not in field['values']:
-                text = prompt('Enter your choice : ', completer=completer)
+            while text not in field["values"]:
+                text = prompt("Enter your choice : ", completer=completer)
 
-            data[field['key']] = text
-        elif field['type'] == 'TitleSelect':
-            print('{} : '.format(field['name']))
-            completer = WordCompleter(field['values'], ignore_case=True)
-            for v in field['values']:
-                print('- {}'.format(v))
-            data[field['key']] = prompt(
-                'Enter your choice or create new : ', completer=completer)
-        elif field['type'] == 'TitlePassword':
-            data[field['key']] = prompt(
-                '{} : '.format(field['name']), is_password=True)
+            data[field["key"]] = text
+        elif field["type"] == "TitleSelect":
+            print("{} : ".format(field["name"]))
+            completer = WordCompleter(field["values"], ignore_case=True)
+            for v in field["values"]:
+                print("- {}".format(v))
+            data[field["key"]] = prompt(
+                "Enter your choice or create new : ", completer=completer
+            )
+        elif field["type"] == "TitlePassword":
+            data[field["key"]] = prompt("{} : ".format(field["name"]), is_password=True)
         else:
-            data[field['key']] = prompt('{} : '.format(field['name']))
-        print('------------------------------')
-    
+            data[field["key"]] = prompt("{} : ".format(field["name"]))
+        print("------------------------------")
+
     return data
 
 
@@ -77,15 +77,9 @@ def form_generator(form_title, fields):
 
 def get_key(manifest_file):
     try:
-        manifest = {
-            "stack": {
-                "cloudian": [],
-                "s3": []
-            }
-        }
+        manifest = {"stack": {"cloudian": [], "s3": []}}
 
-        obs_templates = codecs.open(
-            manifest_file, encoding='utf-8', errors='strict')
+        obs_templates = codecs.open(manifest_file, encoding="utf-8", errors="strict")
         manifest["data"] = yaml.load(obs_templates.read())
         manifest_data = eval(str(manifest["data"]))
         del manifest_data["deploy"]
@@ -128,7 +122,7 @@ def do_deploy_dir(manifest_file):
 
 def template_url(dest):
     mkdir(dest)
-    return {'local': dest}
+    return {"local": dest}
 
 
 def mkdir(dir):

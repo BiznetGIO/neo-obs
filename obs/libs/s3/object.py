@@ -10,9 +10,9 @@ def list_object(session=None, bucket=None):
         session = login_lib.get_client_session()
 
     list_object = session.list_objects(Bucket=bucket)
-    
+
     try:
-        return list_object.get('Contents')
+        return list_object.get("Contents")
     except Exception as e:
         log_utils.log_err(e)
         exit()
@@ -32,11 +32,11 @@ def get_object(session=None, bucket=None, key=None, gettype=None):
     try:
         if gettype is None:
             detail_object = session.get_object(Bucket=bucket, Key=key)
-        elif gettype == 'acl':
+        elif gettype == "acl":
             detail_object = session.get_object_acl(Bucket=bucket, Key=key)
-        elif gettype == 'tagging':
+        elif gettype == "tagging":
             detail_object = session.get_object_tagging(Bucket=bucket, Key=key)
-        elif gettype == 'torrent':
+        elif gettype == "torrent":
             detail_object = session.get_object_torrent(Bucket=bucket, Key=key)
 
         return detail_object
@@ -48,15 +48,17 @@ def get_object(session=None, bucket=None, key=None, gettype=None):
 def put_object(session=None, bucket=None, key=None, acl=None, tagging=None):
     if not session:
         session = login_lib.get_client_session()
-    
+
     try:
         if acl is None and tagging is None:
             # put_object
-            with open(key, 'rb') as data:
-                object = session.put_object(Bucket=bucket, 
-                                            Key=key,
-                                            ContentType=mimetypes.MimeTypes().guess_type(key)[0],
-                                            Body=data)
+            with open(key, "rb") as data:
+                object = session.put_object(
+                    Bucket=bucket,
+                    Key=key,
+                    ContentType=mimetypes.MimeTypes().guess_type(key)[0],
+                    Body=data,
+                )
         elif acl is not None and tagging is None:
             # put object acl
             object = session.put_object_acl(Bucket=bucket, Key=key, ACL=acl)
@@ -65,13 +67,15 @@ def put_object(session=None, bucket=None, key=None, acl=None, tagging=None):
             object = session.put_object_tagging(Bucket=bucket, Key=key, Tagging=tagging)
         else:
             # put object acl tagging
-            with open(key, 'rb') as data:
-                object = session.put_object(Bucket=bucket, 
-                                            Key=key,
-                                            ContentType=mimetypes.MimeTypes().guess_type(key)[0],
-                                            Body=data,
-                                            ACL=acl,
-                                            Tagging=tagging)
+            with open(key, "rb") as data:
+                object = session.put_object(
+                    Bucket=bucket,
+                    Key=key,
+                    ContentType=mimetypes.MimeTypes().guess_type(key)[0],
+                    Body=data,
+                    ACL=acl,
+                    Tagging=tagging,
+                )
 
         return object
     except Exception as e:
@@ -80,20 +84,24 @@ def put_object(session=None, bucket=None, key=None, acl=None, tagging=None):
 
 
 def put_object_multipart(session=None, bucket=None, key=None):
-    config = TransferConfig(multipart_threshold=1024 * 25,
-                            max_concurrency=10,
-                            multipart_chunksize=1024 * 25,
-                            use_threads=True)
+    config = TransferConfig(
+        multipart_threshold=1024 * 25,
+        max_concurrency=10,
+        multipart_chunksize=1024 * 25,
+        use_threads=True,
+    )
 
     if not session:
         session = login_lib.get_client_session()
 
     try:
-        with open(key, 'rb') as data:
-            object = session.upload_file(Filename=data.name, 
-                                        Bucket=bucket, 
-                                        Key=os.path.basename(data.name),
-                                        Config=config)
+        with open(key, "rb") as data:
+            object = session.upload_file(
+                Filename=data.name,
+                Bucket=bucket,
+                Key=os.path.basename(data.name),
+                Config=config,
+            )
 
             return object
     except Exception as e:

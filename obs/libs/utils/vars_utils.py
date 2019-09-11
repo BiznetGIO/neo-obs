@@ -16,5 +16,6 @@ def isfloat(number):
     else:
         return True
 
+
 def get_index(dictionary):
     return [key for (key, value) in dictionary.items()]

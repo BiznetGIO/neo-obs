@@ -19,18 +19,20 @@ def do_create(initialize):
         create_data = {}
         stack = list(initialize.keys())[0]
         stack_name = list(initialize[stack])[0]
-        if stack == 'cloudian':
-            if initialize[stack][stack_name]['template'] == 'user':
-                parameters = initialize[stack][stack_name]['parameters']
+        if stack == "cloudian":
+            if initialize[stack][stack_name]["template"] == "user":
+                parameters = initialize[stack][stack_name]["parameters"]
                 create_data = user.create(data=None, json=parameters)
-            
-            if initialize[stack][stack_name]['template'] == 'credentials':
-                parameters = initialize[stack][stack_name]['parameters']
-                method = 'POST'
-                if 'accessKey' not in parameters:
-                    method = 'PUT'
 
-                create_data = credential.create(data=parameters, json=None, method=method)
+            if initialize[stack][stack_name]["template"] == "credentials":
+                parameters = initialize[stack][stack_name]["parameters"]
+                method = "POST"
+                if "accessKey" not in parameters:
+                    method = "PUT"
+
+                create_data = credential.create(
+                    data=parameters, json=None, method=method
+                )
 
         return create_data
 
@@ -41,4 +43,3 @@ def do_create(initialize):
         pass
     finally:
         pass
-        

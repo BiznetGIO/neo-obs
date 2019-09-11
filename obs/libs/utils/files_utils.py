@@ -7,7 +7,7 @@ def mkdir(dir):
 
 
 def read_file(file):
-    with open(file, 'r') as outfile:
+    with open(file, "r") as outfile:
         return outfile.read()
 
 

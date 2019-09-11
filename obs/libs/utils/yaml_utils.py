@@ -5,16 +5,16 @@ import yaml, os
 
 def check_extension(file):
     filename, file_extension = os.path.splitext(file)
-    if file_extension == '.obs':
+    if file_extension == ".obs":
         return True
-    elif file_extension == '':
-        raise Exception("Ingat Ganteng Extension File "+filename+" Harus Ada")
+    elif file_extension == "":
+        raise Exception("Ingat Ganteng Extension File " + filename + " Harus Ada")
     else:
         raise Exception("Nda Bisa Ganteng Extension File Harus .ocha")
 
 
 def file_parser(file):
-    with open(file, 'r') as stream:
+    with open(file, "r") as stream:
         try:
             data = yaml.load(stream)
             return data
@@ -23,7 +23,7 @@ def file_parser(file):
 
 
 def yaml_parser(file):
-    with open(file, 'r') as stream:
+    with open(file, "r") as stream:
         try:
             data = yaml.load(stream)
             return data
@@ -51,7 +51,7 @@ def check_key(dict, val):
 
 
 def yaml_create(out_file, data):
-    with open(out_file, 'w') as outfile:
+    with open(out_file, "w") as outfile:
         try:
             yaml.dump(data, outfile, default_flow_style=False)
             return True
@@ -61,5 +61,5 @@ def yaml_create(out_file, data):
 
 
 def read_file(file):
-    with open(file, 'r') as outfile:
+    with open(file, "r") as outfile:
         return outfile.read()

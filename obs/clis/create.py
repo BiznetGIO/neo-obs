@@ -1,11 +1,19 @@
 from obs.clis.base import Base
-from obs.libs.utils import orchestration, log_utils, cli_utils, prompt, ncurses, yaml_utils
+from obs.libs.utils import (
+    orchestration,
+    log_utils,
+    cli_utils,
+    prompt,
+    ncurses,
+    yaml_utils,
+)
 from tabulate import tabulate
 
 import os
 
+
 class Create(Base):
-    '''
+    """
     Usage:
         create [-i] [-f PATH]
         create [-t TEMPLATE] [-i]
@@ -24,7 +32,7 @@ class Create(Base):
         obs create -t user         create cloudian user
     
     Run 'obs create COMMAND --help' for more information on a command.
-    '''
+    """
 
     def execute(self):
         set_file = self.args["--file"]
@@ -39,8 +47,7 @@ class Create(Base):
 
         if not default_file:
             log_utils.log_err("Can't find obs.yml manifest file!")
-            q_stack = cli_utils.question(
-                "Do you want to generate obs.yml manifest? ")
+            q_stack = cli_utils.question("Do you want to generate obs.yml manifest? ")
 
             if q_stack:
                 if self.args["--interactive"]:
@@ -71,14 +78,14 @@ class Create(Base):
 
         stack = list(deploy_init.keys())[0]
         stack_name = list(deploy_init[stack])[0]
-        parameters = deploy_init[stack][stack_name]['parameters']
+        parameters = deploy_init[stack][stack_name]["parameters"]
         project_list = list()
         data = {}
         for key in parameters:
-            if parameters[key] != '':
+            if parameters[key] != "":
                 data[key] = parameters[key]
 
         project_list.append(data)
-            
+
         if len(project_list) > 0:
-            print(tabulate(project_list, headers='keys', tablefmt="grid"))
+            print(tabulate(project_list, headers="keys", tablefmt="grid"))

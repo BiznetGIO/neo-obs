@@ -3,10 +3,9 @@ import dill
 import os
 
 
-
 def set_session(sess):
     try:
-        with open('/tmp/obs-session.pkl', 'wb') as f:
+        with open("/tmp/obs-session.pkl", "wb") as f:
             dill.dump(sess, f)
     except Exception as e:
         log.log_err("set session failed")
@@ -15,7 +14,7 @@ def set_session(sess):
 def get_session():
     try:
         sess = None
-        with open('/tmp/obs-session.pkl', 'rb') as f:
+        with open("/tmp/obs-session.pkl", "rb") as f:
             sess = dill.load(f)
         return sess
     except Exception as e:

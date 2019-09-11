@@ -8,7 +8,7 @@ import time
 
 
 class Ls(Base):
-    '''
+    """
     Usage:
     ls user [-g GROUP_ID] [-i ID]
     ls user
@@ -27,90 +27,84 @@ class Ls(Base):
     -s STATUS --status=STATUS
     -b BUCKET --bucket=BUCKET
 
-    '''
+    """
+
     def execute(self):
-        if self.args['user']:
-            if self.args['--group_id'] and self.args['--id']:
+        if self.args["user"]:
+            if self.args["--group_id"] and self.args["--id"]:
                 tab_data = list()
-                data = {
-                    'groupId': self.args['--group_id'],
-                    'userId': self.args['--id'],
-                }
+                data = {"groupId": self.args["--group_id"], "userId": self.args["--id"]}
                 user_data = user.detail(data=data)
                 if user_data is None:
                     log_utils.log_err(user_data)
                     exit()
                 else:
                     user_data_fix = {
-                        'UserType': user_data['userType'],
-                        'Name': user_data['fullName'],
-                        'EmailAddr': user_data['emailAddr'],
-                        'Address': user_data['address1']+user_data['address2'],
-                        'City': user_data['city'],
-                        'Status': user_data['active']
+                        "UserType": user_data["userType"],
+                        "Name": user_data["fullName"],
+                        "EmailAddr": user_data["emailAddr"],
+                        "Address": user_data["address1"] + user_data["address2"],
+                        "City": user_data["city"],
+                        "Status": user_data["active"],
                     }
                     tab_data.append(user_data_fix)
-                    print(tabulate(tab_data, headers='keys', tablefmt='grid'))
+                    print(tabulate(tab_data, headers="keys", tablefmt="grid"))
             else:
-                data = {
-                    'groupId': 'testing',
-                    'userType': 'all',
-                    'userStatus': 'active'
-                }
+                data = {"groupId": "testing", "userType": "all", "userStatus": "active"}
                 data_user = list()
                 all_user = user.get_list(data=data)
                 number = 1
                 for items in all_user:
                     data_item = {
-                        'No.': number,
-                        'User': items['userId'],
-                        'Name': items['fullName'],
-                        'EmailAddr': items['emailAddr'],
-                        'Address': items['address1'],
-                        'City': items['city'],
-                        'Status': items['active']
+                        "No.": number,
+                        "User": items["userId"],
+                        "Name": items["fullName"],
+                        "EmailAddr": items["emailAddr"],
+                        "Address": items["address1"],
+                        "City": items["city"],
+                        "Status": items["active"],
                     }
-                    number = number+1
+                    number = number + 1
                     data_user.append(data_item)
 
-                print(tabulate(data_user, headers='keys', tablefmt='grid'))
+                print(tabulate(data_user, headers="keys", tablefmt="grid"))
 
-        if self.args['qos']:
-            if self.args['--group_id'] and self.args['--id']:
+        if self.args["qos"]:
+            if self.args["--group_id"] and self.args["--id"]:
                 tab_data = list()
                 list_params = {
-                    'userId': self.args['--id'],
-                    'groupId': self.args['--group_id']
+                    "userId": self.args["--id"],
+                    "groupId": self.args["--group_id"],
                 }
 
                 try:
                     qos_data = qos.get(data=list_params)
-                    limitList = qos_data['qosLimitList']
+                    limitList = qos_data["qosLimitList"]
                 except Exception as e:
                     log_utils.log_err(e)
                     exit()
                 else:
                     quota = 0
                     for i in limitList:
-                        if i['type'] == 'STORAGE_QUOTA_KBYTES':
-                            quota = i['value']
+                        if i["type"] == "STORAGE_QUOTA_KBYTES":
+                            quota = i["value"]
 
                     user_qos = {
-                        'User': qos_data['userId'],
-                        'Quota': '{} GB'.format(quota/1024**2)
+                        "User": qos_data["userId"],
+                        "Quota": "{} GB".format(quota / 1024 ** 2),
                     }
                     tab_data.append(user_qos)
-                    print(tabulate(tab_data, headers='keys', tablefmt='grid'))
+                    print(tabulate(tab_data, headers="keys", tablefmt="grid"))
                     exit()
             else:
-                log_utils.log_err('Missing parameter.')
+                log_utils.log_err("Missing parameter.")
                 exit()
 
-        if self.args['credential']:
-            if self.args['--group_id'] and self.args['--id']:
+        if self.args["credential"]:
+            if self.args["--group_id"] and self.args["--id"]:
                 list_params = {
-                    'userId': self.args['--id'],
-                    'groupId': self.args['--group_id']
+                    "userId": self.args["--id"],
+                    "groupId": self.args["--group_id"],
                 }
 
                 credential_list = credential.get_credential(data=list_params)
@@ -121,91 +115,103 @@ class Ls(Base):
                     number = 1
                     data_credential = list()
                     for item in credential_list:
-                        cTime = time.strftime("%d-%m-%Y, %H:%M:%S", time.localtime(int(str(item['createDate'])[:-3])))
+                        cTime = time.strftime(
+                            "%d-%m-%Y, %H:%M:%S",
+                            time.localtime(int(str(item["createDate"])[:-3])),
+                        )
 
-                        if item['expireDate'] is not None:
-                            dTime = time.strftime("%d-%m-%Y, %H:%M:%S", time.localtime(int(str(item['expireDate'])[:-3])))
+                        if item["expireDate"] is not None:
+                            dTime = time.strftime(
+                                "%d-%m-%Y, %H:%M:%S",
+                                time.localtime(int(str(item["expireDate"])[:-3])),
+                            )
                         else:
-                            dTime = item['expireDate']
+                            dTime = item["expireDate"]
 
                         data_item = {
-                            'No.': number,
-                            'Access Key': item['accessKey'],
-                            'Secret Key': item['secretKey'],
-                            'Create': cTime,
-                            'Expire': dTime,
-                            'Status': item['active']
+                            "No.": number,
+                            "Access Key": item["accessKey"],
+                            "Secret Key": item["secretKey"],
+                            "Create": cTime,
+                            "Expire": dTime,
+                            "Status": item["active"],
                         }
-                        number = number+1
+                        number = number + 1
                         data_credential.append(data_item)
 
-                    print(tabulate(data_credential, headers='keys', tablefmt='grid'))
+                    print(tabulate(data_credential, headers="keys", tablefmt="grid"))
                     exit()
 
-            elif self.args['--key']:
+            elif self.args["--key"]:
                 tab_data = list()
-                list_params = {
-                    'accessKey': self.args['--key']
-                }
+                list_params = {"accessKey": self.args["--key"]}
                 credential_data = credential.get_credential(data=list_params)
 
                 if credential_data is None:
                     log_utils.log_err(credential_list)
                     exit()
-                else:                                                                                                                                                                                                                                                            
-                    cTime = time.strftime("%d-%m-%Y, %H:%M:%S",time.localtime(int(str(credential_data['createDate'])[:-3])))
-                    if credential_data['expireDate'] is not None:
-                        dTime = time.strftime("%d-%m-%Y, %H:%M:%deaS", time.localtime(int(str(credential_data['expireDate'])[:-3])))
+                else:
+                    cTime = time.strftime(
+                        "%d-%m-%Y, %H:%M:%S",
+                        time.localtime(int(str(credential_data["createDate"])[:-3])),
+                    )
+                    if credential_data["expireDate"] is not None:
+                        dTime = time.strftime(
+                            "%d-%m-%Y, %H:%M:%deaS",
+                            time.localtime(
+                                int(str(credential_data["expireDate"])[:-3])
+                            ),
+                        )
                     else:
-                        dTime = credential_data['expireDate']
+                        dTime = credential_data["expireDate"]
 
                     cred_detail = {
-                        'Access Key': credential_data['accessKey'],
-                        'Secret Key': credential_data['secretKey'],
-                        'Create': cTime,
-                        'Expire': dTime,
-                        'Status': credential_data['active']
+                        "Access Key": credential_data["accessKey"],
+                        "Secret Key": credential_data["secretKey"],
+                        "Create": cTime,
+                        "Expire": dTime,
+                        "Status": credential_data["active"],
                     }
                     tab_data.append(cred_detail)
-                    print(tabulate(tab_data, headers='keys', tablefmt='grid'))
+                    print(tabulate(tab_data, headers="keys", tablefmt="grid"))
                     exit()
 
             else:
-                log_utils.log_err('Missing parameter.')
+                log_utils.log_err("Missing parameter.")
                 exit()
 
-        if self.args['bucket']:
+        if self.args["bucket"]:
             tab_data = list()
             list_bucket = bucket.bucket_list()
             number = 1
             for item in list_bucket:
                 data_item = {
-                    'No.': number,
-                    'Name': item['Name'],
-                    'Created': item['CreationDate']
+                    "No.": number,
+                    "Name": item["Name"],
+                    "Created": item["CreationDate"],
                 }
-                number = number+1
+                number = number + 1
                 tab_data.append(data_item)
 
-            print(tabulate(tab_data, headers='keys', tablefmt='grid'))
+            print(tabulate(tab_data, headers="keys", tablefmt="grid"))
 
-        if self.args['object']:
-            if self.args['--bucket']:
+        if self.args["object"]:
+            if self.args["--bucket"]:
                 tab_data = list()
-                list_object = object.list_object(bucket=self.args['--bucket'])
+                list_object = object.list_object(bucket=self.args["--bucket"])
                 number = 1
                 for item in list_object:
                     data_item = {
-                        'No.': number,
-                        'Name': item['Key'],
-                        'LastModified': item['LastModified'],
-                        'Size': '{} B'.format(item['Size']),
-                        'OwnerName': item['Owner']['DisplayName'],
+                        "No.": number,
+                        "Name": item["Key"],
+                        "LastModified": item["LastModified"],
+                        "Size": "{} B".format(item["Size"]),
+                        "OwnerName": item["Owner"]["DisplayName"],
                     }
-                    number = number+1
+                    number = number + 1
                     tab_data.append(data_item)
 
-                print(tabulate(tab_data, headers='keys', tablefmt='grid'))
+                print(tabulate(tab_data, headers="keys", tablefmt="grid"))
             else:
-                log_utils.log_err('Missing parameter.')
+                log_utils.log_err("Missing parameter.")
                 exit()

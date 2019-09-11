@@ -1,4 +1,4 @@
-from obs.libs.utils import  yaml_utils
+from obs.libs.utils import yaml_utils
 
 
 def initialize(file=None):
