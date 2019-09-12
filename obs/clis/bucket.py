@@ -18,3 +18,11 @@ def create_bucket(resource, bucket_name, random_name=False):
         click.secho(f'Bucket "{bucket_name}" created successfully', fg="green")
     else:
         click.secho("Bucket creation failed.", fg="yellow", bold=True, err=True)
+
+
+def delete_bucket(resource, bucket_name):
+    is_deleted, exc = bucket_lib.delete_bucket(resource, bucket_name)
+    if is_deleted:
+        click.secho(f'Bucket "{bucket_name}" deleted successfully.', fg="green")
+    else:
+        click.secho(str(exc), fg="yellow", bold=True, err=True)

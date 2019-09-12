@@ -29,7 +29,8 @@ def cli(configure):
 @click.option(
     "-r", "--random", "random_name", is_flag=True, help="Generate random name"
 )
-def storage(ls, mb, random_name):
+@click.option("-del", "--delete", "_del", default="", help="Delete a bucket")
+def storage(ls, mb, random_name, _del):
     """Manage user storage."""
     try:
         s3_resource = auth.resource()
@@ -37,12 +38,11 @@ def storage(ls, mb, random_name):
             bucket.buckets(s3_resource)
         if mb:
             bucket.create_bucket(s3_resource, bucket_name=mb, random_name=random_name)
+        if _del:
+            bucket.delete_bucket(s3_resource, bucket_name=_del)
 
-    except Exception as e:
-        click.secho(
-            'Can\'t find config file.\nPlease run "obs --configure".', fg="yellow"
-        )
-        print(e)
+    except Exception as exc:
+        click.secho(str(exc), fg="yellow", bold=True, err=True)
 
 
 if __name__ == "__main__":
