@@ -1,6 +1,7 @@
 import click
 
 from obs.libs import bucket as bucket_lib
+from obs.libs import utils
 
 
 def buckets(resource):
@@ -24,5 +25,16 @@ def delete_bucket(resource, bucket_name):
     is_deleted, exc = bucket_lib.delete_bucket(resource, bucket_name)
     if is_deleted:
         click.secho(f'Bucket "{bucket_name}" deleted successfully.', fg="green")
+    else:
+        click.secho(str(exc), fg="yellow", bold=True, err=True)
+
+
+def get_objects(resource, bucket_name):
+    objects, exc = bucket_lib.get_objects(resource, bucket_name)
+    if objects:
+        for obj in objects:
+            key = obj.key
+            size = utils.sizeof_fmt(obj.size)
+            click.secho(f"{obj.last_modified:%Y-%m-%d %H:%M:%S}, {size}, {key}")
     else:
         click.secho(str(exc), fg="yellow", bold=True, err=True)

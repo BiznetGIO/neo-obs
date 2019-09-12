@@ -29,3 +29,15 @@ def delete_bucket(resource, bucket_name):
         return True, None
     except Exception as exc:
         return False, exc
+
+
+def get_objects(resource, bucket_name):
+    """List objects inside a bucket"""
+    try:
+        objects = []
+        bucket = resource.Bucket(bucket_name)
+        for obj in bucket.objects.all():
+            objects.append(obj)
+        return objects, True
+    except Exception as exc:
+        return exc, False

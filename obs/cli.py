@@ -30,7 +30,17 @@ def cli(configure):
     "-r", "--random", "random_name", is_flag=True, help="Generate random name"
 )
 @click.option("-del", "--delete", "_del", default="", help="Delete a bucket")
-def storage(ls, mb, random_name, _del):
+@click.option(
+    "-lo", "--list-object", "list_object", default="", help="List bucket contents"
+)
+@click.option(
+    "-do",
+    "--delete-object",
+    "delete_object",
+    default="",
+    help="delete object in bucket",
+)
+def storage(ls, mb, random_name, _del, list_object, delete_object):
     """Manage user storage."""
     try:
         s3_resource = auth.resource()
@@ -40,6 +50,8 @@ def storage(ls, mb, random_name, _del):
             bucket.create_bucket(s3_resource, bucket_name=mb, random_name=random_name)
         if _del:
             bucket.delete_bucket(s3_resource, bucket_name=_del)
+        if list_object:
+            bucket.get_objects(s3_resource, bucket_name=list_object)
 
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)
