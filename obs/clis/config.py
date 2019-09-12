@@ -1,62 +1,11 @@
-import dotenv
-import os
-import errno
 import click
-import io
 
-
-class Config:
-    access_key = ""
-    secret_key = ""
-    user_url = "s3-stage.biznetgio.net"
-    admin_url = "103.77.104.76"
-    admin_port = "19443"
-    admin_username = ""
-    admin_password = ""
-
-    def config_file(self):
-        home = os.path.expanduser("~")
-        config_file = os.path.join(home, ".config", "neo-obs", "neo.env")
-        return config_file
-
-    def is_config_exists(self):
-        config_file = self.config_file()
-        return os.path.isfile(config_file)
-
-    def load_config_file(self):
-        try:
-            config_file = self.config_file()
-            dotenv.load_dotenv(config_file)
-        except:
-            raise FileNotFoundError(
-                errno.ENOENT, os.strerror(errno.ENOENT), config_file
-            )
-
-    def dump_config(self, options, cfg):
-        config_file = self.config_file()
-        config = ""
-        for option in options:
-            value = getattr(cfg, option[0])
-
-            option = f"OS_{option[0].upper()}"
-            config += f"{option}={value}\n"
-        try:
-            with io.open(config_file, "w") as fp:
-                fp.write(config)
-            click.secho(f"\nConfiguration saved to {config_file}", fg="green")
-        except IOError as e:
-            click.secho(
-                f"\nWriting config file failed: {config_file}: {e.strerror}",
-                fg="yellow",
-                bold=True,
-                err=True,
-            )
-            sys.exit(EX_IOERR)
+from obs.libs import config
 
 
 def run_configure():
     """Prompt user interactively for config values and write those values to config_file."""
-    cfg = Config()
+    cfg = config.Config()
     options = [
         (
             "access_key",

@@ -1,6 +1,7 @@
 import click
 
 from obs.clis import config
+from obs.libs import config as config_lib
 
 
 @click.group(invoke_without_command=True)
