@@ -1,6 +1,5 @@
 import click
 
-from obs.libs import config as config_lib
 from obs.libs import auth
 
 from obs.clis import config
@@ -25,13 +24,19 @@ def cli(configure):
 
 
 @cli.command()
-@click.argument("ls", required=False)
-def storage(ls):
+@click.option("--ls", is_flag=True, default=False, help="List all buckets")
+@click.option("--mb", "--make-bucket", default="", help="Make a bucket")
+@click.option(
+    "-r", "--random", "random_name", is_flag=True, help="Generate random name"
+)
+def storage(ls, mb, random_name):
     """Manage user storage."""
     try:
+        s3_resource = auth.resource()
         if ls:
-            s3_resource = auth.resource()
             bucket.buckets(s3_resource)
+        if mb:
+            bucket.create_bucket(s3_resource, bucket_name=mb, random_name=random_name)
 
     except Exception as e:
         click.secho(
