@@ -1,7 +1,10 @@
 import click
 
-from obs.clis import config
 from obs.libs import config as config_lib
+from obs.libs import auth
+
+from obs.clis import config
+from obs.clis import bucket
 
 
 @click.group(invoke_without_command=True)
@@ -19,6 +22,22 @@ def cli(configure):
     """
     if configure:
         config.run_configure()
+
+
+@cli.command()
+@click.argument("ls", required=False)
+def storage(ls):
+    """Manage user storage."""
+    try:
+        if ls:
+            s3_resource = auth.resource()
+            bucket.buckets(s3_resource)
+
+    except Exception as e:
+        click.secho(
+            'Can\'t find config file.\nPlease run "obs --configure".', fg="yellow"
+        )
+        print(e)
 
 
 if __name__ == "__main__":
