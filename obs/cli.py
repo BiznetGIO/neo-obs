@@ -32,8 +32,15 @@ def cli(configure):
 @click.option("--rb", "remove_bucket", default="", help="Remove a bucket")
 @click.option("--lo", "list_object", default="", help="List bucket's objects")
 @click.option("--ro", "remove_object", nargs=2, help="Remove object in bucket")
+@click.option("--get", "download_object", nargs=2, help="Download object in bucket")
 def storage(
-    list_bucket, make_bucket, random_name, remove_bucket, list_object, remove_object
+    list_bucket,
+    make_bucket,
+    random_name,
+    remove_bucket,
+    list_object,
+    remove_object,
+    download_object,
 ):
     """Manage user storage."""
     try:
@@ -51,6 +58,11 @@ def storage(
         if remove_object:
             bucket_name, object_name = remove_object
             bucket.remove_object(
+                s3_resource, bucket_name=bucket_name, object_name=object_name
+            )
+        if download_object:
+            bucket_name, object_name = download_object
+            bucket.download_object(
                 s3_resource, bucket_name=bucket_name, object_name=object_name
             )
 

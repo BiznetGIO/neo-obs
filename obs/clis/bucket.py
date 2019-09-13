@@ -49,3 +49,13 @@ def remove_object(resource, bucket_name, object_name):
         click.secho(f'Object "{object_name}" removed successfully', fg="green")
     except Exception as exc:
         click.secho(f"Object removal failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def download_object(resource, bucket_name, object_name):
+    try:
+        bucket_lib.download_object(resource, bucket_name, object_name)
+        click.secho(f'Object "{object_name}" downloaded successfully', fg="green")
+    except Exception as exc:
+        click.secho(
+            f"Object download failed. \n{exc}", fg="yellow", bold=True, err=True
+        )

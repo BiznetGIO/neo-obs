@@ -35,10 +35,25 @@ def get_objects(resource, bucket_name):
     return objects
 
 
-def remove_object(resource, bucket_name, object_name):
-    """Remove an object in a bucket."""
+def is_exists(resource, bucket_name, object_name):
     objects = get_objects(resource, bucket_name)
     if object_name in [x.key for x in objects]:
+        return True
+    else:
+        return False
+
+
+def remove_object(resource, bucket_name, object_name):
+    """Remove an object in a bucket."""
+    if is_exists(resource, bucket_name, object_name):
         resource.Object(bucket_name, object_name).delete()
+    else:
+        raise ValueError(f"Object not exists: {object_name}")
+
+
+def download_object(resource, bucket_name, object_name):
+    """Download an object in a bucket."""
+    if is_exists(resource, bucket_name, object_name):
+        resource.Object(bucket_name, object_name).download_file(f"{object_name}")
     else:
         raise ValueError(f"Object not exists: {object_name}")
