@@ -18,26 +18,18 @@ def create_bucket(resource, bucket_name, random_name=False):
     """Create a bucket with optional random name as a suffix."""
     if random_name:
         bucket_name = gen_random_name(bucket_name)
-    is_created = resource.create_bucket(Bucket=bucket_name)
-    return is_created, bucket_name
+    resource.create_bucket(Bucket=bucket_name)
 
 
 def remove_bucket(resource, bucket_name):
     """Remove a bucket."""
-    try:
-        resource.Bucket(bucket_name).delete()
-        return True, None
-    except Exception as exc:
-        return False, exc
+    resource.Bucket(bucket_name).delete()
 
 
 def get_objects(resource, bucket_name):
     """List objects inside a bucket"""
-    try:
-        objects = []
-        bucket = resource.Bucket(bucket_name)
-        for obj in bucket.objects.all():
-            objects.append(obj)
-        return objects, True
-    except Exception as exc:
-        return exc, False
+    objects = []
+    bucket = resource.Bucket(bucket_name)
+    for obj in bucket.objects.all():
+        objects.append(obj)
+    return objects

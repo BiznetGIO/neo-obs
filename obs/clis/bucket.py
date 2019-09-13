@@ -12,29 +12,32 @@ def buckets(resource):
 
 
 def create_bucket(resource, bucket_name, random_name=False):
-    is_created, bucket_name = bucket_lib.create_bucket(
-        resource, bucket_name, random_name
-    )
-    if is_created:
+    try:
+        bucket_lib.create_bucket(resource, bucket_name, random_name)
         click.secho(f'Bucket "{bucket_name}" created successfully', fg="green")
-    else:
-        click.secho("Bucket creation failed.", fg="yellow", bold=True, err=True)
+    except Exception as exc:
+        click.secho(
+            f"Bucket creation failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
 
 
 def remove_bucket(resource, bucket_name):
-    is_deleted, exc = bucket_lib.remove_bucket(resource, bucket_name)
-    if is_deleted:
+    try:
+        bucket_lib.remove_bucket(resource, bucket_name)
         click.secho(f'Bucket "{bucket_name}" deleted successfully.', fg="green")
-    else:
-        click.secho(str(exc), fg="yellow", bold=True, err=True)
+    except Exception as exc:
+        click.secho(f"{exc}", fg="yellow", bold=True, err=True)
 
 
 def get_objects(resource, bucket_name):
-    objects, exc = bucket_lib.get_objects(resource, bucket_name)
-    if objects:
-        for obj in objects:
-            key = obj.key
-            size = utils.sizeof_fmt(obj.size)
-            click.secho(f"{obj.last_modified:%Y-%m-%d %H:%M:%S}, {size}, {key}")
-    else:
-        click.secho(str(exc), fg="yellow", bold=True, err=True)
+    try:
+        objects = bucket_lib.get_objects(resource, bucket_name)
+        if len(objects) > 0:
+            for obj in objects:
+                key = obj.key
+                size = utils.sizeof_fmt(obj.size)
+                click.secho(f"{obj.last_modified:%Y-%m-%d %H:%M:%S}, {size}, {key}")
+        else:
+            click.secho(f'Bucket "{bucket_name}" is empty', fg="green")
+    except Exception as exc:
+        click.secho(f"{exc}", fg="yellow", bold=True, err=True)
