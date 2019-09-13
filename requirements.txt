@@ -1,1 +1,3 @@
 Click==7.0
+boto3==1.9.227
+python-dotenv==0.10.3
