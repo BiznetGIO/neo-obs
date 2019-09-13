@@ -86,3 +86,14 @@ def disk_usage(resource, bucket_name):
         )
     except Exception as exc:
         click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def move_object(resource, src_bucket, dest_bucket, object_name):
+    try:
+        bucket_lib.move_object(resource, src_bucket, dest_bucket, object_name)
+        click.secho(
+            f'Object "{object_name}" moved to "{dest_bucket}" bucket successfully',
+            fg="green",
+        )
+    except Exception as exc:
+        click.secho(f"Object moving failed. \n{exc}", fg="yellow", bold=True, err=True)

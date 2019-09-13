@@ -70,6 +70,14 @@ def copy_object(resource, src_bucket, dest_bucket, object_name):
     resource.Object(dest_bucket, object_name).copy(copy_source)
 
 
+def move_object(resource, src_bucket, dest_bucket, object_name):
+    """Move an object into other bucket.
+    Using copy then remove operation.
+    """
+    copy_object(resource, src_bucket, dest_bucket, object_name)
+    remove_object(resource, src_bucket, object_name)
+
+
 def disk_usage(resource, bucket_name):
     """Calculate dist usage of objects in bucket."""
     objects = get_objects(resource, bucket_name)

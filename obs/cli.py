@@ -35,6 +35,7 @@ def cli(configure):
 @click.option("--get", "download_object", nargs=2, help="Download object in bucket")
 @click.option("--put", "upload_object", nargs=2, help="Put object into bucket")
 @click.option("--cp", "copy_object", nargs=3, help="Copy object to other bucket")
+@click.option("--mv", "move_object", nargs=3, help="Move object into other bucket")
 @click.option("--du", "disk_usage", default="", help="Disk usage of bucket")
 def storage(
     list_bucket,
@@ -46,6 +47,7 @@ def storage(
     download_object,
     upload_object,
     copy_object,
+    move_object,
     disk_usage,
 ):
     """Manage user storage."""
@@ -79,6 +81,14 @@ def storage(
         if copy_object:
             src_bucket, dest_bucket, object_name = copy_object
             bucket.copy_object(
+                s3_resource,
+                src_bucket=src_bucket,
+                dest_bucket=dest_bucket,
+                object_name=object_name,
+            )
+        if move_object:
+            src_bucket, dest_bucket, object_name = move_object
+            bucket.move_object(
                 s3_resource,
                 src_bucket=src_bucket,
                 dest_bucket=dest_bucket,
