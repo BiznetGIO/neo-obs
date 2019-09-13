@@ -24,32 +24,30 @@ def cli(configure):
 
 
 @cli.command()
-@click.option("--ls", is_flag=True, default=False, help="List all buckets")
-@click.option("--mb", "--make-bucket", default="", help="Make a bucket")
+@click.option(
+    "--lb", "list_bucket", is_flag=True, default=False, help="List all buckets"
+)
+@click.option("--mb", "make_bucket", default="", help="Make a bucket")
 @click.option(
     "-r", "--random", "random_name", is_flag=True, help="Generate random name"
 )
-@click.option("-del", "--delete", "_del", default="", help="Delete a bucket")
-@click.option(
-    "-lo", "--list-object", "list_object", default="", help="List bucket contents"
-)
-@click.option(
-    "-do",
-    "--delete-object",
-    "delete_object",
-    default="",
-    help="delete object in bucket",
-)
-def storage(ls, mb, random_name, _del, list_object, delete_object):
+@click.option("--rb", "remove_bucket", default="", help="Remove a bucket")
+@click.option("--lo", "list_object", default="", help="List bucket's objects")
+@click.option("--ro", "remove_object", default="", help="remove object in bucket")
+def storage(
+    list_bucket, make_bucket, random_name, remove_bucket, list_object, remove_object
+):
     """Manage user storage."""
     try:
         s3_resource = auth.resource()
-        if ls:
+        if list_bucket:
             bucket.buckets(s3_resource)
-        if mb:
-            bucket.create_bucket(s3_resource, bucket_name=mb, random_name=random_name)
-        if _del:
-            bucket.delete_bucket(s3_resource, bucket_name=_del)
+        if make_bucket:
+            bucket.create_bucket(
+                s3_resource, bucket_name=make_bucket, random_name=random_name
+            )
+        if remove_bucket:
+            bucket.remove_bucket(s3_resource, bucket_name=remove_bucket)
         if list_object:
             bucket.get_objects(s3_resource, bucket_name=list_object)
 

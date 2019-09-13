@@ -22,8 +22,8 @@ def create_bucket(resource, bucket_name, random_name=False):
     return is_created, bucket_name
 
 
-def delete_bucket(resource, bucket_name):
-    """Delete a bucket."""
+def remove_bucket(resource, bucket_name):
+    """Remove a bucket."""
     try:
         resource.Bucket(bucket_name).delete()
         return True, None
