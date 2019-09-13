@@ -57,3 +57,8 @@ def download_object(resource, bucket_name, object_name):
         resource.Object(bucket_name, object_name).download_file(f"{object_name}")
     else:
         raise ValueError(f"Object not exists: {object_name}")
+
+
+def upload_object(resource, bucket_name, object_name):
+    """Upload an object into bucket."""
+    resource.Object(bucket_name, object_name).upload_file(Filename=object_name)

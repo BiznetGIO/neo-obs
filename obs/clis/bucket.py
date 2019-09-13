@@ -59,3 +59,11 @@ def download_object(resource, bucket_name, object_name):
         click.secho(
             f"Object download failed. \n{exc}", fg="yellow", bold=True, err=True
         )
+
+
+def upload_object(resource, bucket_name, object_name):
+    try:
+        bucket_lib.upload_object(resource, bucket_name, object_name)
+        click.secho(f'Object "{object_name}" uploaded successfully', fg="green")
+    except Exception as exc:
+        click.secho(f"Object upload failed. \n{exc}", fg="yellow", bold=True, err=True)

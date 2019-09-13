@@ -33,6 +33,7 @@ def cli(configure):
 @click.option("--lo", "list_object", default="", help="List bucket's objects")
 @click.option("--ro", "remove_object", nargs=2, help="Remove object in bucket")
 @click.option("--get", "download_object", nargs=2, help="Download object in bucket")
+@click.option("--put", "upload_object", nargs=2, help="Put object into bucket")
 def storage(
     list_bucket,
     make_bucket,
@@ -41,6 +42,7 @@ def storage(
     list_object,
     remove_object,
     download_object,
+    upload_object,
 ):
     """Manage user storage."""
     try:
@@ -63,6 +65,11 @@ def storage(
         if download_object:
             bucket_name, object_name = download_object
             bucket.download_object(
+                s3_resource, bucket_name=bucket_name, object_name=object_name
+            )
+        if upload_object:
+            bucket_name, object_name = upload_object
+            bucket.upload_object(
                 s3_resource, bucket_name=bucket_name, object_name=object_name
             )
 
