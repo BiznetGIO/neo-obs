@@ -41,3 +41,11 @@ def get_objects(resource, bucket_name):
             click.secho(f'Bucket "{bucket_name}" is empty', fg="green")
     except Exception as exc:
         click.secho(f"{exc}", fg="yellow", bold=True, err=True)
+
+
+def remove_object(resource, bucket_name, object_name):
+    try:
+        bucket_lib.remove_object(resource, bucket_name, object_name)
+        click.secho(f'Object "{object_name}" removed successfully', fg="green")
+    except Exception as exc:
+        click.secho(f"Object removal failed. \n{exc}", fg="yellow", bold=True, err=True)

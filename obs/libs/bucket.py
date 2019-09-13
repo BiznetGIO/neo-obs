@@ -33,3 +33,12 @@ def get_objects(resource, bucket_name):
     for obj in bucket.objects.all():
         objects.append(obj)
     return objects
+
+
+def remove_object(resource, bucket_name, object_name):
+    """Remove an object in a bucket."""
+    objects = get_objects(resource, bucket_name)
+    if object_name in [x.key for x in objects]:
+        resource.Object(bucket_name, object_name).delete()
+    else:
+        raise ValueError(f"Object not exists: {object_name}")

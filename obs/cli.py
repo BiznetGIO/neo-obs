@@ -24,16 +24,14 @@ def cli(configure):
 
 
 @cli.command()
-@click.option(
-    "--lb", "list_bucket", is_flag=True, default=False, help="List all buckets"
-)
-@click.option("--mb", "make_bucket", default="", help="Make a bucket")
+@click.option("--lb", "list_bucket", is_flag=True, help="List all buckets")
+@click.option("--mb", "make_bucket", type=str, help="Make a bucket")
 @click.option(
     "-r", "--random", "random_name", is_flag=True, help="Generate random name"
 )
 @click.option("--rb", "remove_bucket", default="", help="Remove a bucket")
 @click.option("--lo", "list_object", default="", help="List bucket's objects")
-@click.option("--ro", "remove_object", default="", help="remove object in bucket")
+@click.option("--ro", "remove_object", nargs=2, help="Remove object in bucket")
 def storage(
     list_bucket, make_bucket, random_name, remove_bucket, list_object, remove_object
 ):
@@ -50,6 +48,11 @@ def storage(
             bucket.remove_bucket(s3_resource, bucket_name=remove_bucket)
         if list_object:
             bucket.get_objects(s3_resource, bucket_name=list_object)
+        if remove_object:
+            bucket_name, object_name = remove_object
+            bucket.remove_object(
+                s3_resource, bucket_name=bucket_name, object_name=object_name
+            )
 
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)
