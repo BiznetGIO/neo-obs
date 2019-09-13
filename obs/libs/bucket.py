@@ -68,3 +68,13 @@ def copy_object(resource, src_bucket, dest_bucket, object_name):
     """Copy an object into other bucket."""
     copy_source = {"Bucket": src_bucket, "Key": object_name}
     resource.Object(dest_bucket, object_name).copy(copy_source)
+
+
+def disk_usage(resource, bucket_name):
+    """Calculate dist usage of objects in bucket."""
+    objects = get_objects(resource, bucket_name)
+    total_objects = len(objects)
+    total_size = 0
+    for obj in objects:
+        total_size += obj.size
+    return total_size, total_objects

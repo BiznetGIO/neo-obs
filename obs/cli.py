@@ -34,7 +34,8 @@ def cli(configure):
 @click.option("--rm", "remove_object", nargs=2, help="Remove object in bucket")
 @click.option("--get", "download_object", nargs=2, help="Download object in bucket")
 @click.option("--put", "upload_object", nargs=2, help="Put object into bucket")
-@click.option("--cp", "copy_object", nargs=3, help="copy object to other bucket")
+@click.option("--cp", "copy_object", nargs=3, help="Copy object to other bucket")
+@click.option("--du", "disk_usage", default="", help="Disk usage of bucket")
 def storage(
     list_bucket,
     make_bucket,
@@ -45,6 +46,7 @@ def storage(
     download_object,
     upload_object,
     copy_object,
+    disk_usage,
 ):
     """Manage user storage."""
     try:
@@ -82,6 +84,8 @@ def storage(
                 dest_bucket=dest_bucket,
                 object_name=object_name,
             )
+        if disk_usage:
+            bucket.disk_usage(s3_resource, bucket_name=disk_usage)
 
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)

@@ -75,3 +75,14 @@ def copy_object(resource, src_bucket, dest_bucket, object_name):
         click.secho(f'Object "{object_name}" copied successfully', fg="green")
     except Exception as exc:
         click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def disk_usage(resource, bucket_name):
+    try:
+        total_size, total_objects = bucket_lib.disk_usage(resource, bucket_name)
+        human_total_size = utils.sizeof_fmt(total_size)
+        click.secho(
+            f'{human_total_size}, {total_objects} objects of "{bucket_name}" bucket'
+        )
+    except Exception as exc:
+        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
