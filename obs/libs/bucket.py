@@ -62,3 +62,9 @@ def download_object(resource, bucket_name, object_name):
 def upload_object(resource, bucket_name, object_name):
     """Upload an object into bucket."""
     resource.Object(bucket_name, object_name).upload_file(Filename=object_name)
+
+
+def copy_object(resource, src_bucket, dest_bucket, object_name):
+    """Copy an object into other bucket."""
+    copy_source = {"Bucket": src_bucket, "Key": object_name}
+    resource.Object(dest_bucket, object_name).copy(copy_source)

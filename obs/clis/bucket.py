@@ -67,3 +67,11 @@ def upload_object(resource, bucket_name, object_name):
         click.secho(f'Object "{object_name}" uploaded successfully', fg="green")
     except Exception as exc:
         click.secho(f"Object upload failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def copy_object(resource, src_bucket, dest_bucket, object_name):
+    try:
+        bucket_lib.copy_object(resource, src_bucket, dest_bucket, object_name)
+        click.secho(f'Object "{object_name}" copied successfully', fg="green")
+    except Exception as exc:
+        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)

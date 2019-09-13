@@ -31,9 +31,10 @@ def cli(configure):
 )
 @click.option("--rb", "remove_bucket", default="", help="Remove a bucket")
 @click.option("--lo", "list_object", default="", help="List bucket's objects")
-@click.option("--ro", "remove_object", nargs=2, help="Remove object in bucket")
+@click.option("--rm", "remove_object", nargs=2, help="Remove object in bucket")
 @click.option("--get", "download_object", nargs=2, help="Download object in bucket")
 @click.option("--put", "upload_object", nargs=2, help="Put object into bucket")
+@click.option("--cp", "copy_object", nargs=3, help="copy object to other bucket")
 def storage(
     list_bucket,
     make_bucket,
@@ -43,6 +44,7 @@ def storage(
     remove_object,
     download_object,
     upload_object,
+    copy_object,
 ):
     """Manage user storage."""
     try:
@@ -71,6 +73,14 @@ def storage(
             bucket_name, object_name = upload_object
             bucket.upload_object(
                 s3_resource, bucket_name=bucket_name, object_name=object_name
+            )
+        if copy_object:
+            src_bucket, dest_bucket, object_name = copy_object
+            bucket.copy_object(
+                s3_resource,
+                src_bucket=src_bucket,
+                dest_bucket=dest_bucket,
+                object_name=object_name,
             )
 
     except Exception as exc:
