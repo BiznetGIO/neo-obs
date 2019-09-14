@@ -10,8 +10,8 @@ def resource():
     :return: resource service client.
     """
     config.load_config_file()
-    access_key = os.environ.get("OBS_USER_ACCESKEY")
-    secret_key = os.environ.get("OBS_USER_SECRETKEY")
+    access_key = os.environ.get("OBS_USER_ACCESS_KEY")
+    secret_key = os.environ.get("OBS_USER_SECRET_KEY")
     endpoint = os.environ.get("OBS_USER_URL")
     endpoint_url = f"https://{endpoint}"
 

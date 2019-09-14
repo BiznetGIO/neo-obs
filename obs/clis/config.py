@@ -8,11 +8,11 @@ def run_configure():
     cfg = config.Config()
     options = [
         (
-            "access_key",
+            "user_access_key",
             "Access Key",
             "Access key and Secret key are your identifiers for object storage service",
         ),
-        ("secret_key", "Secret Key"),
+        ("user_secret_key", "Secret Key"),
         (
             "user_url",
             "Object Storage Endpoint",

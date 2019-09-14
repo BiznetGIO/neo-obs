@@ -10,8 +10,8 @@ class Config:
     """Accommodate config file creation by setting and
     getting it's class variables."""
 
-    access_key = ""
-    secret_key = ""
+    user_access_key = ""
+    user_secret_key = ""
     user_url = "s3-stage.biznetgio.net"
     admin_url = "103.77.104.76"
     admin_port = "19443"
@@ -24,7 +24,7 @@ class Config:
         for option in options:
             value = getattr(cfg, option[0])
 
-            option = f"OS_{option[0].upper()}"
+            option = f"OBS_{option[0].upper()}"
             config += f"{option}={value}\n"
         try:
             with io.open(cfg_file, "w") as fp:
@@ -52,9 +52,9 @@ def is_config_exists():
 
 
 def load_config_file():
+    cfg_file = config_file()
     # load_dotenv didn't have it's own exception
     if is_config_exists():
-        cfg_file = config_file()
         dotenv.load_dotenv(cfg_file, override=True)
     else:
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), cfg_file)
