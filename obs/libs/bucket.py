@@ -143,6 +143,7 @@ def get_grant_name(grant):
 
 
 def get_grants(obj):
+    """Get grants info of bucket or object."""
     grants = obj.Acl().grants
     grantees = []
 
@@ -189,7 +190,7 @@ def object_info(resource, bucket_name, object_name):
 
 
 def set_acl(**kwargs):
-    """Info of object."""
+    """Set ACL of object or object."""
     resource = kwargs.get("resource")
     bucket_name = kwargs.get("bucket_name")
     object_name = kwargs.get("object_name")
@@ -203,7 +204,7 @@ def set_acl(**kwargs):
 
 
 def generate_url(resource, bucket_name, object_name, expire=3600):
-    """Generate Url for bucket or object."""
+    """Generate URL for bucket or object."""
     client = resource.meta.client
     url = client.generate_presigned_url(
         "get_object",
