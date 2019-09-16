@@ -97,3 +97,18 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
         )
     except Exception as exc:
         click.secho(f"Object moving failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def info(resource, bucket_name):
+    try:
+        info = bucket_lib.info(resource, bucket_name)
+        msg = (
+            f"Location: {info['Location']}\n"
+            f"Expiration Rule: {info['Expiration']}\n"
+            f"Policy: {info['Policy']}\n"
+            f"CORS: {info['CORS']}\n"
+            f"ACL: {info['ACL'][0]}: {info['ACL'][1]}"
+        )
+        click.secho(msg)
+    except Exception as exc:
+        click.secho(f"Info fetching failed. \n{exc}", fg="yellow", bold=True, err=True)

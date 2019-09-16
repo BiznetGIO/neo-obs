@@ -133,3 +133,11 @@ def disk_usage(bucket_name):
     """Disk usage of bucket."""
     s3_resource = get_resources()
     bucket.disk_usage(s3_resource, bucket_name=bucket_name)
+
+
+@storage.command("info")
+@click.argument("bucket_name", default="")
+def info(bucket_name):
+    """Display info of bucket."""
+    s3_resource = get_resources()
+    bucket.info(s3_resource, bucket_name=bucket_name)

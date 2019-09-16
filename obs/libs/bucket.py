@@ -97,3 +97,54 @@ def disk_usage(resource, bucket_name):
     for obj in objects:
         total_size += obj.size
     return total_size, total_objects
+
+
+def get_cors(bucket):
+    try:
+        cors = bucket.Cors().cors_rules
+    except Exception:
+        cors = None
+    return cors
+
+
+def get_policy(bucket):
+    try:
+        policy = bucket.Policy().policy
+    except Exception:
+        policy = None
+    return policy
+
+
+def get_location(client, bucket_name):
+    response = client.get_bucket_location(Bucket=bucket_name)
+    location = response["LocationConstraint"]
+    return location
+
+
+def get_expiration(client, bucket_name):
+    try:
+        exp = client.get_bucket_lifecycle(Bucket=bucket_name)
+    except Exception:
+        exp = None
+    return exp
+
+
+def info(resource, bucket_name):
+    """Info of bucket."""
+    bucket = resource.Bucket(bucket_name)
+    client = resource.meta.client
+    acl_user = bucket.Acl().grants[0]["Grantee"]["DisplayName"]
+    acl_ctrl = bucket.Acl().grants[0]["Permission"]
+    expiration = get_expiration(client, bucket_name)
+    location = get_location(client, bucket_name)
+    policy = get_policy(bucket)
+    cors = get_cors(bucket)
+
+    info = {
+        "ACL": [acl_user, acl_ctrl],
+        "CORS": cors,
+        "Policy": policy,
+        "Expiration": expiration,
+        "Location": location,
+    }
+    return info
