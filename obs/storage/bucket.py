@@ -11,9 +11,9 @@ def buckets(resource):
         click.secho(f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}")
 
 
-def create_bucket(resource, bucket_name, random_name=False):
+def create_bucket(resource, bucket_name, acl, random_name=False):
     try:
-        bucket_lib.create_bucket(resource, bucket_name, random_name)
+        bucket_lib.create_bucket(resource, bucket_name, acl, random_name)
         click.secho(f'Bucket "{bucket_name}" created successfully', fg="green")
     except Exception as exc:
         click.secho(
@@ -29,9 +29,9 @@ def remove_bucket(resource, bucket_name):
         click.secho(f"{exc}", fg="yellow", bold=True, err=True)
 
 
-def get_objects(resource, bucket_name):
+def get_objects(resource, bucket_name, prefix):
     try:
-        objects = bucket_lib.get_objects(resource, bucket_name)
+        objects = bucket_lib.get_objects(resource, bucket_name, prefix)
         if len(objects) > 0:
             for obj in objects:
                 key = obj.key
@@ -61,10 +61,10 @@ def download_object(resource, bucket_name, object_name):
         )
 
 
-def upload_object(resource, bucket_name, object_name):
+def upload_object(**kwargs):
     try:
-        bucket_lib.upload_object(resource, bucket_name, object_name)
-        click.secho(f'Object "{object_name}" uploaded successfully', fg="green")
+        bucket_lib.upload_object(**kwargs)
+        click.secho(f"Object uploaded successfully", fg="green")
     except Exception as exc:
         click.secho(f"Object upload failed. \n{exc}", fg="yellow", bold=True, err=True)
 

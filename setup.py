@@ -34,5 +34,5 @@ setup(
     include_package_data=True,
     packages=find_packages(exclude=["docs", "tests*"]),
     install_requires=requirements,
-    entry_points={"console_scripts": ["obs=obs.cli:cli"]},
+    entry_points={"console_scripts": ["obs=obs.main:cli"]},
 )

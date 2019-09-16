@@ -1,4 +1,5 @@
 import uuid
+import os
 
 
 def buckets(resource):
@@ -14,11 +15,11 @@ def gen_random_name(prefix):
     return f"{prefix}-{str(uuid.uuid4())[:13]}"
 
 
-def create_bucket(resource, bucket_name, random_name=False):
+def create_bucket(resource, bucket_name, acl="private", random_name=False):
     """Create a bucket with optional random name as a suffix."""
     if random_name:
         bucket_name = gen_random_name(bucket_name)
-    resource.create_bucket(Bucket=bucket_name)
+    resource.create_bucket(Bucket=bucket_name, ACL=acl)
 
 
 def remove_bucket(resource, bucket_name):
@@ -26,11 +27,11 @@ def remove_bucket(resource, bucket_name):
     resource.Bucket(bucket_name).delete()
 
 
-def get_objects(resource, bucket_name):
+def get_objects(resource, bucket_name, prefix=""):
     """List objects inside a bucket"""
     objects = []
     bucket = resource.Bucket(bucket_name)
-    for obj in bucket.objects.all():
+    for obj in bucket.objects.filter(Prefix=prefix):
         objects.append(obj)
     return objects
 
@@ -59,9 +60,19 @@ def download_object(resource, bucket_name, object_name):
         raise ValueError(f"Object not exists: {object_name}")
 
 
-def upload_object(resource, bucket_name, object_name):
+def upload_object(**kwargs):
     """Upload an object into bucket."""
-    resource.Object(bucket_name, object_name).upload_file(Filename=object_name)
+    filename = kwargs.get("path", "")  # use path as default filename
+    path = kwargs.get("path")
+
+    if kwargs.get("object_name"):
+        filename = kwargs.get("object_name")
+    if kwargs.get("use_basename"):
+        filename = os.path.basename(path)
+
+    resource = kwargs.get("resource")
+    bucket_name = kwargs.get("bucket_name")
+    resource.Object(bucket_name, filename).upload_file(Filename=path)
 
 
 def copy_object(resource, src_bucket, dest_bucket, object_name):
