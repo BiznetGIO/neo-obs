@@ -177,24 +177,18 @@ def set_acl(target_name, acl):
 
 @storage.command("url")
 @click.argument("target_name", nargs=-1)
-@click.argument("acl", default="private")
-def set_acl(target_name, acl):
-    """Set ACL for bucket or object."""
+@click.option("--expire", "expire", type=int, help="Set expiration time [default:3600]")
+def url(target_name, expire):
+    """Generate Url for bucket or object."""
     s3_resource = get_resources()
     if len(target_name) == 1:
-        acl_type = "bucket"
-        bucket_name = target_name[0]
-        bucket.set_acl(
-            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type=acl_type
-        )
-
+        # TODO for bucket
+        pass
     if len(target_name) == 2:
-        acl_type = "object"
         bucket_name, object_name = target_name
-        bucket.set_acl(
+        bucket.generate_url(
             resource=s3_resource,
             bucket_name=bucket_name,
             object_name=object_name,
-            acl=acl,
-            acl_type=acl_type,
+            expire=expire,
         )

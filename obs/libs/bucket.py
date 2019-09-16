@@ -200,3 +200,14 @@ def set_acl(**kwargs):
         obj = resource.Bucket(bucket_name)
 
     obj.Acl().put(ACL=kwargs.get("acl"))
+
+
+def generate_url(resource, bucket_name, object_name, expire=3600):
+    """Generate Url for bucket or object."""
+    client = resource.meta.client
+    url = client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": bucket_name, "Key": object_name},
+        ExpiresIn=expire,
+    )
+    return url

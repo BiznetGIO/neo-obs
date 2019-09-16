@@ -142,3 +142,11 @@ def set_acl(**kwargs):
         click.secho(f"ACL changed successfully", fg="green")
     except Exception as exc:
         click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def generate_url(resource, bucket_name, object_name, expire):
+    try:
+        url = bucket_lib.generate_url(resource, bucket_name, object_name, expire)
+        click.secho(f"{url}")
+    except Exception as exc:
+        click.secho(f"URL generation failed. \n{exc}", fg="yellow", bold=True, err=True)
