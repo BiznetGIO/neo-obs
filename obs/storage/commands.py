@@ -136,8 +136,14 @@ def disk_usage(bucket_name):
 
 
 @storage.command("info")
-@click.argument("bucket_name", default="")
-def info(bucket_name):
-    """Display info of bucket."""
+@click.argument("target_name", nargs=-1)
+def info(target_name):
+    """Display bucket or object info."""
     s3_resource = get_resources()
-    bucket.info(s3_resource, bucket_name=bucket_name)
+    if len(target_name) == 1:
+        bucket.bucket_info(s3_resource, bucket_name=target_name[0])
+    if len(target_name) == 2:
+        bucket_name, object_name = target_name
+        bucket.object_info(
+            s3_resource, bucket_name=bucket_name, object_name=object_name
+        )

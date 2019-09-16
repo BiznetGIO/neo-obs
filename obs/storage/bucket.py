@@ -99,14 +99,33 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
         click.secho(f"Object moving failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
-def info(resource, bucket_name):
+def bucket_info(resource, bucket_name):
     try:
-        info = bucket_lib.info(resource, bucket_name)
+        info = bucket_lib.bucket_info(resource, bucket_name)
         msg = (
             f"Location: {info['Location']}\n"
             f"Expiration Rule: {info['Expiration']}\n"
             f"Policy: {info['Policy']}\n"
             f"CORS: {info['CORS']}\n"
+            f"ACL: {info['ACL'][0]}: {info['ACL'][1]}"
+        )
+        click.secho(msg)
+    except Exception as exc:
+        click.secho(f"Info fetching failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def object_info(resource, bucket_name, object_name):
+    try:
+        info = bucket_lib.object_info(resource, bucket_name, object_name)
+        size = utils.sizeof_fmt(info["Size"])
+        last_modified = f"{info['LastModified']:%Y-%m-%d %H:%M:%S}"
+
+        msg = (
+            f"File Size: {size}\n"
+            f"Last Modified: {last_modified}\n"
+            f"Mime Type: {info['MimeType']}\n"
+            f"Storage: {info['StorageClass']}\n"
+            f"MD5 Sum: {info['MD5']}\n"
             f"ACL: {info['ACL'][0]}: {info['ACL'][1]}"
         )
         click.secho(msg)

@@ -129,12 +129,17 @@ def get_expiration(client, bucket_name):
     return exp
 
 
-def info(resource, bucket_name):
+def get_grants(obj):
+    acl_user = obj.Acl().grants[0]["Grantee"]["DisplayName"]
+    acl_ctrl = obj.Acl().grants[0]["Permission"]
+    return acl_user, acl_ctrl
+
+
+def bucket_info(resource, bucket_name):
     """Info of bucket."""
     bucket = resource.Bucket(bucket_name)
     client = resource.meta.client
-    acl_user = bucket.Acl().grants[0]["Grantee"]["DisplayName"]
-    acl_ctrl = bucket.Acl().grants[0]["Permission"]
+    acl_user, acl_ctrl = get_grants(bucket)
     expiration = get_expiration(client, bucket_name)
     location = get_location(client, bucket_name)
     policy = get_policy(bucket)
@@ -146,5 +151,23 @@ def info(resource, bucket_name):
         "Policy": policy,
         "Expiration": expiration,
         "Location": location,
+    }
+    return info
+
+
+def object_info(resource, bucket_name, object_name):
+    """Info of object."""
+    obj = resource.Object(bucket_name=bucket_name, key=object_name)
+    storage_class = obj.storage_class
+    content_type = obj.content_type
+    acl_user, acl_ctrl = get_grants(obj)
+
+    info = {
+        "ACL": [acl_user, acl_ctrl],
+        "Size": obj.content_length,
+        "LastModified": obj.last_modified,
+        "MD5": obj.e_tag,
+        "MimeType": content_type,
+        "StorageClass": storage_class,
     }
     return info
