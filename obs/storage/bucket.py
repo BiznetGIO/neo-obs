@@ -106,10 +106,12 @@ def bucket_info(resource, bucket_name):
             f"Location: {info['Location']}\n"
             f"Expiration Rule: {info['Expiration']}\n"
             f"Policy: {info['Policy']}\n"
-            f"CORS: {info['CORS']}\n"
-            f"ACL: {info['ACL'][0]}: {info['ACL'][1]}"
+            f"CORS: {info['CORS']}"
         )
         click.secho(msg)
+        for grant in info["ACL"]:
+            click.secho(f"ACL: {grant[0]} : {grant[1]}")
+
     except Exception as exc:
         click.secho(f"Info fetching failed. \n{exc}", fg="yellow", bold=True, err=True)
 
@@ -125,9 +127,18 @@ def object_info(resource, bucket_name, object_name):
             f"Last Modified: {last_modified}\n"
             f"Mime Type: {info['MimeType']}\n"
             f"Storage: {info['StorageClass']}\n"
-            f"MD5 Sum: {info['MD5']}\n"
-            f"ACL: {info['ACL'][0]}: {info['ACL'][1]}"
+            f"MD5 Sum: {info['MD5']}"
         )
         click.secho(msg)
+        for grant in info["ACL"]:
+            click.secho(f"ACL: {grant[0]} : {grant[1]}")
     except Exception as exc:
         click.secho(f"Info fetching failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def set_acl(**kwargs):
+    try:
+        bucket_lib.set_acl(**kwargs)
+        click.secho(f"ACL changed successfully", fg="green")
+    except Exception as exc:
+        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)

@@ -129,28 +129,43 @@ def get_expiration(client, bucket_name):
     return exp
 
 
+def get_grant_name(grant):
+    """Get grant name based on Grantee type."""
+    grant_name = ""
+    if grant["Grantee"]["Type"] == "Group":
+        uri = grant["Grantee"]["URI"]
+        grant_name = uri.rsplit("/", 1)[-1]
+
+    if grant["Grantee"]["Type"] == "CanonicalUser":
+        grant_name = grant["Grantee"]["DisplayName"]
+
+    return grant_name
+
+
 def get_grants(obj):
-    acl_user = obj.Acl().grants[0]["Grantee"]["DisplayName"]
-    acl_ctrl = obj.Acl().grants[0]["Permission"]
-    return acl_user, acl_ctrl
+    grants = obj.Acl().grants
+    grantees = []
+
+    for grant in grants:
+        name = get_grant_name(grant)
+        permission = grant["Permission"]
+        grantee = [name, permission]
+        grantees.append(grantee)
+
+    return grantees
 
 
 def bucket_info(resource, bucket_name):
     """Info of bucket."""
     bucket = resource.Bucket(bucket_name)
     client = resource.meta.client
-    acl_user, acl_ctrl = get_grants(bucket)
-    expiration = get_expiration(client, bucket_name)
-    location = get_location(client, bucket_name)
-    policy = get_policy(bucket)
-    cors = get_cors(bucket)
 
     info = {
-        "ACL": [acl_user, acl_ctrl],
-        "CORS": cors,
-        "Policy": policy,
-        "Expiration": expiration,
-        "Location": location,
+        "ACL": get_grants(bucket),
+        "CORS": get_cors(bucket),
+        "Policy": get_policy(bucket),
+        "Expiration": get_expiration(client, bucket_name),
+        "Location": get_location(client, bucket_name),
     }
     return info
 
@@ -160,10 +175,10 @@ def object_info(resource, bucket_name, object_name):
     obj = resource.Object(bucket_name=bucket_name, key=object_name)
     storage_class = obj.storage_class
     content_type = obj.content_type
-    acl_user, acl_ctrl = get_grants(obj)
+    grantees = get_grants(obj)
 
     info = {
-        "ACL": [acl_user, acl_ctrl],
+        "ACL": grantees,
         "Size": obj.content_length,
         "LastModified": obj.last_modified,
         "MD5": obj.e_tag,
@@ -171,3 +186,17 @@ def object_info(resource, bucket_name, object_name):
         "StorageClass": storage_class,
     }
     return info
+
+
+def set_acl(**kwargs):
+    """Info of object."""
+    resource = kwargs.get("resource")
+    bucket_name = kwargs.get("bucket_name")
+    object_name = kwargs.get("object_name")
+
+    if kwargs.get("acl_type") == "object":
+        obj = resource.Object(bucket_name=bucket_name, key=object_name)
+    if kwargs.get("acl_type") == "bucket":
+        obj = resource.Bucket(bucket_name)
+
+    obj.Acl().put(ACL=kwargs.get("acl"))

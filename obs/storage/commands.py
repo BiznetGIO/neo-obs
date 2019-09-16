@@ -141,9 +141,60 @@ def info(target_name):
     """Display bucket or object info."""
     s3_resource = get_resources()
     if len(target_name) == 1:
-        bucket.bucket_info(s3_resource, bucket_name=target_name[0])
+        bucket_name = target_name[0]
+        bucket.bucket_info(s3_resource, bucket_name=bucket_name)
     if len(target_name) == 2:
         bucket_name, object_name = target_name
         bucket.object_info(
             s3_resource, bucket_name=bucket_name, object_name=object_name
+        )
+
+
+@storage.command("acl")
+@click.argument("target_name", nargs=-1)
+@click.argument("acl", default="private")
+def set_acl(target_name, acl):
+    """Set ACL for bucket or object."""
+    s3_resource = get_resources()
+    if len(target_name) == 1:
+        acl_type = "bucket"
+        bucket_name = target_name[0]
+        bucket.set_acl(
+            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type=acl_type
+        )
+
+    if len(target_name) == 2:
+        acl_type = "object"
+        bucket_name, object_name = target_name
+        bucket.set_acl(
+            resource=s3_resource,
+            bucket_name=bucket_name,
+            object_name=object_name,
+            acl=acl,
+            acl_type=acl_type,
+        )
+
+
+@storage.command("url")
+@click.argument("target_name", nargs=-1)
+@click.argument("acl", default="private")
+def set_acl(target_name, acl):
+    """Set ACL for bucket or object."""
+    s3_resource = get_resources()
+    if len(target_name) == 1:
+        acl_type = "bucket"
+        bucket_name = target_name[0]
+        bucket.set_acl(
+            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type=acl_type
+        )
+
+    if len(target_name) == 2:
+        acl_type = "object"
+        bucket_name, object_name = target_name
+        bucket.set_acl(
+            resource=s3_resource,
+            bucket_name=bucket_name,
+            object_name=object_name,
+            acl=acl,
+            acl_type=acl_type,
         )
