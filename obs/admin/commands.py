@@ -31,7 +31,7 @@ def user():
 @click.option("--user-status", "user_status", default="active", help="User Status")
 @click.option("--limit", "limit", type=int, help="Maximum data length")
 def list(group_id, user_type, user_status, limit):
-    """List bucket or object."""
+    """List users."""
     client = get_admin_client()
     user_cli.list_user(
         client=client,
@@ -46,6 +46,13 @@ def list(group_id, user_type, user_status, limit):
 @click.option("--user-id", "user_id", type=str, help="User ID")
 @click.option("--group-id", "group_id", type=str, help="Group ID")
 def info(user_id, group_id):
-    """List bucket or object."""
+    """Get user info."""
     client = get_admin_client()
     user_cli.user_info(client=client, user_id=user_id, group_id=group_id)
+
+
+@user.command("create")
+def create():
+    """Create user."""
+    client = get_admin_client()
+    user_cli.create_user(client)

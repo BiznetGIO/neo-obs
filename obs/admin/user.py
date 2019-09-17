@@ -2,6 +2,7 @@ import tabulate
 import click
 
 from obs.libs import user as user_lib
+from obs.admin import user_data
 
 
 def list_user(client, group_id, user_type, user_status, limit):
@@ -40,3 +41,9 @@ def user_info(client, user_id, group_id):
         f"Active: {user['active']}"
     )
     click.secho(result)
+
+
+def create_user(client):
+    data = user_data.prompt_user_data()
+    user_lib.create_user(client, data)
+    click.secho(f"User created successfully", fg="green")
