@@ -40,3 +40,12 @@ def list(group_id, user_type, user_status, limit):
         user_status=user_status,
         limit=limit,
     )
+
+
+@user.command("info")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+def info(user_id, group_id):
+    """List bucket or object."""
+    client = get_admin_client()
+    user_cli.user_info(client=client, user_id=user_id, group_id=group_id)
