@@ -47,3 +47,8 @@ def create_user(client):
     data = user_data.prompt_user_data()
     user_lib.create_user(client, data)
     click.secho(f"User created successfully", fg="green")
+
+
+def remove_user(client, user_id, group_id):
+    user_lib.remove_user(client, user_id=user_id, group_id=group_id)
+    click.secho(f"User removed successfully", fg="green")

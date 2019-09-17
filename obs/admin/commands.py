@@ -56,3 +56,12 @@ def create():
     """Create user."""
     client = get_admin_client()
     user_cli.create_user(client)
+
+
+@user.command("rm")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+def rm(user_id, group_id):
+    """Remove user"""
+    client = get_admin_client()
+    user_cli.remove_user(client, user_id=user_id, group_id=group_id)

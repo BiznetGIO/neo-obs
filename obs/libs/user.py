@@ -43,3 +43,8 @@ def user_info(client, user_id, group_id):
 def create_user(client, data):
     """Create user"""
     client.user(method="PUT", json=data)
+
+
+def remove_user(client, user_id, group_id):
+    """Remove user"""
+    client.user(method="DELETE", userId=user_id, groupId=group_id)
