@@ -1,29 +1,16 @@
 import tabulate
 import click
-import sys
 
 from obs.libs import user as user_lib
 from obs.admin import user_profile
-
-
-def check(response):
-    """Check if response contains error result
-    then raise exception."""
-    sys.tracebacklimit = 0
-
-    if "reason" in response:
-        msg = (
-            f"{response.get('reason')} [{response.get('status_code')}]\n"
-            f"URL: {response.get('url')}"
-        )
-        raise ValueError(msg)
+from obs.libs import utils
 
 
 def list_user(client, group_id, user_type, user_status, limit):
     users = user_lib.list_user(
         client=client, group_id=group_id, user_type=user_type, user_status=user_status
     )
-    check(users)
+    utils.check(users)
     number = 1  # must start from 1 (as user data)
     results = []
     if not limit:
@@ -45,7 +32,7 @@ def list_user(client, group_id, user_type, user_status, limit):
 
 def info(client, user_id, group_id):
     user = user_lib.info(client=client, user_id=user_id, group_id=group_id)
-    check(user)
+    utils.check(user)
     result = (
         f"ID: {user['userId']}\n"
         f"Name: {user['fullName']}\n"
@@ -62,12 +49,12 @@ def info(client, user_id, group_id):
 def create(client):
     data = user_profile.prompt_user_profile()
     response = user_lib.create(client, data)
-    check(response)
+    utils.check(response)
     click.secho(f"User created successfully", fg="green")
 
 
 def remove(client, user_id, group_id):
     response = user_lib.remove(client, user_id=user_id, group_id=group_id)
 
-    check(response)
+    utils.check(response)
     click.secho(f"User removed successfully", fg="green")
