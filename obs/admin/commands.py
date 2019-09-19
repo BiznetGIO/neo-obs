@@ -3,6 +3,7 @@ from functools import partial
 
 from obs.libs import auth
 from obs.admin import user as user_cli
+from obs.admin import qos as qos_cli
 
 click.option = partial(click.option, show_default=True)
 
@@ -65,3 +66,36 @@ def rm(user_id, group_id):
     """Remove user"""
     client = get_admin_client()
     user_cli.remove(client, user_id=user_id, group_id=group_id)
+
+
+@admin.group()
+def qos():
+    """administrate QoS."""
+
+
+@qos.command("info")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+def info(user_id, group_id):
+    """Get QoS info of specified user"""
+    client = get_admin_client()
+    qos_cli.info(client, user_id=user_id, group_id=group_id)
+
+
+@qos.command("set")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+@click.option("--limit", "limit", type=int, help="Storage limit")
+def set(user_id, group_id, limit):
+    """Set QoS of specified user"""
+    client = get_admin_client()
+    qos_cli.set(client, user_id=user_id, group_id=group_id, limit=limit)
+
+
+@qos.command("rm")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+def rm(user_id, group_id):
+    """Remove QoS of specified user"""
+    client = get_admin_client()
+    qos_cli.rm(client, user_id=user_id, group_id=group_id)
