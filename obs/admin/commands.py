@@ -48,14 +48,14 @@ def list(group_id, user_type, user_status, limit):
 def info(user_id, group_id):
     """Get user info."""
     client = get_admin_client()
-    user_cli.user_info(client=client, user_id=user_id, group_id=group_id)
+    user_cli.info(client=client, user_id=user_id, group_id=group_id)
 
 
 @user.command("create")
 def create():
     """Create user."""
     client = get_admin_client()
-    user_cli.create_user(client)
+    user_cli.create(client)
 
 
 @user.command("rm")
@@ -64,4 +64,4 @@ def create():
 def rm(user_id, group_id):
     """Remove user"""
     client = get_admin_client()
-    user_cli.remove_user(client, user_id=user_id, group_id=group_id)
+    user_cli.remove(client, user_id=user_id, group_id=group_id)

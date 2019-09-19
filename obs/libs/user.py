@@ -1,5 +1,5 @@
-class UserData:
-    """Accommodate user data creation by setting and
+class UserProfile:
+    """Accommodate user profile creation by setting and
     getting it's class variables."""
 
     active = True
@@ -18,7 +18,8 @@ class UserData:
     phone = ""
     website = ""
 
-    def dump_data(self, options, cfg):
+    def dump(self, options, cfg):
+        """Dump user profile data"""
         data = {}
         for option in options:
             value = getattr(cfg, option[0])
@@ -27,26 +28,26 @@ class UserData:
 
 
 def list_user(client, group_id, user_type="all", user_status="active"):
-    """Get all user info."""
+    """List all users."""
     users = client.user.list(
         groupId=group_id, userType=user_type, userStatus=user_status
     )
     return users
 
 
-def user_info(client, user_id, group_id):
+def info(client, user_id, group_id):
     """Get user info"""
     user = client.user(userId=user_id, groupId=group_id)
     return user
 
 
-def create_user(client, data):
+def create(client, data):
     """Create user"""
     response = client.user(method="PUT", json=data)
     return response
 
 
-def remove_user(client, user_id, group_id):
+def remove(client, user_id, group_id):
     """Remove user"""
     response = client.user(method="DELETE", userId=user_id, groupId=group_id)
     return response

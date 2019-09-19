@@ -3,9 +3,9 @@ import click
 from obs.libs import user as user_lib
 
 
-def prompt_user_data():
+def prompt_user_profile():
     """Prompt user interactively for data"""
-    user_data = user_lib.UserData()
+    user_profile = user_lib.UserProfile()
     options = [
         ("userId", "User ID"),
         ("groupId", "Group ID"),
@@ -27,7 +27,7 @@ def prompt_user_data():
             click.secho("Put in new values or accept defaults.")
             for option in options:
                 prompt = option[1]
-                val = getattr(user_data, option[0])
+                val = getattr(user_profile, option[0])
                 if val not in (None, ""):
                     prompt += f" [{val}]"
 
@@ -37,7 +37,7 @@ def prompt_user_data():
                 val = input(prompt + ": ")
                 # only set new value if user provide one
                 if val != "":
-                    setattr(user_data, option[0], val)
+                    setattr(user_profile, option[0], val)
 
             val = input("\nSave settings? [y/N] ")
             if val.lower().startswith("y"):
@@ -47,7 +47,7 @@ def prompt_user_data():
             if val.lower().startswith("n"):
                 raise EOFError()
 
-        data = user_data.dump_data(options, user_data)
+        data = user_profile.dump(options, user_profile)
         return data
 
     except (EOFError, KeyboardInterrupt):

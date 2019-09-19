@@ -3,10 +3,10 @@ import click
 import sys
 
 from obs.libs import user as user_lib
-from obs.admin import user_data
+from obs.admin import user_profile
 
 
-def check_response(response):
+def check(response):
     """Check if response contains error result
     then raise exception."""
     sys.tracebacklimit = 0
@@ -23,7 +23,7 @@ def list_user(client, group_id, user_type, user_status, limit):
     users = user_lib.list_user(
         client=client, group_id=group_id, user_type=user_type, user_status=user_status
     )
-    check_response(users)
+    check(users)
     number = 1  # must start from 1 (as user data)
     results = []
     if not limit:
@@ -33,7 +33,7 @@ def list_user(client, group_id, user_type, user_status, limit):
             "No": number,
             "User": user["userId"],
             "Name": user["fullName"],
-            "EmailAddr": user["emailAddr"],
+            "Email": user["emailAddr"],
             "Address": user["address1"],
             "City": user["city"],
             "Status": user["active"],
@@ -43,13 +43,13 @@ def list_user(client, group_id, user_type, user_status, limit):
     click.secho(tabulate.tabulate(results, headers="keys", tablefmt="grid"))
 
 
-def user_info(client, user_id, group_id):
-    user = user_lib.user_info(client=client, user_id=user_id, group_id=group_id)
-    check_response(user)
+def info(client, user_id, group_id):
+    user = user_lib.info(client=client, user_id=user_id, group_id=group_id)
+    check(user)
     result = (
         f"ID: {user['userId']}\n"
         f"Name: {user['fullName']}\n"
-        f"EmailAddr: {user['emailAddr']}\n"
+        f"Email: {user['emailAddr']}\n"
         f"Address: {user['address1']}\n"
         f"City: {user['city']}\n"
         f"Group ID: {user['groupId']}\n"
@@ -59,15 +59,15 @@ def user_info(client, user_id, group_id):
     click.secho(result)
 
 
-def create_user(client):
-    data = user_data.prompt_user_data()
-    response = user_lib.create_user(client, data)
-    check_response(response)
+def create(client):
+    data = user_profile.prompt_user_profile()
+    response = user_lib.create(client, data)
+    check(response)
     click.secho(f"User created successfully", fg="green")
 
 
-def remove_user(client, user_id, group_id):
-    response = user_lib.remove_user(client, user_id=user_id, group_id=group_id)
+def remove(client, user_id, group_id):
+    response = user_lib.remove(client, user_id=user_id, group_id=group_id)
 
-    check_response(response)
+    check(response)
     click.secho(f"User removed successfully", fg="green")
