@@ -120,7 +120,7 @@ def ls(user_id, group_id):
 @click.option("--access-key", "access_key", type=str, help="User Access Key")
 @click.option("--status", "status", default=True, help="Set Status")
 def status(access_key, status):
-    """Show user's credentials."""
+    """Set user's credentials status."""
     client = get_admin_client()
     cred_cli.status(client, access_key, status)
 
