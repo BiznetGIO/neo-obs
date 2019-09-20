@@ -87,6 +87,7 @@ def get_object(bucket_name, object_name):
     help="Use basename for object name",
 )
 def put_object(bucket_name, path, object_name, use_basename):
+    """Upload object to bucket."""
     s3_resource = get_resources()
     bucket.upload_object(
         resource=s3_resource,
