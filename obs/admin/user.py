@@ -8,14 +8,16 @@ from obs.libs import utils
 
 def list_user(client, group_id, user_type, user_status, limit):
     users = user_lib.list_user(
-        client=client, group_id=group_id, user_type=user_type, user_status=user_status
+        client=client,
+        group_id=group_id,
+        user_type=user_type,
+        user_status=user_status,
+        limit=limit,
     )
     utils.check(users)
     number = 1  # must start from 1 (as user data)
     results = []
-    if not limit:
-        limit = len(users)
-    for _, user in zip(range(limit), users):
+    for user in users:
         data = {
             "No": number,
             "User": user["userId"],

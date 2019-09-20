@@ -27,10 +27,10 @@ class UserProfile:
         return data
 
 
-def list_user(client, group_id, user_type="all", user_status="active"):
+def list_user(client, group_id, user_type="all", user_status="active", limit=""):
     """List all users."""
     users = client.user.list(
-        groupId=group_id, userType=user_type, userStatus=user_status
+        groupId=group_id, userType=user_type, userStatus=user_status, limit=limit
     )
     return users
 

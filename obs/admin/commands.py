@@ -31,7 +31,7 @@ def user():
 @click.option("--group-id", "group_id", type=str, help="Group ID")
 @click.option("--user-type", "user_type", default="all", help="User Type")
 @click.option("--user-status", "user_status", default="active", help="User Status")
-@click.option("--limit", "limit", type=int, help="Maximum data length")
+@click.option("--limit", "limit", default="", help="Maximum data length")
 def list(group_id, user_type, user_status, limit):
     """List users."""
     client = get_admin_client()
