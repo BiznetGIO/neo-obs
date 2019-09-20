@@ -4,6 +4,7 @@ from functools import partial
 from obs.libs import auth
 from obs.admin import user as user_cli
 from obs.admin import qos as qos_cli
+from obs.admin import credential as cred_cli
 
 click.option = partial(click.option, show_default=True)
 
@@ -99,3 +100,43 @@ def rm(user_id, group_id):
     """Remove QoS of specified user"""
     client = get_admin_client()
     qos_cli.rm(client, user_id=user_id, group_id=group_id)
+
+
+@admin.group()
+def cred():
+    """administrate user credentials."""
+
+
+@cred.command("ls")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+def ls(user_id, group_id):
+    """Show user's credentials."""
+    client = get_admin_client()
+    cred_cli.list(client, user_id, group_id)
+
+
+@cred.command("status")
+@click.option("--access-key", "access_key", type=str, help="User Access Key")
+@click.option("--status", "status", default=True, help="Set Status")
+def status(access_key, status):
+    """Show user's credentials."""
+    client = get_admin_client()
+    cred_cli.status(client, access_key, status)
+
+
+@cred.command("rm")
+@click.option("--access-key", "access_key", type=str, help="User Access Key")
+def rm(access_key):
+    """Remove user's credentials."""
+    client = get_admin_client()
+    cred_cli.rm(client, access_key)
+
+
+@cred.command("create")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+def create(user_id, group_id):
+    """Create user's credentials."""
+    client = get_admin_client()
+    cred_cli.create(client, user_id, group_id)

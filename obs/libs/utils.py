@@ -1,4 +1,6 @@
 import sys
+from datetime import datetime
+import tzlocal
 
 
 def sizeof_fmt(num, suffix="B"):
@@ -21,3 +23,13 @@ def check(response):
             f"URL: {response.get('url')}"
         )
         raise ValueError(msg)
+
+
+def human_date(unixtime):
+    """Convert unix timestamp to human readable."""
+    # divided by 1000 to convert from miliseconds to seconds
+    unix_timestamp = int(unixtime) / 1000
+    local_timezone = tzlocal.get_localzone()
+    local_time = datetime.fromtimestamp(unix_timestamp, local_timezone)
+    human_datetime = local_time.strftime("%Y-%m-%d %H:%M:%S%z (%Z)")
+    return human_datetime
