@@ -175,15 +175,12 @@ def set_acl(target_name, acl):
         )
 
 
-@storage.command("url")
+@storage.command("presign")
 @click.argument("target_name", nargs=-1)
 @click.option("--expire", "expire", type=int, help="Set expiration time [default:3600]")
 def url(target_name, expire):
     """Generate Url for bucket or object."""
     s3_resource = get_resources()
-    if len(target_name) == 1:
-        # TODO for bucket
-        pass
     if len(target_name) == 2:
         bucket_name, object_name = target_name
         bucket.generate_url(
