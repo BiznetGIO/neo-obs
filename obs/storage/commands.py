@@ -190,3 +190,12 @@ def url(target_name, expire):
             object_name=object_name,
             expire=expire,
         )
+
+
+@storage.command("mkdir")
+@click.argument("target_name", nargs=-1)
+def mkdir(target_name):
+    """Create directory inside bucket"""
+    s3_resource = get_resources()
+    bucket_name, dir_name = target_name
+    bucket.mkdir(resource=s3_resource, bucket_name=bucket_name, dir_name=dir_name)

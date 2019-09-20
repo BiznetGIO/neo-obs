@@ -212,3 +212,12 @@ def generate_url(resource, bucket_name, object_name, expire=3600):
         ExpiresIn=expire,
     )
     return url
+
+
+def mkdir(resource, bucket_name, dir_name):
+    """Create directory inside bucket"""
+    client = resource.meta.client
+    if not dir_name.endswith("/"):
+        dir_name = f"{dir_name}/"
+
+    client.put_object(Bucket=bucket_name, Body="", Key=dir_name)

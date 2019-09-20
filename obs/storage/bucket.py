@@ -150,3 +150,13 @@ def generate_url(resource, bucket_name, object_name, expire):
         click.secho(f"{url}")
     except Exception as exc:
         click.secho(f"URL generation failed. \n{exc}", fg="yellow", bold=True, err=True)
+
+
+def mkdir(resource, bucket_name, dir_name):
+    try:
+        bucket_lib.mkdir(resource, bucket_name, dir_name)
+        click.secho(f'Directory "{dir_name}" created successfully', fg="green")
+    except Exception as exc:
+        click.secho(
+            f"Directory creation failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
