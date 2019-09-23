@@ -4,6 +4,7 @@ import errno
 import click
 import io
 import sys
+import pathlib
 
 
 class Config:
@@ -27,6 +28,7 @@ class Config:
             option = f"OBS_{option[0].upper()}"
             config += f"{option}={value}\n"
         try:
+            create_config_dir()
             with io.open(cfg_file, "w") as fp:
                 fp.write(config)
                 click.secho(f"\nConfiguration saved to {cfg_file}", fg="green")
@@ -38,6 +40,12 @@ class Config:
                 err=True,
             )
             sys.exit()
+
+
+def create_config_dir():
+    home = os.path.expanduser("~")
+    config_dir = os.path.join(home, ".config", "neo-obs")
+    pathlib.Path(config_dir).mkdir(parents=True, exist_ok=True)
 
 
 def config_file():
