@@ -1,4 +1,5 @@
 import click
+import sys
 
 from obs.libs import auth
 from obs.storage import bucket
@@ -10,6 +11,12 @@ def get_resources():
         return s3_resource
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)
+        msg = (
+            f"Configuration file not available.\n"
+            f"Consider running 'obs --configure' to create one"
+        )
+        click.secho(msg, fg="yellow", bold=True, err=True)
+        sys.exit(1)
 
 
 @click.group()
