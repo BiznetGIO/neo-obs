@@ -1,4 +1,5 @@
 import click
+import sys
 from functools import partial
 
 from obs.libs import auth
@@ -15,6 +16,12 @@ def get_admin_client():
         return admin_client
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)
+        msg = (
+            f"Configuration file not available.\n"
+            f"Consider running 'obs --configure' to create one"
+        )
+        click.secho(msg, fg="yellow", bold=True, err=True)
+        sys.exit(1)
 
 
 @click.group()
