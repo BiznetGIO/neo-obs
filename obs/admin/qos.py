@@ -23,24 +23,39 @@ def get_limit_kbytes(qos):
 
 
 def info(client, user_id, group_id):
-    qos = qos_lib.info(client, user_id=user_id, group_id=group_id)
-    utils.check(qos)
-    qos_limit = get_limit_kbytes(qos)
-    msg = (
-        f"Group ID: {qos['groupId']}\n"
-        f"User ID: {qos['userId']}\n"
-        f"Storage Limit: {qos_limit}"
-    )
-    click.secho(msg)
+    try:
+        qos = qos_lib.info(client, user_id=user_id, group_id=group_id)
+        utils.check(qos)
+        qos_limit = get_limit_kbytes(qos)
+        msg = (
+            f"Group ID: {qos['groupId']}\n"
+            f"User ID: {qos['userId']}\n"
+            f"Storage Limit: {qos_limit}"
+        )
+        click.secho(msg)
+    except Exception as exc:
+        click.secho(
+            f"Storage limit fetching failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
 
 
 def set(client, user_id, group_id, limit):
-    qos = qos_lib.set(client, user_id=user_id, group_id=group_id, limit=limit)
-    utils.check(qos)
-    click.secho("Storage limit changed", fg="green")
+    try:
+        qos = qos_lib.set(client, user_id=user_id, group_id=group_id, limit=limit)
+        utils.check(qos)
+        click.secho("Storage limit changed", fg="green")
+    except Exception as exc:
+        click.secho(
+            f"Storage limit set failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
 
 
 def rm(client, user_id, group_id):
-    qos = qos_lib.rm(client, user_id=user_id, group_id=group_id)
-    utils.check(qos)
-    click.secho("Storage limit removed", fg="green")
+    try:
+        qos = qos_lib.rm(client, user_id=user_id, group_id=group_id)
+        utils.check(qos)
+        click.secho("Storage limit removed", fg="green")
+    except Exception as exc:
+        click.secho(
+            f"Storage limit removal failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
