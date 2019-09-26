@@ -11,10 +11,13 @@ def buckets(resource):
         click.secho(f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}")
 
 
-def create_bucket(resource, bucket_name, acl, random_name=False):
+def create_bucket(**kwargs):
     try:
-        bucket_lib.create_bucket(resource, bucket_name, acl, random_name)
-        click.secho(f'Bucket "{bucket_name}" created successfully', fg="green")
+        response = bucket_lib.create_bucket(**kwargs)
+        utils.check_plain(response)
+        click.secho(
+            f'Bucket "{kwargs.get("bucket_name")}" created successfully', fg="green"
+        )
     except Exception as exc:
         click.secho(
             f"Bucket creation failed. \n{exc}", fg="yellow", bold=True, err=True

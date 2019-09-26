@@ -5,17 +5,31 @@ from obs.libs import auth
 from obs.storage import bucket
 
 
+def warn_inexsit_config():
+    msg = (
+        f"Configuration file not available.\n"
+        f"Consider running 'obs --configure' to create one"
+    )
+    click.secho(msg, fg="yellow", bold=True, err=True)
+
+
 def get_resources():
     try:
         s3_resource = auth.resource()
         return s3_resource
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)
-        msg = (
-            f"Configuration file not available.\n"
-            f"Consider running 'obs --configure' to create one"
-        )
-        click.secho(msg, fg="yellow", bold=True, err=True)
+        warn_inexsit_config()
+        sys.exit(1)
+
+
+def get_plain_auth():
+    try:
+        plain_auth = auth.plain_auth()
+        return plain_auth
+    except Exception as exc:
+        click.secho(str(exc), fg="yellow", bold=True, err=True)
+        warn_inexsit_config()
         sys.exit(1)
 
 
@@ -56,6 +70,13 @@ def remove(target_name):
     "--acl", "acl", default="private", required=False, help="Access Control List"
 )
 @click.option(
+    "--policy-id",
+    "policy_id",
+    default="",
+    required=False,
+    help="Data distribution in bucket",
+)
+@click.option(
     "-r",
     "--random",
     "random_name",
@@ -63,11 +84,15 @@ def remove(target_name):
     is_flag=True,
     help="Generate random name",
 )
-def make_bucket(bucket_name, acl, random_name):
+def make_bucket(bucket_name, acl, policy_id, random_name):
     """Create bucket."""
-    s3_resource = get_resources()
+    plain_auth = get_plain_auth()
     bucket.create_bucket(
-        s3_resource, bucket_name=bucket_name, acl=acl, random_name=random_name
+        auth=plain_auth,
+        bucket_name=bucket_name,
+        acl=acl,
+        policy_id=policy_id,
+        random_name=random_name,
     )
 
 

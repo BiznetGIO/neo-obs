@@ -1,5 +1,6 @@
 import uuid
 import os
+import requests
 
 
 def buckets(resource):
@@ -15,11 +16,28 @@ def gen_random_name(prefix):
     return f"{prefix}-{str(uuid.uuid4())[:13]}"
 
 
-def create_bucket(resource, bucket_name, acl="private", random_name=False):
-    """Create a bucket with optional random name as a suffix."""
-    if random_name:
+def create_bucket(**kwargs):
+    """Create a bucket.
+
+    :param auth: Tuple, consists of auth object and endpoint string
+    :param acl: Input for canned ACL, defaults to "private"
+    :param policy_id: String represent `x-gmt-policyid` or determines how data in the bucket will be distributed, defaults to None
+    :param bucket_name: Bucket name
+    :param random: A flag for deciding that a bucket name should be suffixed by random string or not, defaults to False
+    """
+    auth, endpoint = kwargs.get("auth")
+    acl = kwargs.get("acl", "private")
+    policy_id = kwargs.get("policy_id", "")
+    bucket_name = kwargs.get("bucket_name")
+
+    if kwargs.get("random_name"):
         bucket_name = gen_random_name(bucket_name)
-    resource.create_bucket(Bucket=bucket_name, ACL=acl)
+
+    endpoint = f"http://{bucket_name}.{endpoint}"
+    headers = {"x-gmt-policyid": policy_id, "x-amz-acl": acl}
+
+    response = requests.put(endpoint, auth=auth, headers=headers)
+    return response
 
 
 def remove_bucket(resource, bucket_name):
