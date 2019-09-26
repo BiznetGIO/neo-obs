@@ -88,7 +88,9 @@ def disk_usage(resource, bucket_name):
             f'{human_total_size}, {total_objects} objects of "{bucket_name}" bucket'
         )
     except Exception as exc:
-        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(
+            f"Disk usage fetching failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
 
 
 def move_object(resource, src_bucket, dest_bucket, object_name):
@@ -144,7 +146,7 @@ def set_acl(**kwargs):
         bucket_lib.set_acl(**kwargs)
         click.secho(f"ACL changed successfully", fg="green")
     except Exception as exc:
-        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(f"ACL change failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
 def generate_url(resource, bucket_name, object_name, expire):
