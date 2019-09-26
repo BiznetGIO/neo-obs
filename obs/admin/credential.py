@@ -7,15 +7,15 @@ from obs.libs import utils
 def list(client, user_id, group_id):
     credentials = cred_lib.list(client, user_id, group_id)
     utils.check(credentials)
-    credential = credentials[0]
-    human_date = utils.human_date(credential["createDate"])
-    result = (
-        f"Access Key: {credential['accessKey']}\n"
-        f"Secret Key: {credential['secretKey']}\n"
-        f"Created: {human_date}\n"
-        f"Active: {credential['active']}"
-    )
-    click.secho(result)
+    for credential in credentials:
+        human_date = utils.human_date(credential["createDate"])
+        result = (
+            f"Access Key: {credential['accessKey']}\n"
+            f"Secret Key: {credential['secretKey']}\n"
+            f"Created: {human_date}\n"
+            f"Active: {credential['active']}"
+        )
+        click.secho(result)
 
 
 def status(client, access_key, status):
