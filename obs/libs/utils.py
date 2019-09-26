@@ -29,13 +29,13 @@ def check(response):
 def check_plain(response):
     """Check if response contains error result
     then raise exception."""
-    sys.tracebacklimit = 0
+    if response.text:
+        response_dict = xmltodict.parse(response.text)
 
-    response_dict = xmltodict.parse(response.text)
-    if "Error" in response_dict:
-        code = response_dict["Error"]["Code"]
-        msg = response_dict["Error"]["Message"]
-        raise ValueError(f"{code}: {msg}")
+        if "Error" in response_dict:
+            code = response_dict["Error"]["Code"]
+            msg = response_dict["Error"]["Message"]
+            raise ValueError(f"{code}: {msg}")
 
 
 def human_date(unixtime):
