@@ -104,14 +104,15 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
         click.secho(f"Object moving failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
-def bucket_info(resource, bucket_name):
+def bucket_info(resource, bucket_name, auth):
     try:
-        info = bucket_lib.bucket_info(resource, bucket_name)
+        info = bucket_lib.bucket_info(resource, bucket_name, auth)
         msg = (
             f"Location: {info['Location']}\n"
             f"Expiration Rule: {info['Expiration']}\n"
             f"Policy: {info['Policy']}\n"
-            f"CORS: {info['CORS']}"
+            f"CORS: {info['CORS']}\n"
+            f"Gmt Policy: {info['GmtPolicy']}"
         )
         click.secho(msg)
         for grant in info["ACL"]:

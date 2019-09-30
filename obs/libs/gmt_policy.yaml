@@ -1,0 +1,39 @@
+WJV-1:
+  id: "9f934425b7f5de611c32d6320be45c59"
+  description: "Technovillage Datacenter"
+  scheme: {"DC1": "3"}
+
+Dual-DC:
+  id: "926cbd2972ca1d304831d773bebb362c"
+  description: ""
+  scheme: {"DC2": "2", "DC1": "2"}
+
+T1M2:
+  id: "c41e0a6f5e74663c2b3b587cd659b5bf"
+  description: "1 replica store in wjv-1 , 2 replica store in jkt1"
+  scheme: {"DC2": "2", "DC1": "1"}
+
+JKT-2:
+  id: "cb8083b9fcc7c4f4c4f405f66ed7e32c"
+  description: "2 Replication in Midplaza, 1 in Technovillage"
+  scheme: { "DC2": "2", "DC1": "1"}
+
+WJV-3:
+  id: "207b35a78f981ac3df1e87c7b724c90b"
+  description: "2 Replication in Technovillage, 2 in Jakarta"
+  scheme: { "DC2": "2","DC1": "2"}
+
+DC-1:
+  id: "dd7e84cfe467c0fc11b5b075ac9acd73"
+  description: "Replica Data to all nodes within single Datacenter"
+  scheme: {"DC1": "3"}
+
+DC-2:
+  id: "df6dcd190da06328004d1915a2e612f2"
+  description: ""
+  scheme: {"DC1": "3"}
+
+WJV-2:
+  id: "0673bc558aa8762e814e31f84619b261"
+  description: "2 Replication in Technovillage, 1 in Midplaza"
+  scheme: {"DC2": "1", "DC1": "2"}
