@@ -1,4 +1,5 @@
 import click
+import bitmath
 
 from obs.libs import bucket as bucket_lib
 from obs.libs import utils
@@ -80,13 +81,35 @@ def copy_object(resource, src_bucket, dest_bucket, object_name):
         click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
-def disk_usage(resource, bucket_name):
+def bucket_usage(resource, bucket_name):
     try:
-        total_size, total_objects = bucket_lib.disk_usage(resource, bucket_name)
+        total_size, total_objects = bucket_lib.bucket_usage(resource, bucket_name)
         human_total_size = utils.sizeof_fmt(total_size)
         click.secho(
             f'{human_total_size}, {total_objects} objects of "{bucket_name}" bucket'
         )
+    except Exception as exc:
+        click.secho(
+            f"Bucket usage fetching failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
+
+
+def disk_usage(resource):
+    try:
+        disk_usages = bucket_lib.disk_usage(resource)
+        total_usage = 0
+        for usage in disk_usages:
+            bucket_name = usage[0]
+            total_size, total_objects = usage[1]
+            human_total_size = bitmath.Byte(total_size).to_MiB()
+            total_usage += total_size
+            click.secho(
+                f'{human_total_size.format("{value:.2f} {unit}")}, {total_objects} objects in "{bucket_name}" bucket'
+            )
+
+        human_total_usage = bitmath.Byte(total_usage).to_MiB()
+        click.secho(f"---\n" f"{human_total_usage.format('{value:.2f} {unit}')} Total")
+
     except Exception as exc:
         click.secho(
             f"Disk usage fetching failed. \n{exc}", fg="yellow", bold=True, err=True

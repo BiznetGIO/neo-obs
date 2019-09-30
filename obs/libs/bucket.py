@@ -109,14 +109,27 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
     remove_object(resource, src_bucket, object_name)
 
 
-def disk_usage(resource, bucket_name):
-    """Calculate dist usage of objects in bucket."""
+def bucket_usage(resource, bucket_name):
+    """Calculate bucket usage."""
     objects = get_objects(resource, bucket_name)
     total_objects = len(objects)
     total_size = 0
     for obj in objects:
         total_size += obj.size
     return total_size, total_objects
+
+
+def disk_usage(resource):
+    """Calculate disk usage."""
+    all_buckets = buckets(resource)
+    bucket_names = [bucket.name for bucket in all_buckets]
+
+    disk_usages = []
+    for bucket_name in bucket_names:
+        usage = bucket_usage(resource, bucket_name)
+        disk_usages.append([bucket_name, usage])
+
+    return disk_usages
 
 
 def get_cors(bucket):
