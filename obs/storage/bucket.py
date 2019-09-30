@@ -84,7 +84,7 @@ def copy_object(resource, src_bucket, dest_bucket, object_name):
 def bucket_usage(resource, bucket_name):
     try:
         total_size, total_objects = bucket_lib.bucket_usage(resource, bucket_name)
-        human_total_size = bitmath.Byte(total_size).to_MiB()
+        human_total_size = bitmath.Byte(total_size).best_prefix()
         click.secho(
             f'{human_total_size.format("{value:.2f} {unit}")}, {total_objects} objects in "{bucket_name}" bucket'
         )
