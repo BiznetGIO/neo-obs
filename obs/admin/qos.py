@@ -46,7 +46,7 @@ def set(client, user_id, group_id, limit):
         click.secho("Storage limit changed", fg="green")
     except Exception as exc:
         click.secho(
-            f"Storage limit set failed. \n{exc}", fg="yellow", bold=True, err=True
+            f"Storage limit change failed. \n{exc}", fg="yellow", bold=True, err=True
         )
 
 

@@ -13,9 +13,18 @@ def fake_resource():
     pass
 
 
+def fake_plain_auth():
+    pass
+
+
 @pytest.fixture
 def resource(monkeypatch):
     monkeypatch.setattr(obs.libs.auth, "resource", fake_resource)
+
+
+@pytest.fixture
+def plain_auth(monkeypatch):
+    monkeypatch.setattr(obs.libs.auth, "plain_auth", fake_plain_auth)
 
 
 def fake_buckets(resource):
@@ -69,16 +78,16 @@ def test_ls_storage(monkeypatch, resource):
     )
 
 
-def test_disk_usage(monkeypatch, resource):
+def test_bucket_usage(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du", "bucket-one"])
 
-    assert result.output == (f'300.0 B, 2 objects of "bucket-one" bucket\n')
+    assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
 
 
-def fake_bucket_info(resource, bucket_name):
+def fake_bucket_info(resource, bucket_name, auth):
     acl = [[["Test user"], ["FULL_CONTROL"]], [["Public"], ["FULL_CONTROL"]]]
     info = {
         "ACL": acl,
@@ -86,12 +95,13 @@ def fake_bucket_info(resource, bucket_name):
         "Policy": None,
         "Expiration": None,
         "Location": "US",
+        "GmtPolicy": "2 Replication in Midplaza, 1 in Technovillage",
     }
 
     return info
 
 
-def test_bucket_info(monkeypatch, resource):
+def test_bucket_info(monkeypatch, resource, plain_auth):
     monkeypatch.setattr(obs.libs.bucket, "bucket_info", fake_bucket_info)
 
     runner = CliRunner()
@@ -102,6 +112,7 @@ def test_bucket_info(monkeypatch, resource):
         f"Expiration Rule: None\n"
         f"Policy: None\n"
         f"CORS: None\n"
+        f"Gmt Policy: 2 Replication in Midplaza, 1 in Technovillage\n"
         f"ACL: ['Test user'] : ['FULL_CONTROL']\n"
         f"ACL: ['Public'] : ['FULL_CONTROL']\n"
     )
@@ -122,7 +133,7 @@ def fake_object_info(resource, bucket_name, object_name):
     return info
 
 
-def test_object_info(monkeypatch, resource):
+def test_object_info(monkeypatch, resource, plain_auth):
     monkeypatch.setattr(obs.libs.bucket, "object_info", fake_object_info)
 
     runner = CliRunner()

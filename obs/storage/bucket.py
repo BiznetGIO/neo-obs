@@ -1,4 +1,5 @@
 import click
+import bitmath
 
 from obs.libs import bucket as bucket_lib
 from obs.libs import utils
@@ -80,15 +81,39 @@ def copy_object(resource, src_bucket, dest_bucket, object_name):
         click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
-def disk_usage(resource, bucket_name):
+def bucket_usage(resource, bucket_name):
     try:
-        total_size, total_objects = bucket_lib.disk_usage(resource, bucket_name)
-        human_total_size = utils.sizeof_fmt(total_size)
+        total_size, total_objects = bucket_lib.bucket_usage(resource, bucket_name)
+        human_total_size = bitmath.Byte(total_size).best_prefix()
         click.secho(
-            f'{human_total_size}, {total_objects} objects of "{bucket_name}" bucket'
+            f'{human_total_size.format("{value:.2f} {unit}")}, {total_objects} objects in "{bucket_name}" bucket'
         )
     except Exception as exc:
-        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(
+            f"Bucket usage fetching failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
+
+
+def disk_usage(resource):
+    try:
+        disk_usages = bucket_lib.disk_usage(resource)
+        total_usage = 0
+        for usage in disk_usages:
+            bucket_name = usage[0]
+            total_size, total_objects = usage[1]
+            human_total_size = bitmath.Byte(total_size).best_prefix()
+            total_usage += total_size
+            click.secho(
+                f'{human_total_size.format("{value:.2f} {unit}")}, {total_objects} objects in "{bucket_name}" bucket'
+            )
+
+        human_total_usage = bitmath.Byte(total_usage).best_prefix()
+        click.secho(f"---\n" f"{human_total_usage.format('{value:.2f} {unit}')} Total")
+
+    except Exception as exc:
+        click.secho(
+            f"Disk usage fetching failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
 
 
 def move_object(resource, src_bucket, dest_bucket, object_name):
@@ -102,14 +127,15 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
         click.secho(f"Object moving failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
-def bucket_info(resource, bucket_name):
+def bucket_info(resource, bucket_name, auth):
     try:
-        info = bucket_lib.bucket_info(resource, bucket_name)
+        info = bucket_lib.bucket_info(resource, bucket_name, auth)
         msg = (
             f"Location: {info['Location']}\n"
             f"Expiration Rule: {info['Expiration']}\n"
             f"Policy: {info['Policy']}\n"
-            f"CORS: {info['CORS']}"
+            f"CORS: {info['CORS']}\n"
+            f"Gmt Policy: {info['GmtPolicy']}"
         )
         click.secho(msg)
         for grant in info["ACL"]:
@@ -144,7 +170,7 @@ def set_acl(**kwargs):
         bucket_lib.set_acl(**kwargs)
         click.secho(f"ACL changed successfully", fg="green")
     except Exception as exc:
-        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(f"ACL change failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
 def generate_url(resource, bucket_name, object_name, expire):

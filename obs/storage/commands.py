@@ -161,11 +161,14 @@ def move_object(src_bucket, dest_bucket, object_name):
 
 
 @storage.command("du")
-@click.argument("bucket_name", default="")
-def disk_usage(bucket_name):
-    """Disk usage of bucket."""
+@click.argument("bucket_name", default="", required=False)
+def du(bucket_name):
+    """Show disk or bucket usage."""
     s3_resource = get_resources()
-    bucket.disk_usage(s3_resource, bucket_name=bucket_name)
+    if bucket_name:
+        bucket.bucket_usage(s3_resource, bucket_name=bucket_name)
+    else:
+        bucket.disk_usage(s3_resource)
 
 
 @storage.command("info")
@@ -173,9 +176,10 @@ def disk_usage(bucket_name):
 def info(target_name):
     """Display bucket or object info."""
     s3_resource = get_resources()
+    plain_auth = get_plain_auth()
     if len(target_name) == 1:
         bucket_name = target_name[0]
-        bucket.bucket_info(s3_resource, bucket_name=bucket_name)
+        bucket.bucket_info(s3_resource, bucket_name=bucket_name, auth=plain_auth)
     if len(target_name) == 2:
         bucket_name, object_name = target_name
         bucket.object_info(

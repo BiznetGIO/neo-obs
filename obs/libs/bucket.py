@@ -1,6 +1,8 @@
 import uuid
 import os
 import requests
+import yaml
+import errno
 
 
 def buckets(resource):
@@ -107,14 +109,27 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
     remove_object(resource, src_bucket, object_name)
 
 
-def disk_usage(resource, bucket_name):
-    """Calculate dist usage of objects in bucket."""
+def bucket_usage(resource, bucket_name):
+    """Calculate bucket usage."""
     objects = get_objects(resource, bucket_name)
     total_objects = len(objects)
     total_size = 0
     for obj in objects:
         total_size += obj.size
     return total_size, total_objects
+
+
+def disk_usage(resource):
+    """Calculate disk usage."""
+    all_buckets = buckets(resource)
+    bucket_names = [bucket.name for bucket in all_buckets]
+
+    disk_usages = []
+    for bucket_name in bucket_names:
+        usage = bucket_usage(resource, bucket_name)
+        disk_usages.append([bucket_name, usage])
+
+    return disk_usages
 
 
 def get_cors(bucket):
@@ -174,7 +189,51 @@ def get_grants(obj):
     return grantees
 
 
-def bucket_info(resource, bucket_name):
+def policies_file():
+    directory = os.path.dirname(os.path.realpath(__file__))
+    policy_file = os.path.join(directory, "gmt_policy.yaml")
+    return policy_file
+
+
+def gmt_policy_description(policy_id):
+    """Get GMT-Policy description."""
+    policy_file = policies_file()
+    if policies_file:
+        policies = yaml.safe_load(open(policy_file))
+    else:
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), policy_file)
+
+    for zone in policies:
+        policyid, description, scheme = policies[zone].values()
+        if policyid == policy_id:
+            break
+
+    return description
+
+
+def gmt_policy_id(bucket_name, auth):
+    """Get GMT-Policy id from S3 API response headers."""
+    auth, endpoint = auth
+
+    endpoint = f"http://{bucket_name}.{endpoint}"
+    response = requests.get(endpoint, auth=auth)
+    policy_id = response.headers.get("x-gmt-policyid")
+
+    return policy_id
+
+
+def bucket_gmt_policy(bucket_name, auth):
+    """Get bucket GMT-Policy"""
+    policy_id = gmt_policy_id(bucket_name, auth)
+    description = gmt_policy_description(policy_id)
+
+    if not description:
+        description = "Not Set"
+
+    return description
+
+
+def bucket_info(resource, bucket_name, auth):
     """Info of bucket."""
     bucket = resource.Bucket(bucket_name)
     client = resource.meta.client
@@ -185,6 +244,7 @@ def bucket_info(resource, bucket_name):
         "Policy": get_policy(bucket),
         "Expiration": get_expiration(client, bucket_name),
         "Location": get_location(client, bucket_name),
+        "GmtPolicy": bucket_gmt_policy(bucket_name, auth),
     }
     return info
 
