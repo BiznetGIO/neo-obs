@@ -112,9 +112,9 @@ def test_bucket_info(monkeypatch, resource, plain_auth):
         f"Expiration Rule: None\n"
         f"Policy: None\n"
         f"CORS: None\n"
-        f"Gmt Policy: 2 Replication in Midplaza, 1 in Technovillage\n"
         f"ACL: ['Test user'] : ['FULL_CONTROL']\n"
         f"ACL: ['Public'] : ['FULL_CONTROL']\n"
+        f"Gmt Policy: 2 Replication in Midplaza, 1 in Technovillage\n"
     )
 
 
