@@ -3,6 +3,7 @@ import sys
 
 from obs.libs import auth
 from obs.storage import bucket
+from obs.storage import gmt
 
 
 def warn_inexsit_config():
@@ -235,3 +236,11 @@ def mkdir(target_name):
     s3_resource = get_resources()
     bucket_name, dir_name = target_name
     bucket.mkdir(resource=s3_resource, bucket_name=bucket_name, dir_name=dir_name)
+
+
+@storage.command("gmt")
+@click.option("--policy-id", "policy_id", is_flag=True, help="List Gmt Policy ID")
+def gmt_cmd(policy_id):
+    """Manage Cloudian extensions to S3."""
+    if policy_id:
+        gmt.show_policies()
