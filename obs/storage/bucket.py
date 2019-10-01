@@ -134,12 +134,15 @@ def bucket_info(resource, bucket_name, auth):
             f"Location: {info['Location']}\n"
             f"Expiration Rule: {info['Expiration']}\n"
             f"Policy: {info['Policy']}\n"
-            f"CORS: {info['CORS']}\n"
-            f"Gmt Policy: {info['GmtPolicy']}"
+            f"CORS: {info['CORS']}"
         )
         click.secho(msg)
+
         for grant in info["ACL"]:
             click.secho(f"ACL: {grant[0]} : {grant[1]}")
+
+        if "GmtPolicy" in info:
+            click.secho(f"Gmt Policy: {info['GmtPolicy']}")
 
     except Exception as exc:
         click.secho(f"Info fetching failed. \n{exc}", fg="yellow", bold=True, err=True)

@@ -193,10 +193,6 @@ def bucket_gmt_policy(bucket_name, auth):
     """Get bucket GMT-Policy"""
     policy_id = gmt.policy_id(bucket_name, auth)
     description = gmt.policy_description(policy_id)
-
-    if not description:
-        description = "Not Set"
-
     return description
 
 
@@ -205,14 +201,17 @@ def bucket_info(resource, bucket_name, auth):
     bucket = resource.Bucket(bucket_name)
     client = resource.meta.client
 
+    gmt_policy = bucket_gmt_policy(bucket_name, auth)
     info = {
         "ACL": get_grants(bucket),
         "CORS": get_cors(bucket),
         "Policy": get_policy(bucket),
         "Expiration": get_expiration(client, bucket_name),
         "Location": get_location(client, bucket_name),
-        "GmtPolicy": bucket_gmt_policy(bucket_name, auth),
     }
+    if gmt_policy:
+        info["GmtPolicy"] = gmt_policy
+
     return info
 
 
