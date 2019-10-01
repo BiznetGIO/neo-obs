@@ -36,7 +36,7 @@ def policy_description(policy_id):
     policies = get_policies()
 
     for zone in policies:
-        policyid, description, scheme = policies[zone].values()
+        policyid, description, _ = policies[zone].values()
         if policyid == policy_id:
             break
 
