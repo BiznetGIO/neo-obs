@@ -16,6 +16,7 @@ Storage Usage
   cp       Copy object to other bucket.
   du       Disk usage of bucket.
   get      Download object in bucket.
+  gmt      Manage Cloudian extensions to S3.
   info     Display bucket or object info.
   ls       List bucket or object.
   mb       Create bucket.
@@ -77,6 +78,9 @@ Usage Example
   To make a bucket with spesific ACL
   $ obs storage mb awesomebucket --acl private
 
+  To make a bucket with spesific gmt id policy
+  $ obs storage mb awesomebucket --policy-id c41e0a6f5e74663bexampleid
+
   To download an object
   $ obs storage get awesomebucket myobject
 
@@ -98,3 +102,6 @@ Usage Example
 
   To set object ACL
   $ obs storage acl awesomebucket myobject private
+
+  To show all gmt id policies
+  $ obs storage gmt --policy-id
