@@ -14,6 +14,7 @@ class Config:
     user_access_key = ""
     user_secret_key = ""
     user_url = "s3-stage.biznetgio.net"
+    user_gmt_policy = "notset"
     admin_url = "103.77.104.76"
     admin_port = "19443"
     admin_username = ""

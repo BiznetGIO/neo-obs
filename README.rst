@@ -47,6 +47,7 @@ Features
 * Supports for common commands for managing storage: `ls`, `rm`, `get`, `put`,
   `cp`, `mv` `du`, `info`, `sets ACL`, `presign URL` `create bucket`, etc.
 * Common commands for admin: `ls users`, `user info`, `rm user`, `set QoS`, etc.
+* Support Cloudian HyperStore extension feature. e.g `x-gmt-policyid`
 * Can be used as library for your next object storage application.
 
 Take the tour

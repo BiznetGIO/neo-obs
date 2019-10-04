@@ -1,30 +1,33 @@
-import io
 import re
 
-from setuptools import find_packages, setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
-with io.open("README.rst", "rt", encoding="utf8") as f:
-    readme = f.read()
-
-with io.open("requirements.txt", "rt", encoding="utf8") as f:
-    requirements = f.read()
-
-with io.open("obs/__init__.py", "rt", encoding="utf8") as f:
+with open("obs/__init__.py", "r", encoding="utf8") as f:
     version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
+
+with open("README.rst", "rb") as f:
+    readme = f.read().decode("utf-8")
+
+with open("requirements.txt", "rb") as f:
+    requirements = f.read().decode("utf-8")
 
 setup(
     name="neo-obs",
     version=version,
     description="A OBS command line tools",
     long_description=readme,
+    long_description_content_type="text/x-rst",
     url="https://github.com/BiznetGIO/neo-obs",
     author="BiznetGio",
     author_email="support@biznetgio.com",
-    license="MIT",
+    license="MIT license",
     classifiers=[
         "Intended Audience :: Developers",
         "Topic :: Utilities",
-        "License :: MIT",
+        "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
@@ -32,7 +35,7 @@ setup(
     ],
     keywords="cli",
     include_package_data=True,
-    packages=find_packages(exclude=["docs", "tests*"]),
+    packages=["obs"],
     install_requires=requirements,
     entry_points={"console_scripts": ["obs=obs.main:cli"]},
 )

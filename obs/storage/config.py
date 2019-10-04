@@ -19,6 +19,11 @@ def run_configure():
             f'Use "{cfg.user_url}" for Neo Object Storage.',
         ),
         (
+            "user_gmt_policy",
+            "Gmt Policy PATH",
+            f"PATH to your gmt policy file, Leave as is 'notset' if you don't want to use Cloudian extension",
+        ),
+        (
             "admin_username",
             "Admin Username",
             f"""Admin username and password are your identififers for your admin panel (e.g Clodian CMC), \nUse "{cfg.admin_url}" to the target Neo Object Storage.""",

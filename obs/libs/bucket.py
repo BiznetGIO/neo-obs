@@ -1,8 +1,8 @@
 import uuid
 import os
 import requests
-import yaml
-import errno
+
+from obs.libs import gmt
 
 
 def buckets(resource):
@@ -189,47 +189,10 @@ def get_grants(obj):
     return grantees
 
 
-def policies_file():
-    directory = os.path.dirname(os.path.realpath(__file__))
-    policy_file = os.path.join(directory, "gmt_policy.yaml")
-    return policy_file
-
-
-def gmt_policy_description(policy_id):
-    """Get GMT-Policy description."""
-    policy_file = policies_file()
-    if policies_file:
-        policies = yaml.safe_load(open(policy_file))
-    else:
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), policy_file)
-
-    for zone in policies:
-        policyid, description, scheme = policies[zone].values()
-        if policyid == policy_id:
-            break
-
-    return description
-
-
-def gmt_policy_id(bucket_name, auth):
-    """Get GMT-Policy id from S3 API response headers."""
-    auth, endpoint = auth
-
-    endpoint = f"http://{bucket_name}.{endpoint}"
-    response = requests.get(endpoint, auth=auth)
-    policy_id = response.headers.get("x-gmt-policyid")
-
-    return policy_id
-
-
 def bucket_gmt_policy(bucket_name, auth):
     """Get bucket GMT-Policy"""
-    policy_id = gmt_policy_id(bucket_name, auth)
-    description = gmt_policy_description(policy_id)
-
-    if not description:
-        description = "Not Set"
-
+    policy_id = gmt.policy_id(bucket_name, auth)
+    description = gmt.policy_description(policy_id)
     return description
 
 
@@ -238,14 +201,17 @@ def bucket_info(resource, bucket_name, auth):
     bucket = resource.Bucket(bucket_name)
     client = resource.meta.client
 
+    gmt_policy = bucket_gmt_policy(bucket_name, auth)
     info = {
         "ACL": get_grants(bucket),
         "CORS": get_cors(bucket),
         "Policy": get_policy(bucket),
         "Expiration": get_expiration(client, bucket_name),
         "Location": get_location(client, bucket_name),
-        "GmtPolicy": bucket_gmt_policy(bucket_name, auth),
     }
+    if gmt_policy:
+        info["GmtPolicy"] = gmt_policy
+
     return info
 
 
