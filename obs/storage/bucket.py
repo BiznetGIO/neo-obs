@@ -7,9 +7,12 @@ from obs.libs import utils
 
 def buckets(resource):
     """Print all bucket with specified attribute."""
-    all_buckets = bucket_lib.buckets(resource)
-    for bucket in all_buckets:
-        click.secho(f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}")
+    try:
+        all_buckets = bucket_lib.buckets(resource)
+        for bucket in all_buckets:
+            click.secho(f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}")
+    except Exception as exc:
+        click.secho(f"Bucket listing failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
 def create_bucket(**kwargs):
