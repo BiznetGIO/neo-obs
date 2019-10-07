@@ -1,6 +1,7 @@
 recursive-exclude *.egg-info *
-recursive-include tests *
+recursive-include obs tests *.py
 
-include README.md
-include setup.cfg
-include requirements.txt
+include requirements*.txt
+include README.rst
+include LICENSE
+include setup.py

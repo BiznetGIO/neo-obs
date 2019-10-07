@@ -1,5 +1,8 @@
 import uuid
 import os
+import requests
+
+from obs.libs import gmt
 
 
 def buckets(resource):
@@ -15,11 +18,28 @@ def gen_random_name(prefix):
     return f"{prefix}-{str(uuid.uuid4())[:13]}"
 
 
-def create_bucket(resource, bucket_name, acl="private", random_name=False):
-    """Create a bucket with optional random name as a suffix."""
-    if random_name:
+def create_bucket(**kwargs):
+    """Create a bucket.
+
+    :param auth: Tuple, consists of auth object and endpoint string
+    :param acl: Input for canned ACL, defaults to "private"
+    :param policy_id: String represent `x-gmt-policyid` or determines how data in the bucket will be distributed, defaults to None
+    :param bucket_name: Bucket name
+    :param random: A flag for deciding that a bucket name should be suffixed by random string or not, defaults to False
+    """
+    auth, endpoint = kwargs.get("auth")
+    acl = kwargs.get("acl", "private")
+    policy_id = kwargs.get("policy_id", "")
+    bucket_name = kwargs.get("bucket_name")
+
+    if kwargs.get("random_name"):
         bucket_name = gen_random_name(bucket_name)
-    resource.create_bucket(Bucket=bucket_name, ACL=acl)
+
+    endpoint = f"http://{bucket_name}.{endpoint}"
+    headers = {"x-gmt-policyid": policy_id, "x-amz-acl": acl}
+
+    response = requests.put(endpoint, auth=auth, headers=headers)
+    return response
 
 
 def remove_bucket(resource, bucket_name):
@@ -89,14 +109,27 @@ def move_object(resource, src_bucket, dest_bucket, object_name):
     remove_object(resource, src_bucket, object_name)
 
 
-def disk_usage(resource, bucket_name):
-    """Calculate dist usage of objects in bucket."""
+def bucket_usage(resource, bucket_name):
+    """Calculate bucket usage."""
     objects = get_objects(resource, bucket_name)
     total_objects = len(objects)
     total_size = 0
     for obj in objects:
         total_size += obj.size
     return total_size, total_objects
+
+
+def disk_usage(resource):
+    """Calculate disk usage."""
+    all_buckets = buckets(resource)
+    bucket_names = [bucket.name for bucket in all_buckets]
+
+    disk_usages = []
+    for bucket_name in bucket_names:
+        usage = bucket_usage(resource, bucket_name)
+        disk_usages.append([bucket_name, usage])
+
+    return disk_usages
 
 
 def get_cors(bucket):
@@ -156,11 +189,19 @@ def get_grants(obj):
     return grantees
 
 
-def bucket_info(resource, bucket_name):
+def bucket_gmt_policy(bucket_name, auth):
+    """Get bucket GMT-Policy"""
+    policy_id = gmt.policy_id(bucket_name, auth)
+    description = gmt.policy_description(policy_id)
+    return description
+
+
+def bucket_info(resource, bucket_name, auth):
     """Info of bucket."""
     bucket = resource.Bucket(bucket_name)
     client = resource.meta.client
 
+    gmt_policy = bucket_gmt_policy(bucket_name, auth)
     info = {
         "ACL": get_grants(bucket),
         "CORS": get_cors(bucket),
@@ -168,6 +209,9 @@ def bucket_info(resource, bucket_name):
         "Expiration": get_expiration(client, bucket_name),
         "Location": get_location(client, bucket_name),
     }
+    if gmt_policy:
+        info["GmtPolicy"] = gmt_policy
+
     return info
 
 

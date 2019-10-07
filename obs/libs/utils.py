@@ -1,6 +1,7 @@
 import sys
-from datetime import datetime
 import tzlocal
+import xmltodict
+from datetime import datetime
 
 
 def sizeof_fmt(num, suffix="B"):
@@ -23,6 +24,18 @@ def check(response):
             f"URL: {response.get('url')}"
         )
         raise ValueError(msg)
+
+
+def check_plain(response):
+    """Check if response contains error result
+    then raise exception."""
+    if response.text:
+        response_dict = xmltodict.parse(response.text)
+
+        if "Error" in response_dict:
+            code = response_dict["Error"]["Code"]
+            msg = response_dict["Error"]["Message"]
+            raise ValueError(f"{code}: {msg}")
 
 
 def human_date(unixtime):

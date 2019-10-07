@@ -1,7 +1,17 @@
 import click
+import sys
 
 from obs.libs import auth
 from obs.storage import bucket
+from obs.storage import gmt
+
+
+def warn_inexsit_config():
+    msg = (
+        f"Configuration file not available.\n"
+        f"Consider running 'obs --configure' to create one"
+    )
+    click.secho(msg, fg="yellow", bold=True, err=True)
 
 
 def get_resources():
@@ -10,6 +20,18 @@ def get_resources():
         return s3_resource
     except Exception as exc:
         click.secho(str(exc), fg="yellow", bold=True, err=True)
+        warn_inexsit_config()
+        sys.exit(1)
+
+
+def get_plain_auth():
+    try:
+        plain_auth = auth.plain_auth()
+        return plain_auth
+    except Exception as exc:
+        click.secho(str(exc), fg="yellow", bold=True, err=True)
+        warn_inexsit_config()
+        sys.exit(1)
 
 
 @click.group()
@@ -49,6 +71,13 @@ def remove(target_name):
     "--acl", "acl", default="private", required=False, help="Access Control List"
 )
 @click.option(
+    "--policy-id",
+    "policy_id",
+    default="",
+    required=False,
+    help="Data distribution in bucket",
+)
+@click.option(
     "-r",
     "--random",
     "random_name",
@@ -56,11 +85,15 @@ def remove(target_name):
     is_flag=True,
     help="Generate random name",
 )
-def make_bucket(bucket_name, acl, random_name):
+def make_bucket(bucket_name, acl, policy_id, random_name):
     """Create bucket."""
-    s3_resource = get_resources()
+    plain_auth = get_plain_auth()
     bucket.create_bucket(
-        s3_resource, bucket_name=bucket_name, acl=acl, random_name=random_name
+        auth=plain_auth,
+        bucket_name=bucket_name,
+        acl=acl,
+        policy_id=policy_id,
+        random_name=random_name,
     )
 
 
@@ -129,11 +162,14 @@ def move_object(src_bucket, dest_bucket, object_name):
 
 
 @storage.command("du")
-@click.argument("bucket_name", default="")
-def disk_usage(bucket_name):
-    """Disk usage of bucket."""
+@click.argument("bucket_name", default="", required=False)
+def du(bucket_name):
+    """Show disk or bucket usage."""
     s3_resource = get_resources()
-    bucket.disk_usage(s3_resource, bucket_name=bucket_name)
+    if bucket_name:
+        bucket.bucket_usage(s3_resource, bucket_name=bucket_name)
+    else:
+        bucket.disk_usage(s3_resource)
 
 
 @storage.command("info")
@@ -141,9 +177,10 @@ def disk_usage(bucket_name):
 def info(target_name):
     """Display bucket or object info."""
     s3_resource = get_resources()
+    plain_auth = get_plain_auth()
     if len(target_name) == 1:
         bucket_name = target_name[0]
-        bucket.bucket_info(s3_resource, bucket_name=bucket_name)
+        bucket.bucket_info(s3_resource, bucket_name=bucket_name, auth=plain_auth)
     if len(target_name) == 2:
         bucket_name, object_name = target_name
         bucket.object_info(
@@ -199,3 +236,11 @@ def mkdir(target_name):
     s3_resource = get_resources()
     bucket_name, dir_name = target_name
     bucket.mkdir(resource=s3_resource, bucket_name=bucket_name, dir_name=dir_name)
+
+
+@storage.command("gmt")
+@click.option("--policy-id", "policy_id", is_flag=True, help="List Gmt Policy ID")
+def gmt_cmd(policy_id):
+    """Manage Cloudian extensions to S3."""
+    if policy_id:
+        gmt.show_policies()

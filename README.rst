@@ -8,10 +8,9 @@
     <p align="center">
         <!-- <a href="https://pypi.python.org/pypi/neo-obs"><img alt="Pypi version" src="https://img.shields.io/pypi/v/neo-obs.svg"></a> -->
         <!-- <a href="https://pypi.python.org/pypi/neo-obs"><img alt="Python versions" src="https://img.shields.io/pypi/pyversions/neo-obs.svg"></a> -->
-      <!-- <a href="https://neoobs.readthedocs.io/en/stable/index.html"><img alt="Documentation" src="https://img.shields.io/readthedocs/neoobs.svg"></a> -->
-        <!-- <a href="https://travis-ci.org/BiznetGIO/neo-obs/"><img alt="Build status" src="https://img.shields.io/travis/BiznetGIO/neo-obs.svg"></a> -->
-        <!-- <a href="https://travis-ci.org/BiznetGIO/neo-obs/"><img alt="Build status" src="https://img.shields.io/travis/BiznetGIO/neo-obs.svg"></a> -->
-        <a href="https://github.com/python/black"><img alt="Code Style" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+      <a href="https://neo-obs.readthedocs.io/en/latest/"><img alt="Documentation" src="https://img.shields.io/readthedocs/neo-obs.svg"></a>
+      <a href="https://travis-ci.org/BiznetGIO/neo-obs/"><img alt="Build status" src="https://img.shields.io/travis/BiznetGIO/neo-obs.svg"></a>
+      <a href="https://github.com/python/black"><img alt="Code Style" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
         <!-- <a href="https://pypi.org/project/neo-obs/"><img alt="License" src="https://img.shields.io/pypi/l/neo-cli.svg"></a> -->
     </p>
     <p align="center">
@@ -48,6 +47,7 @@ Features
 * Supports for common commands for managing storage: `ls`, `rm`, `get`, `put`,
   `cp`, `mv` `du`, `info`, `sets ACL`, `presign URL` `create bucket`, etc.
 * Common commands for admin: `ls users`, `user info`, `rm user`, `set QoS`, etc.
+* Support Cloudian HyperStore extension feature. e.g `x-gmt-policyid`
 * Can be used as library for your next object storage application.
 
 Take the tour
@@ -93,7 +93,7 @@ Show user's credentials
 Project information
 -------------------
 
-* `Documentation <https://loguru.readthedocs.io/en/stable/api/logger.html>`_
+* `Documentation <https://neo-obs.readthedocs.io/en/latest/>`_
 * `Contributing <https://biznetgio.github.io/guide/engineering/contrib-guide/>`_
 * `Changelog <CHANGELOG.rst>`_
 * `License <LICENSE>`_
