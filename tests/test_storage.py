@@ -163,3 +163,33 @@ def test_presign(monkeypatch, resource):
         result.output
         == "https://myendpotin.net/oneoneone/logo.png?AWSAccessKeyId=62fake123&Signature=rSNa6fake&Expires=15\n"
     )
+
+def create_fake_buck(objsize):
+    buck=mock.Mock()
+    buck.total_objects=len(objsize)
+    buck.total_size=sum(objsize)
+    return buck.total_size, buck.total_objects
+
+def fake_disk_usage(resource):
+    bucket_name=['green','black']
+    disk_usages = []
+    buck=[]
+    buck.append(create_fake_buck([100,200]))
+    buck.append(create_fake_buck([400,150,250]))
+
+    for bckt,obj in zip(bucket_name,buck):
+        disk_usages.append([bckt,obj])
+    return disk_usages
+
+def test_du_disk_usage(monkeypatch, resource):
+    monkeypatch.setattr(
+        obs.libs.bucket,"disk_usage",fake_disk_usage
+    )
+    runner = CliRunner()
+    result = runner.invoke(cli,['storage','du'])
+    assert result.output==(
+        f'300.00 Byte, 2 objects in "green" bucket\n'
+        f'800.00 Byte, 3 objects in "black" bucket\n'
+        f'---\n'
+        f'1.07 KiB Total\n'
+    )
