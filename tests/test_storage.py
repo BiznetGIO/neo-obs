@@ -193,3 +193,21 @@ def test_du_disk_usage(monkeypatch, resource):
         f'---\n'
         f'1.07 KiB Total\n'
     )
+
+def fake_gmt():
+    policies = {'Jakarta':{'id':'123','desc':'','_':''},'Sydney':{'id':'143','desc':'blabla','_':''}}
+    return policies
+
+def test_gmt(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.gmt,"get_policies",fake_gmt)
+    runner = CliRunner()
+    result = runner.invoke(cli,['storage','gmt','--policy-id'])
+
+    assert result.output==(
+        f"Name: Jakarta\n"
+        f"Id: 123\n"
+        f"Description: No description\n\n"
+        f"Name: Sydney\n"
+        f"Id: 143\n"
+        f"Description: blabla\n\n"
+    )
