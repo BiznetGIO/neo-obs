@@ -158,3 +158,18 @@ def test_cred_list(monkeypatch, client):
         f"Created: 1970-01-19 10:55:05+0700 (WIB)\n"
         f"Active: True\n"
     )
+
+
+def fake_status(client, access_key, status=True):
+    client = mock.Mock()
+    client.user.credentials.status.return_value = "set"
+    return client.user.credentials.status()
+
+
+def test_cred_status(monkeypatch):
+    monkeypatch.setattr(obs.libs.credential, "status", fake_status)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "status"])
+
+    assert result.output == (f"Credentials status changed\n")
