@@ -199,7 +199,7 @@ def test_du_disk_usage(monkeypatch, resource):
 def fake_gmt():
     policies = {
         "Jakarta": {"id": "123", "desc": "", "_": ""},
-        "Sydney": {"id": "143", "desc": "blabla", "_": ""},
+        "Sydney": {"id": "143", "desc": "foo", "_": ""},
     }
     return policies
 
@@ -215,5 +215,5 @@ def test_gmt(monkeypatch, resource):
         f"Description: No description\n\n"
         f"Name: Sydney\n"
         f"Id: 143\n"
-        f"Description: blabla\n\n"
+        f"Description: foo\n\n"
     )
