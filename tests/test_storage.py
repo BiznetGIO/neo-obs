@@ -1,12 +1,13 @@
 import mock
 import pytest
-from click.testing import CliRunner
-
+import obs.libs.bucket
+import obs.libs.auth
+import obs.libs.gmt
 
 from datetime import datetime
 from obs.main import cli
-import obs.libs.bucket
-import obs.libs.auth
+from click.testing import CliRunner
+from obs.storage import bucket
 
 
 def fake_resource():
@@ -41,11 +42,14 @@ def fake_buckets(resource):
 
 
 def test_ls(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "buckets", fake_buckets)
-
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls"])
+    assert result.output == (
+        f"Bucket listing failed. \n" f"'NoneType' object has no attribute 'buckets'\n"
+    )
 
+    monkeypatch.setattr(obs.libs.bucket, "buckets", fake_buckets)
+    result = runner.invoke(cli, ["storage", "ls"])
     assert result.output == (
         f"2019-09-24 01:01:00 bucket-one\n" f"2019-09-24 01:01:00 bucket-two\n"
     )
@@ -57,20 +61,32 @@ def fake_get_objects(resource, bucket_name, prefix=""):
     obj1.size = 100
     dt1 = datetime(2019, 9, 24, 1, 1, 0, 0)
     obj1.last_modified = dt1
+    obj1.bucket = "bucket-one"
 
     obj2 = mock.Mock()
     obj2.key = "obj-two"
     obj2.size = 200
     obj2.last_modified = dt1
+    obj2.bucket = "bucket-two"
 
     return [obj1, obj2]
 
 
 def test_ls_storage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
-
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
+
+    assert result.output == (f"'NoneType' object has no attribute 'Bucket'\n")
+
+    monkeypatch.setattr(
+        obs.libs.bucket, "get_objects", lambda resource, bucket_name, prefix: []
+    )
+    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
+
+    assert result.output == (f'Bucket "bucket-one" is empty\n')
+
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
+    result = runner.invoke(cli, ["storage", "ls", "bucket-two"])
 
     assert result.output == (
         f"2019-09-24 01:01:00, 100.0 B, obj-one\n"
@@ -79,9 +95,15 @@ def test_ls_storage(monkeypatch, resource):
 
 
 def test_bucket_usage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
-
     runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "du", "bucket-one"])
+
+    assert result.output == (
+        f"Bucket usage fetching failed. \n"
+        f"'NoneType' object has no attribute 'Bucket'\n"
+    )
+
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
     result = runner.invoke(cli, ["storage", "du", "bucket-one"])
 
     assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
@@ -102,11 +124,14 @@ def fake_bucket_info(resource, bucket_name, auth):
 
 
 def test_bucket_info(monkeypatch, resource, plain_auth):
-    monkeypatch.setattr(obs.libs.bucket, "bucket_info", fake_bucket_info)
-
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one"])
+    assert result.output == (
+        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
+    )
 
+    monkeypatch.setattr(obs.libs.bucket, "bucket_info", fake_bucket_info)
+    result = runner.invoke(cli, ["storage", "info", "bucket-one"])
     assert result.output == (
         f"Location: US\n"
         f"Expiration Rule: None\n"
@@ -134,9 +159,14 @@ def fake_object_info(resource, bucket_name, object_name):
 
 
 def test_object_info(monkeypatch, resource, plain_auth):
-    monkeypatch.setattr(obs.libs.bucket, "object_info", fake_object_info)
-
     runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
+
+    assert result.output == (
+        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Object'\n"
+    )
+
+    monkeypatch.setattr(obs.libs.bucket, "object_info", fake_object_info)
     result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
 
     assert result.output == (
@@ -154,9 +184,15 @@ def fake_presign(resource, bucket_name, object_name, expire):
 
 
 def test_presign(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "generate_url", fake_presign)
-
     runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
+
+    assert (
+        result.output == f"URL generation failed. \n"
+        f"'NoneType' object has no attribute 'meta'\n"
+    )
+
+    monkeypatch.setattr(obs.libs.bucket, "generate_url", fake_presign)
     result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
 
     assert (
@@ -178,16 +214,26 @@ def fake_disk_usage(resource):
     buck = []
     buck.append(create_fake_buck([100, 200]))
     buck.append(create_fake_buck([400, 150, 250]))
-
     for bckt, obj in zip(bucket_name, buck):
         disk_usages.append([bckt, obj])
     return disk_usages
 
 
-def test_du_disk_usage(monkeypatch, resource):
+def test_except_disk_usage(monkeypatch, resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "du"])
+
+    assert result.output == (
+        f"Disk usage fetching failed. \n"
+        f"'NoneType' object has no attribute 'buckets'\n"
+    )
+
+
+def test_disk_usage(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.bucket, "disk_usage", fake_disk_usage)
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du"])
+
     assert result.output == (
         f'300.00 Byte, 2 objects in "green" bucket\n'
         f'800.00 Byte, 3 objects in "black" bucket\n'
@@ -199,14 +245,21 @@ def test_du_disk_usage(monkeypatch, resource):
 def fake_gmt():
     policies = {
         "Jakarta": {"id": "123", "desc": "", "_": ""},
-        "Sydney": {"id": "143", "desc": "foo", "_": ""},
+        "Sydney": {"id": "143", "desc": "blabla", "_": ""},
     }
     return policies
 
 
 def test_gmt(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.gmt, "get_policies", fake_gmt)
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda : None)
     runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
+
+    assert result.output == (
+        f"Show policies failed. \n" f"'NoneType' object is not iterable\n"
+    )
+
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", fake_gmt)
     result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
 
     assert result.output == (
@@ -215,5 +268,13 @@ def test_gmt(monkeypatch, resource):
         f"Description: No description\n\n"
         f"Name: Sydney\n"
         f"Id: 143\n"
-        f"Description: foo\n\n"
+        f"Description: blabla\n\n"
+    )
+
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda : 'notset')
+    result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
+
+    assert result.output == (
+        f"Can't find Policy file\n"
+        f"See '#using-cloudian-hyperstore-extension' in our documentation for more information\n"
     )
