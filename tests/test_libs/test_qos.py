@@ -1,6 +1,7 @@
+import mock
+import pytest
 from obs.libs import qos
 from obs.libs import auth
-import mock, pytest
 
 
 @pytest.fixture
