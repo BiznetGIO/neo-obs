@@ -26,10 +26,9 @@ class Testbucket:
             "satu-b21f6bb7-39d5",
         ]
 
-    def test_random(self,monkeypatch):
-        monkeypatch.setattr(uuid,'uuid4',lambda : "71e43e94-c10d")
-        assert bucket.gen_random_name('awesome') == f"awesome-71e43e94-c10d"
-
+    def test_random(self, monkeypatch):
+        monkeypatch.setattr(uuid, "uuid4", lambda: "71e43e94-c10d")
+        assert bucket.gen_random_name("awesome") == f"awesome-71e43e94-c10d"
 
     def test_get(self):
         assert bucket.get_objects(self.fake_resource(), "satu-b21f6bb7-39d5") == [

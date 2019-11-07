@@ -251,7 +251,7 @@ def fake_gmt():
 
 
 def test_gmt(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda : None)
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: None)
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
 
@@ -271,7 +271,7 @@ def test_gmt(monkeypatch, resource):
         f"Description: blabla\n\n"
     )
 
-    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda : 'notset')
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: "notset")
     result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
 
     assert result.output == (

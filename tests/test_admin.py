@@ -1,13 +1,16 @@
 import pytest
-from click.testing import CliRunner
 import io
 import os
-from datetime import datetime
-
-from obs.main import cli
+import mock
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
+import obs.admin.commands as admin_client
+
+from datetime import datetime
+from click.testing import CliRunner
+from obs.main import cli
+from pathlib import Path
 
 
 def fake_client():
@@ -17,6 +20,19 @@ def fake_client():
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setattr(obs.libs.auth, "admin_client", fake_client)
+
+
+def test_get_client(monkeypatch):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
+    )
+    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+    assert result.output == (
+        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"Configuration file not available.\n"
+        f"Consider running 'obs --configure' to create one\n"
+    )
 
 
 def fake_list_users(client, group_id, user_type="all", user_status="active", limit=""):
@@ -40,9 +56,27 @@ def fake_list_users(client, group_id, user_type="all", user_status="active", lim
 
 
 def test_ls(monkeypatch, client):
-    monkeypatch.setattr(obs.libs.user, "list_user", fake_list_users)
-
     runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "admin",
+            "user",
+            "ls",
+            "--group-id",
+            "testing",
+            "--user-type",
+            "all",
+            "--user-status",
+            "active",
+        ],
+    )
+
+    assert result.output == (
+        f"Users fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+    monkeypatch.setattr(obs.libs.user, "list_user", fake_list_users)
     result = runner.invoke(
         cli,
         [
@@ -80,14 +114,18 @@ def fake_info(client, user_id, group_id):
 
 
 def test_info(monkeypatch, client):
-    monkeypatch.setattr(obs.libs.user, "info", fake_info)
-
     runner = CliRunner()
     result = runner.invoke(
-        cli,
-        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
+        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+    )
+    assert result.output == (
+        f"User info fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )
 
+    monkeypatch.setattr(obs.libs.user, "info", fake_info)
+    result = runner.invoke(
+        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+    )
     assert result.output == (
         f"ID: johnthompson\n"
         f"Name: John Thompson\n"
@@ -116,9 +154,17 @@ def fake_qos_info(client, user_id, group_id):
 
 
 def test_qos_info(monkeypatch, client):
-    monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
-
     runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "qos", "info", "--user-id", "StageTest", "--group-id", "testing"]
+    )
+
+    assert result.output == (
+        f"Storage limit fetching failed. \n"
+        f"'NoneType' object has no attribute 'qos'\n"
+    )
+
+    monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
     result = runner.invoke(
         cli, ["admin", "qos", "info", "--user-id", "StageTest", "--group-id", "testing"]
     )
@@ -144,10 +190,17 @@ def fake_human_date(unixtime):
 
 
 def test_cred_list(monkeypatch, client):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
+    )
+    assert result.output == (
+        f"Credentials listing failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
     monkeypatch.setattr(obs.libs.credential, "list", fake_cred_list)
     monkeypatch.setattr(obs.libs.utils, "human_date", fake_human_date)
 
-    runner = CliRunner()
     result = runner.invoke(
         cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
     )
