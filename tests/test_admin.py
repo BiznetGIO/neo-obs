@@ -109,7 +109,8 @@ def test_info(monkeypatch, client):
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+        cli,
+        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
     )
 
     assert result.output == (
@@ -127,7 +128,8 @@ def test_info(monkeypatch, client):
 def test_except_info(client):
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+        cli,
+        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
     )
 
     assert result.output == (
@@ -215,4 +217,107 @@ def test_except_cred_list(client):
 
     assert result.output == (
         f"Credentials listing failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_clients():
+    user = [
+        {
+            "userId": "jerrygarcia",
+            "fullName": "Jerry Garcia",
+            "emailAddr": "garcia@bgn.net",
+            "address1": "456 Shakedown St.",
+            "city": "Portsmouth",
+            "active": True,
+        },
+        {
+            "userId": "johnthompson",
+            "fullName": "John Thompson",
+            "emailAddr": "",
+            "address1": "",
+            "city": "",
+            "active": True,
+        },
+    ]
+    client = mock.Mock()
+    client.user.list.return_value = user
+    client.user.side_effect = client.user.list().pop(1)
+    return client
+
+
+def test_remove_user(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_clients)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda response: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "user", "rm"])
+
+    assert fake_clients().user.list() == [
+        {
+            "userId": "jerrygarcia",
+            "fullName": "Jerry Garcia",
+            "emailAddr": "garcia@bgn.net",
+            "address1": "456 Shakedown St.",
+            "city": "Portsmouth",
+            "active": True,
+        }
+    ]
+
+
+def test_except_remove_user(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "user", "rm"])
+    assert result.output == (
+        f"User removal failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_creds():
+    credential = [
+        {
+            "accessKey": "394b287c9efake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        },
+        {
+            "accessKey": "Br432sd293fake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        },
+    ]
+    cred = mock.Mock()
+    cred.user.credentials.list.return_value = credential
+
+    def remove():
+        del cred.user.credentials.list()[1]
+
+    cred.user.credentials.side_effect = remove()
+    return cred
+
+
+def test_remove_cred(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_creds)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "rm"])
+
+    assert fake_creds().user.credentials.list() == [
+        {
+            "accessKey": "394b287c9efake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        }
+    ]
+
+
+def test_except_remove_cred(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "rm"])
+
+    assert result.output == (
+        f"Credential removal failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )

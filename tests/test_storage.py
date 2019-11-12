@@ -1,9 +1,11 @@
 import mock
 import pytest
 import sys
+import requests
 import obs.libs.bucket
 import obs.libs.auth
 import obs.libs.gmt
+import obs.libs.utils
 
 from obs.storage import commands
 from datetime import datetime
@@ -368,54 +370,204 @@ def test_mv(monkeypatch):
 
 def test_except_mv(resource):
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "mv", "bucket-one",'bucket-two','obj1'])
-    
-    assert result.output==(
-        f"Object moving failed. \n"
-        f"'NoneType' object has no attribute 'Object'\n")
+    result = runner.invoke(cli, ["storage", "mv", "bucket-one", "bucket-two", "obj1"])
+
+    assert result.output == (
+        f"Object moving failed. \n" f"'NoneType' object has no attribute 'Object'\n"
+    )
 
 
 def fake_copy():
-    bucket=mock.Mock()
-    bucket.Bucket.return_value=[{'Bucket': 'bucket1', 'Key': ['obj1']}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3']}]
-    bucket.Object.return_value.copy.side_effect=bucket.Bucket()[1]['Key'].append('obj1')
+    bucket = mock.Mock()
+    bucket.Bucket.return_value = [
+        {"Bucket": "bucket1", "Key": ["obj1"]},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
+    ]
+    bucket.Object.return_value.copy.side_effect = bucket.Bucket()[1]["Key"].append(
+        "obj1"
+    )
     return bucket
+
 
 def test_cp(monkeypatch):
     monkeypatch.setattr(obs.storage.commands, "get_resources", fake_copy)
-    
+
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "cp", "bucket-one",'bucket-two','obj1'])
-    
-    assert fake_copy().Bucket()==[{'Bucket': 'bucket1', 'Key': ['obj1']}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3', 'obj1']}] 
+    result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
+
+    assert fake_copy().Bucket() == [
+        {"Bucket": "bucket1", "Key": ["obj1"]},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3", "obj1"]},
+    ]
+
 
 def test_except_cp(resource):
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "cp", "bucket-one",'bucket-two','obj1'])
-    
-    assert result.output==(f"Object copying failed. \n"f"'NoneType' object has no attribute 'Object'\n")
+    result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
+
+    assert result.output == (
+        f"Object copying failed. \n" f"'NoneType' object has no attribute 'Object'\n"
+    )
 
 
 def fake_remove():
-    bucket=mock.Mock()
-    bucket.Bucket.return_value=[{'Bucket': 'bucket1', 'Key': ['obj1']}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3']}]
-    bucket.Object.return_value.delete.side_effect=bucket.Bucket()[0]['Key'].remove('obj1')
+    bucket = mock.Mock()
+    bucket.Bucket.return_value = [
+        {"Bucket": "bucket1", "Key": ["obj1"]},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
+    ]
+    bucket.Object.return_value.delete.side_effect = bucket.Bucket()[0]["Key"].remove(
+        "obj1"
+    )
     return bucket
 
-def test_rm(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
-    monkeypatch.setattr(obs.libs.bucket,'is_exists',lambda res,bucket,object: True)
-    
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "rm", "bucket-one","obj1"])
-    
-    assert fake_remove().Bucket()==[{'Bucket': 'bucket1', 'Key': []}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3']}] 
 
-def test_except_rm(monkeypatch):
+def test_rm_object(monkeypatch):
     monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
-    monkeypatch.setattr(obs.libs.bucket,'is_exists',lambda res,bucket,object: False)
+    monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "rm", "bucket-one","obj1"])
-    
-    assert result.output==(f"Object removal failed. \n"f"Object not exists: obj1\n")
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one", "obj1"])
+
+    assert fake_remove().Bucket() == [
+        {"Bucket": "bucket1", "Key": []},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
+    ]
+
+
+def test_except_rm_object(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
+    monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one", "obj1"])
+
+    assert result.output == (f"Object removal failed. \n" f"Object not exists: obj1\n")
+
+
+def fake_mb(*args, **kwargs):
+    res = mock.Mock()
+    res.buckets.all.return_value = fake_buckets(resource)
+
+    bucket = mock.Mock()
+    bucket.name = "bucket-three"
+    dt = datetime(2019, 9, 24, 1, 1, 0, 0)
+    bucket.creation_date = dt
+
+    def put():
+        res.buckets.all().append(bucket)
+
+    requests = mock.Mock()
+    requests.put.side_effect = put()
+    return res
+
+
+def test_mb(monkeypatch):
+    monkeypatch.setattr(obs.libs.auth, "plain_auth", lambda: ("foobar", "foo"))
+    monkeypatch.setattr(requests, "put", fake_mb)
+    monkeypatch.setattr(obs.libs.utils, "check_plain", lambda response: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mb", "bucket-one", "--random"])
+
+    echo = ""
+    for bucket in fake_mb().buckets.all():
+        echo += f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}\n"
+
+    assert echo == (
+        f"2019-09-24 01:01:00 bucket-one\n"
+        f"2019-09-24 01:01:00 bucket-two\n"
+        f"2019-09-24 01:01:00 bucket-three\n"
+    )
+
+
+def test_except_mb(plain_auth):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mb", "bucket-one"])
+
+    assert result.output == (
+        f"Bucket creation failed. \n" f"cannot unpack non-iterable NoneType object\n"
+    )
+
+
+def fake_remove_bucket():
+    bucket = mock.Mock()
+    bucket.Buckets.return_value = [
+        {"Bucket": "bucket1", "Key": ["obj1"]},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
+    ]
+
+    def del_bucket(bucket_name):
+        for index, foo in enumerate(bucket.Buckets()):
+            if foo["Bucket"] == bucket_name:
+                del bucket.Buckets()[index]
+
+    bucket.Bucket.return_value.delete.side_effect = del_bucket("bucket1")
+    return bucket
+
+
+def test_rm_bucket(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove_bucket)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
+
+    assert fake_remove_bucket().Buckets() == [
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]}
+    ]
+
+
+def test_except_rm_bucket(monkeypatch, resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
+
+    assert result.output == f"'NoneType' object has no attribute 'Bucket'\n"
+
+
+def fake_acl_object():
+    acl = mock.Mock()
+    acl.info = []
+    acl.Object.return_value.Acl.return_value.put.side_effect = acl.info.append(
+        [["Testing"], ["FULL_CONTROL"]]
+    )
+    return acl
+
+
+def fake_acl_Bucket():
+    acl = mock.Mock()
+    acl.info = [[["Test user"], ["FULL_CONTROL"]]]
+    acl.Bucket.return_value.Acl.return_value.put.side_effect = acl.info.append(
+        [["Testing"], ["FULL_CONTROL"]]
+    )
+    return acl
+
+
+def test_acl_bucket(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_acl_Bucket)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "private"])
+    assert fake_acl_Bucket().info == [
+        [["Test user"], ["FULL_CONTROL"]],
+        [["Testing"], ["FULL_CONTROL"]],
+    ]
+    assert result.output == f"ACL changed successfully\n"
+
+
+def test_acl_object(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_acl_object)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "obj1", "private"])
+    assert fake_acl_object().info == [[["Testing"], ["FULL_CONTROL"]]]
+
+    assert result.output == f"ACL changed successfully\n"
+
+
+def test_except_acl(resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "private"])
+
+    assert result.output == (
+        f"ACL change failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
+    )
