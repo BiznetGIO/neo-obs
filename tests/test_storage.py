@@ -364,3 +364,58 @@ def test_mv(monkeypatch):
         {"Bucket": "bucket1", "Key": []},
         {"Bucket": "bucket2", "Key": ["obj2", "obj3", "obj1"]},
     ]
+
+
+def test_except_mv(resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mv", "bucket-one",'bucket-two','obj1'])
+    
+    assert result.output==(
+        f"Object moving failed. \n"
+        f"'NoneType' object has no attribute 'Object'\n")
+
+
+def fake_copy():
+    bucket=mock.Mock()
+    bucket.Bucket.return_value=[{'Bucket': 'bucket1', 'Key': ['obj1']}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3']}]
+    bucket.Object.return_value.copy.side_effect=bucket.Bucket()[1]['Key'].append('obj1')
+    return bucket
+
+def test_cp(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_copy)
+    
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "cp", "bucket-one",'bucket-two','obj1'])
+    
+    assert fake_copy().Bucket()==[{'Bucket': 'bucket1', 'Key': ['obj1']}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3', 'obj1']}] 
+
+def test_except_cp(resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "cp", "bucket-one",'bucket-two','obj1'])
+    
+    assert result.output==(f"Object copying failed. \n"f"'NoneType' object has no attribute 'Object'\n")
+
+
+def fake_remove():
+    bucket=mock.Mock()
+    bucket.Bucket.return_value=[{'Bucket': 'bucket1', 'Key': ['obj1']}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3']}]
+    bucket.Object.return_value.delete.side_effect=bucket.Bucket()[0]['Key'].remove('obj1')
+    return bucket
+
+def test_rm(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
+    monkeypatch.setattr(obs.libs.bucket,'is_exists',lambda res,bucket,object: True)
+    
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one","obj1"])
+    
+    assert fake_remove().Bucket()==[{'Bucket': 'bucket1', 'Key': []}, {'Bucket': 'bucket2', 'Key': ['obj2', 'obj3']}] 
+
+def test_except_rm(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
+    monkeypatch.setattr(obs.libs.bucket,'is_exists',lambda res,bucket,object: False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one","obj1"])
+    
+    assert result.output==(f"Object removal failed. \n"f"Object not exists: obj1\n")

@@ -13,7 +13,7 @@ def test_size():
 
 def test_date(monkeypatch):
     monkeypatch.setattr(tzlocal, "get_localzone", lambda: None)
-    assert utils.human_date(0) == f"1970-01-01 07:00:00 ()"
+    assert utils.human_date(0) == f"1970-01-01 00:00:00 ()"
 
 
 def test_check():
