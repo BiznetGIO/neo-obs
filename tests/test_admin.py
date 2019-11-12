@@ -56,27 +56,9 @@ def fake_list_users(client, group_id, user_type="all", user_status="active", lim
 
 
 def test_ls(monkeypatch, client):
-    runner = CliRunner()
-    result = runner.invoke(
-        cli,
-        [
-            "admin",
-            "user",
-            "ls",
-            "--group-id",
-            "testing",
-            "--user-type",
-            "all",
-            "--user-status",
-            "active",
-        ],
-    )
-
-    assert result.output == (
-        f"Users fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
-    )
-
     monkeypatch.setattr(obs.libs.user, "list_user", fake_list_users)
+
+    runner = CliRunner()
     result = runner.invoke(
         cli,
         [
@@ -99,6 +81,15 @@ def test_ls(monkeypatch, client):
     assert result.output == tabulated_users
 
 
+def test_except_ls(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "user", "ls"])
+
+    assert result.output == (
+        f"Users fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
 def fake_info(client, user_id, group_id):
     user = {
         "userId": "johnthompson",
@@ -114,18 +105,13 @@ def fake_info(client, user_id, group_id):
 
 
 def test_info(monkeypatch, client):
+    monkeypatch.setattr(obs.libs.user, "info", fake_info)
+
     runner = CliRunner()
     result = runner.invoke(
         cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
     )
-    assert result.output == (
-        f"User info fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
-    )
 
-    monkeypatch.setattr(obs.libs.user, "info", fake_info)
-    result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
-    )
     assert result.output == (
         f"ID: johnthompson\n"
         f"Name: John Thompson\n"
@@ -135,6 +121,17 @@ def test_info(monkeypatch, client):
         f"Group ID: testing\n"
         f"Canonical ID: 2c82bdc930155e8dc6860bfake\n"
         f"Active: True\n"
+    )
+
+
+def test_except_info(client):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+    )
+
+    assert result.output == (
+        f"User info fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )
 
 
@@ -154,6 +151,19 @@ def fake_qos_info(client, user_id, group_id):
 
 
 def test_qos_info(monkeypatch, client):
+    monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "qos", "info", "--user-id", "StageTest", "--group-id", "testing"]
+    )
+
+    assert result.output == (
+        f"Group ID: testing\n" f"User ID: johnthompson\n" f"Storage Limit: Unlimited\n"
+    )
+
+
+def test_except_qos_info(client):
     runner = CliRunner()
     result = runner.invoke(
         cli, ["admin", "qos", "info", "--user-id", "StageTest", "--group-id", "testing"]
@@ -162,15 +172,6 @@ def test_qos_info(monkeypatch, client):
     assert result.output == (
         f"Storage limit fetching failed. \n"
         f"'NoneType' object has no attribute 'qos'\n"
-    )
-
-    monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
-    result = runner.invoke(
-        cli, ["admin", "qos", "info", "--user-id", "StageTest", "--group-id", "testing"]
-    )
-
-    assert result.output == (
-        f"Group ID: testing\n" f"User ID: johnthompson\n" f"Storage Limit: Unlimited\n"
     )
 
 
@@ -190,17 +191,10 @@ def fake_human_date(unixtime):
 
 
 def test_cred_list(monkeypatch, client):
-    runner = CliRunner()
-    result = runner.invoke(
-        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
-    )
-    assert result.output == (
-        f"Credentials listing failed. \n" f"'NoneType' object has no attribute 'user'\n"
-    )
-
     monkeypatch.setattr(obs.libs.credential, "list", fake_cred_list)
     monkeypatch.setattr(obs.libs.utils, "human_date", fake_human_date)
 
+    runner = CliRunner()
     result = runner.invoke(
         cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
     )
@@ -210,4 +204,15 @@ def test_cred_list(monkeypatch, client):
         f"Secret Key: IgP23gfnbrguu21YqFRw4+7Mfake\n"
         f"Created: 1970-01-19 10:55:05+0700 (WIB)\n"
         f"Active: True\n"
+    )
+
+
+def test_except_cred_list(client):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
+    )
+
+    assert result.output == (
+        f"Credentials listing failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )

@@ -1,13 +1,16 @@
 import mock
 import pytest
+import sys
 import obs.libs.bucket
 import obs.libs.auth
 import obs.libs.gmt
 
+from obs.storage import commands
 from datetime import datetime
 from obs.main import cli
 from click.testing import CliRunner
 from obs.storage import bucket
+from pathlib import Path
 
 
 def fake_resource():
@@ -41,17 +44,43 @@ def fake_buckets(resource):
     return [bucket1, bucket2]
 
 
+def test_resources():
+    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "ls"])
+    assert result.output == (
+        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"Configuration file not available.\n"
+        f"Consider running 'obs --configure' to create one\n"
+    )
+
+
+def test_plain_auth(resource):
+    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "info"])
+    assert result.output == (
+        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"Configuration file not available.\n"
+        f"Consider running 'obs --configure' to create one\n"
+    )
+
+
 def test_ls(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "buckets", fake_buckets)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "ls"])
+    assert result.output == (
+        f"2019-09-24 01:01:00 bucket-one\n" f"2019-09-24 01:01:00 bucket-two\n"
+    )
+
+
+def test_except_ls(resource):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls"])
     assert result.output == (
         f"Bucket listing failed. \n" f"'NoneType' object has no attribute 'buckets'\n"
-    )
-
-    monkeypatch.setattr(obs.libs.bucket, "buckets", fake_buckets)
-    result = runner.invoke(cli, ["storage", "ls"])
-    assert result.output == (
-        f"2019-09-24 01:01:00 bucket-one\n" f"2019-09-24 01:01:00 bucket-two\n"
     )
 
 
@@ -73,19 +102,9 @@ def fake_get_objects(resource, bucket_name, prefix=""):
 
 
 def test_ls_storage(monkeypatch, resource):
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
-
-    assert result.output == (f"'NoneType' object has no attribute 'Bucket'\n")
-
-    monkeypatch.setattr(
-        obs.libs.bucket, "get_objects", lambda resource, bucket_name, prefix: []
-    )
-    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
-
-    assert result.output == (f'Bucket "bucket-one" is empty\n')
-
     monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
+
+    runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls", "bucket-two"])
 
     assert result.output == (
@@ -94,7 +113,34 @@ def test_ls_storage(monkeypatch, resource):
     )
 
 
+def test_except_ls_storage(resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
+
+    assert result.output == (f"'NoneType' object has no attribute 'Bucket'\n")
+
+
+def test_else_ls_storage(monkeypatch, resource):
+    monkeypatch.setattr(
+        obs.libs.bucket, "get_objects", lambda resource, bucket_name, prefix: []
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
+
+    assert result.output == (f'Bucket "bucket-one" is empty\n')
+
+
 def test_bucket_usage(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "du", "bucket-one"])
+
+    assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
+
+
+def test_except_bucket_usage(resource):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du", "bucket-one"])
 
@@ -102,11 +148,6 @@ def test_bucket_usage(monkeypatch, resource):
         f"Bucket usage fetching failed. \n"
         f"'NoneType' object has no attribute 'Bucket'\n"
     )
-
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
-    result = runner.invoke(cli, ["storage", "du", "bucket-one"])
-
-    assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
 
 
 def fake_bucket_info(resource, bucket_name, auth):
@@ -124,13 +165,9 @@ def fake_bucket_info(resource, bucket_name, auth):
 
 
 def test_bucket_info(monkeypatch, resource, plain_auth):
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "info", "bucket-one"])
-    assert result.output == (
-        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
-    )
-
     monkeypatch.setattr(obs.libs.bucket, "bucket_info", fake_bucket_info)
+
+    runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one"])
     assert result.output == (
         f"Location: US\n"
@@ -140,6 +177,14 @@ def test_bucket_info(monkeypatch, resource, plain_auth):
         f"ACL: ['Test user'] : ['FULL_CONTROL']\n"
         f"ACL: ['Public'] : ['FULL_CONTROL']\n"
         f"Gmt Policy: 2 Replication in Midplaza, 1 in Technovillage\n"
+    )
+
+
+def test_except_bucket_info(resource, plain_auth):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "info", "bucket-one"])
+    assert result.output == (
+        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
     )
 
 
@@ -159,14 +204,9 @@ def fake_object_info(resource, bucket_name, object_name):
 
 
 def test_object_info(monkeypatch, resource, plain_auth):
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
-
-    assert result.output == (
-        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Object'\n"
-    )
-
     monkeypatch.setattr(obs.libs.bucket, "object_info", fake_object_info)
+
+    runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
 
     assert result.output == (
@@ -176,6 +216,15 @@ def test_object_info(monkeypatch, resource, plain_auth):
         f"Storage: None\n"
         "MD5 Sum: 5610180790cf66a71cf5ea9ad0f920f5\n"
         f"ACL: ['Test user'] : ['FULL_CONTROL']\n"
+    )
+
+
+def test_except_object_info(resource, plain_auth):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
+
+    assert result.output == (
+        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Object'\n"
     )
 
 
@@ -245,21 +294,15 @@ def test_disk_usage(monkeypatch, resource):
 def fake_gmt():
     policies = {
         "Jakarta": {"id": "123", "desc": "", "_": ""},
-        "Sydney": {"id": "143", "desc": "blabla", "_": ""},
+        "Sydney": {"id": "143", "desc": "foo", "_": ""},
     }
     return policies
 
 
 def test_gmt(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: None)
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
-
-    assert result.output == (
-        f"Show policies failed. \n" f"'NoneType' object is not iterable\n"
-    )
-
     monkeypatch.setattr(obs.libs.gmt, "get_policies", fake_gmt)
+
+    runner = CliRunner()
     result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
 
     assert result.output == (
@@ -268,13 +311,56 @@ def test_gmt(monkeypatch, resource):
         f"Description: No description\n\n"
         f"Name: Sydney\n"
         f"Id: 143\n"
-        f"Description: blabla\n\n"
+        f"Description: foo\n\n"
     )
 
+
+def test_notset_gmt(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: "notset")
+
+    runner = CliRunner()
     result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
 
     assert result.output == (
         f"Can't find Policy file\n"
         f"See '#using-cloudian-hyperstore-extension' in our documentation for more information\n"
     )
+
+
+def test_except_gmt(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
+
+    assert result.output == (
+        f"Show policies failed. \n" f"'NoneType' object is not iterable\n"
+    )
+
+
+def fake_move():
+    bucket = mock.Mock()
+    bucket.Bucket.return_value = [
+        {"Bucket": "bucket1", "Key": ["obj1"]},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
+    ]
+    bucket.Object.return_value.copy.side_effect = bucket.Bucket()[1]["Key"].append(
+        "obj1"
+    )
+    bucket.Object.return_value.delete.side_effect = bucket.Bucket()[0]["Key"].remove(
+        "obj1"
+    )
+    return bucket
+
+
+def test_mv(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_move)
+    monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mv", "bucket-one", "bucket-two", "obj1"])
+
+    assert fake_move().Bucket() == [
+        {"Bucket": "bucket1", "Key": []},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3", "obj1"]},
+    ]
