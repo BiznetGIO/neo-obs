@@ -4,6 +4,7 @@ import errno
 import requests
 
 from obs.libs import config
+from obs.libs import auth as auth_lib
 
 
 def policies_file():
@@ -29,9 +30,8 @@ def get_policies():
 
 def policy_id(bucket_name, auth):
     """Get GMT-Policy id from S3 API response headers."""
-    auth, endpoint = auth
 
-    endpoint = f"http://{bucket_name}.{endpoint}"
+    endpoint = auth_lib.get_endpoint(bucket_name)
     response = requests.get(endpoint, auth=auth)
     policy_id = response.headers.get("x-gmt-policyid")
 

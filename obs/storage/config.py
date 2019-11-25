@@ -35,6 +35,11 @@ def run_configure():
             f"Admin url and port are your url and port location to your admin panel. \nUse the defaults to use Neo Object Storage Admin.",
         ),
         ("admin_port", "Admin port"),
+        (
+            "use_https",
+            "Use HTTPS protocol",
+            "All communication is protected when enabled, but it's slower than plain HTTP.",
+        ),
     ]
     try:
         while True:
