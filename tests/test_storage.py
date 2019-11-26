@@ -1,13 +1,17 @@
 import mock
 import pytest
+import boto3
 import sys
+import os
 import requests
 import obs.libs.bucket
 import obs.libs.auth
 import obs.libs.gmt
 import obs.libs.utils
+import obs.libs.config
 
 from obs.storage import commands
+from requests_aws4auth import AWS4Auth
 from datetime import datetime
 from obs.main import cli
 from click.testing import CliRunner
@@ -46,23 +50,30 @@ def fake_buckets(resource):
     return [bucket1, bucket2]
 
 
-def test_resources():
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+def fake_session(**kwargs):
+    session = mock.Mock()
+    session.resource.return_value = "s3_resource"
+    return session
+
+
+def test_resources(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda : 'home/user/path')
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls"])
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
 
+def test_plain_auth(monkeypatch,resource):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda : 'home/user/path')
 
-def test_plain_auth(resource):
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info"])
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
@@ -571,3 +582,4 @@ def test_except_acl(resource):
     assert result.output == (
         f"ACL change failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
     )
+

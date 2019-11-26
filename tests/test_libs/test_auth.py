@@ -1,10 +1,7 @@
-import os
 import mock
 import boto3
 from obs.libs import auth
 from obs.libs import config
-from cloudianapi.client import CloudianAPIClient
-from requests_aws4auth import AWS4Auth
 
 
 def fake_config():

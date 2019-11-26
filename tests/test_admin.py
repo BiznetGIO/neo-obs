@@ -2,6 +2,7 @@ import pytest
 import io
 import os
 import mock
+import bitmath
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
@@ -23,13 +24,14 @@ def client(monkeypatch):
 
 
 def test_get_client(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda : 'home/user/path')
+
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
+        cli, ["admin", "user", "ls"]
     )
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
@@ -154,6 +156,7 @@ def fake_qos_info(client, user_id, group_id):
 
 def test_qos_info(monkeypatch, client):
     monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
+    monkeypatch.setattr(bitmath, "kB", fake_bitmath)
 
     runner = CliRunner()
     result = runner.invoke(
@@ -163,6 +166,12 @@ def test_qos_info(monkeypatch, client):
     assert result.output == (
         f"Group ID: testing\n" f"User ID: johnthompson\n" f"Storage Limit: Unlimited\n"
     )
+
+
+def fake_bitmath(limit):
+    limit = mock.Mock()
+    limit.to_GiB.return_value.best_prefix.return_value = "0.49234 GiB"
+    return limit
 
 
 def test_except_qos_info(client):
@@ -272,7 +281,7 @@ def test_except_remove_user(client):
     )
 
 
-def fake_creds():
+def fake_rm_creds():
     credential = [
         {
             "accessKey": "394b287c9efake",
@@ -298,13 +307,13 @@ def fake_creds():
 
 
 def test_remove_cred(monkeypatch):
-    monkeypatch.setattr(admin_client, "get_admin_client", fake_creds)
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_rm_creds)
     monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["admin", "cred", "rm"])
 
-    assert fake_creds().user.credentials.list() == [
+    assert fake_rm_creds().user.credentials.list() == [
         {
             "accessKey": "394b287c9efake",
             "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
