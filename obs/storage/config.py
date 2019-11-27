@@ -20,21 +20,26 @@ def run_configure():
         ),
         (
             "user_gmt_policy",
-            "Gmt Policy PATH",
-            f"PATH to your gmt policy file, Leave as is 'notset' if you don't want to use Cloudian extension",
+            "Gmt Policy Path",
+            f"Path to your gmt policy file, Leave as is 'notset' if you don't want to use Cloudian extension",
         ),
         (
             "admin_username",
             "Admin Username",
-            f"""Admin username and password are your identififers for your admin panel (e.g Clodian CMC), \nUse "{cfg.admin_url}" to the target Neo Object Storage.""",
+            f"""Admin username and password are your identifiers for your admin panel.""",
         ),
         ("admin_password", "Admin Password"),
         (
             "admin_url",
             "Admin URL",
-            f'Admin url and port are your url and port location to your admin panel Default "{cfg.admin_port}""',
+            f"Admin url and port are your url and port location to your admin panel. \nUse the defaults to use Neo Object Storage Admin.",
         ),
-        ("admin_port", "Admin port", f'Default "{cfg.admin_port}"'),
+        ("admin_port", "Admin port"),
+        (
+            "use_https",
+            "Use HTTPS protocol",
+            "All communication is protected when enabled, but it's slower than plain HTTP.",
+        ),
     ]
     try:
         while True:

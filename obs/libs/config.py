@@ -19,6 +19,7 @@ class Config:
     admin_port = "19443"
     admin_username = ""
     admin_password = ""
+    use_https = "true"
 
     def dump_config(self, options, cfg):
         cfg_file = config_file()

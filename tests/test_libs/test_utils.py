@@ -4,6 +4,7 @@ import tzlocal
 import mock
 import xmltodict
 from obs.libs import utils
+from datetime import datetime, timezone
 
 
 def test_size():
@@ -12,8 +13,8 @@ def test_size():
 
 
 def test_date(monkeypatch):
-    monkeypatch.setattr(tzlocal, "get_localzone", lambda: None)
-    assert utils.human_date(0) == f"1970-01-01 00:00:00 ()"
+    monkeypatch.setattr(tzlocal, "get_localzone", lambda: timezone.utc)
+    assert utils.human_date(0) == f"1970-01-01 00:00:00+0000 (UTC)"
 
 
 def test_check():

@@ -3,6 +3,7 @@ import os
 import requests
 
 from obs.libs import gmt
+from obs.libs import auth as auth_lib
 
 
 def buckets(resource):
@@ -27,7 +28,7 @@ def create_bucket(**kwargs):
     :param bucket_name: Bucket name
     :param random: A flag for deciding that a bucket name should be suffixed by random string or not, defaults to False
     """
-    auth, endpoint = kwargs.get("auth")
+    auth = kwargs.get("auth")
     acl = kwargs.get("acl", "private")
     policy_id = kwargs.get("policy_id", "")
     bucket_name = kwargs.get("bucket_name")
@@ -35,7 +36,7 @@ def create_bucket(**kwargs):
     if kwargs.get("random_name"):
         bucket_name = gen_random_name(bucket_name)
 
-    endpoint = f"http://{bucket_name}.{endpoint}"
+    endpoint = auth_lib.get_endpoint(bucket_name)
     headers = {"x-gmt-policyid": policy_id, "x-amz-acl": acl}
 
     response = requests.put(endpoint, auth=auth, headers=headers)
