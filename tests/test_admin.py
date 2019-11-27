@@ -24,12 +24,10 @@ def client(monkeypatch):
 
 
 def test_get_client(monkeypatch):
-    monkeypatch.setattr(obs.libs.config, "config_file", lambda : 'home/user/path')
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
 
     runner = CliRunner()
-    result = runner.invoke(
-        cli, ["admin", "user", "ls"]
-    )
+    result = runner.invoke(cli, ["admin", "user", "ls"])
     assert result.output == (
         f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
@@ -330,6 +328,7 @@ def test_except_remove_cred(client):
     assert result.output == (
         f"Credential removal failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )
+
 
 def fake_status_creds():
     client = mock.Mock()
