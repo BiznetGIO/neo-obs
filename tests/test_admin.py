@@ -2,6 +2,7 @@ import pytest
 import io
 import os
 import mock
+import bitmath
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
@@ -23,13 +24,12 @@ def client(monkeypatch):
 
 
 def test_get_client(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
+
     runner = CliRunner()
-    result = runner.invoke(
-        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
-    )
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+    result = runner.invoke(cli, ["admin", "user", "ls"])
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
@@ -109,7 +109,8 @@ def test_info(monkeypatch, client):
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+        cli,
+        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
     )
 
     assert result.output == (
@@ -127,7 +128,8 @@ def test_info(monkeypatch, client):
 def test_except_info(client):
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+        cli,
+        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
     )
 
     assert result.output == (
@@ -152,6 +154,7 @@ def fake_qos_info(client, user_id, group_id):
 
 def test_qos_info(monkeypatch, client):
     monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
+    monkeypatch.setattr(bitmath, "kB", fake_bitmath)
 
     runner = CliRunner()
     result = runner.invoke(
@@ -161,6 +164,12 @@ def test_qos_info(monkeypatch, client):
     assert result.output == (
         f"Group ID: testing\n" f"User ID: johnthompson\n" f"Storage Limit: Unlimited\n"
     )
+
+
+def fake_bitmath(limit):
+    limit = mock.Mock()
+    limit.to_GiB.return_value.best_prefix.return_value = "0.49234 GiB"
+    return limit
 
 
 def test_except_qos_info(client):
@@ -215,4 +224,198 @@ def test_except_cred_list(client):
 
     assert result.output == (
         f"Credentials listing failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_clients():
+    user = [
+        {
+            "userId": "jerrygarcia",
+            "fullName": "Jerry Garcia",
+            "emailAddr": "garcia@bgn.net",
+            "address1": "456 Shakedown St.",
+            "city": "Portsmouth",
+            "active": True,
+        },
+        {
+            "userId": "johnthompson",
+            "fullName": "John Thompson",
+            "emailAddr": "",
+            "address1": "",
+            "city": "",
+            "active": True,
+        },
+    ]
+    client = mock.Mock()
+    client.user.list.return_value = user
+    client.user.side_effect = client.user.list().pop(1)
+    return client
+
+
+def test_remove_user(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_clients)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda response: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "user", "rm"])
+
+    assert fake_clients().user.list() == [
+        {
+            "userId": "jerrygarcia",
+            "fullName": "Jerry Garcia",
+            "emailAddr": "garcia@bgn.net",
+            "address1": "456 Shakedown St.",
+            "city": "Portsmouth",
+            "active": True,
+        }
+    ]
+
+
+def test_except_remove_user(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "user", "rm"])
+    assert result.output == (
+        f"User removal failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_rm_creds():
+    credential = [
+        {
+            "accessKey": "394b287c9efake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        },
+        {
+            "accessKey": "Br432sd293fake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        },
+    ]
+    cred = mock.Mock()
+    cred.user.credentials.list.return_value = credential
+
+    def remove():
+        del cred.user.credentials.list()[1]
+
+    cred.user.credentials.side_effect = remove()
+    return cred
+
+
+def test_remove_cred(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_rm_creds)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "rm"])
+
+    assert fake_rm_creds().user.credentials.list() == [
+        {
+            "accessKey": "394b287c9efake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        }
+    ]
+
+
+def test_except_remove_cred(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "rm"])
+
+    assert result.output == (
+        f"Credential removal failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_status_creds():
+    client = mock.Mock()
+    client.user.credentials.list.return_value = [
+        {
+            "accessKey": "394b287c9efake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        },
+        {
+            "accessKey": "Br432sd293fake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+            "active": False,
+        },
+    ]
+
+    def set_status():
+        client.user.credentials.list.return_value[1]["active"] = True
+        return "foo"
+
+    client.user.credentials.status.side_effect = set_status()
+    client.user.credentials.return_value = "Done"
+    return client
+
+
+def test_status_cred(monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_status_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "status", "--access-key", "Br432sd293fake"]
+    )
+    assert obs.libs.credential.list(fake_status_creds(), "user", "group")[1] == {
+        "accessKey": "Br432sd293fake",
+        "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+        "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+        "active": True,
+    }
+
+
+def test_except_status_cred(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "status"])
+    assert result.output == (
+        f"Credentials fetching failed. \n"
+        f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_create_creds():
+    client = mock.Mock()
+    client.user.credentials.list.return_value = []
+    cred = {
+        "accessKey": "Br432sd293fake",
+        "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+        "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+        "active": False,
+    }
+
+    def create():
+        client.user.credentials.list.return_value.append(cred)
+        return "foo"
+
+    client.user.credentials.return_value = create()
+    return client
+
+
+def test_create_cred(monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_create_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "create"])
+    assert obs.libs.credential.list(fake_create_creds(), "user", "group") == [
+        {
+            "accessKey": "Br432sd293fake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+            "active": False,
+        }
+    ]
+
+
+def test_except_create_cred(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "create"])
+    assert result.output == (
+        f"Credential creation failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )

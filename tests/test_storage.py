@@ -1,11 +1,18 @@
 import mock
 import pytest
+import boto3
 import sys
+import os
+import pyfakefs
+import requests
 import obs.libs.bucket
 import obs.libs.auth
 import obs.libs.gmt
+import obs.libs.utils
+import obs.libs.config
 
 from obs.storage import commands
+from requests_aws4auth import AWS4Auth
 from datetime import datetime
 from obs.main import cli
 from click.testing import CliRunner
@@ -44,23 +51,31 @@ def fake_buckets(resource):
     return [bucket1, bucket2]
 
 
-def test_resources():
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+def fake_session(**kwargs):
+    session = mock.Mock()
+    session.resource.return_value = "s3_resource"
+    return session
+
+
+def test_resources(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls"])
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
 
 
-def test_plain_auth(resource):
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+def test_plain_auth(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info"])
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
@@ -420,7 +435,7 @@ def fake_remove():
     return bucket
 
 
-def test_rm(monkeypatch):
+def test_rm_object(monkeypatch):
     monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
 
@@ -433,7 +448,7 @@ def test_rm(monkeypatch):
     ]
 
 
-def test_except_rm(monkeypatch):
+def test_except_rm_object(monkeypatch):
     monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
 
@@ -441,3 +456,210 @@ def test_except_rm(monkeypatch):
     result = runner.invoke(cli, ["storage", "rm", "bucket-one", "obj1"])
 
     assert result.output == (f"Object removal failed. \n" f"Object not exists: obj1\n")
+
+
+def fake_mb(*args, **kwargs):
+    res = mock.Mock()
+    res.buckets.all.return_value = fake_buckets(resource)
+
+    bucket = mock.Mock()
+    bucket.name = "bucket-three"
+    dt = datetime(2019, 9, 24, 1, 1, 0, 0)
+    bucket.creation_date = dt
+
+    def put():
+        res.buckets.all().append(bucket)
+
+    requests = mock.Mock()
+    requests.put.side_effect = put()
+    return res
+
+
+def test_mb(monkeypatch):
+    monkeypatch.setattr(obs.libs.auth, "plain_auth", lambda: ("foobar", "foo"))
+    monkeypatch.setattr(requests, "put", fake_mb)
+    monkeypatch.setattr(obs.libs.utils, "check_plain", lambda response: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mb", "bucket-one", "--random"])
+
+    echo = ""
+    for bucket in fake_mb().buckets.all():
+        echo += f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}\n"
+
+    assert echo == (
+        f"2019-09-24 01:01:00 bucket-one\n"
+        f"2019-09-24 01:01:00 bucket-two\n"
+        f"2019-09-24 01:01:00 bucket-three\n"
+    )
+
+
+def test_except_mb(plain_auth):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mb", "bucket-one"])
+
+    assert result.output == (
+        f"Bucket creation failed. \n" f"'NoneType' object has no attribute 'lower'\n"
+    )
+
+
+def fake_remove_bucket():
+    bucket = mock.Mock()
+    bucket.Buckets.return_value = [
+        {"Bucket": "bucket1", "Key": ["obj1"]},
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
+    ]
+
+    def del_bucket(bucket_name):
+        for index, foo in enumerate(bucket.Buckets()):
+            if foo["Bucket"] == bucket_name:
+                del bucket.Buckets()[index]
+
+    bucket.Bucket.return_value.delete.side_effect = del_bucket("bucket1")
+    return bucket
+
+
+def test_rm_bucket(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove_bucket)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
+
+    assert fake_remove_bucket().Buckets() == [
+        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]}
+    ]
+
+
+def test_except_rm_bucket(monkeypatch, resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
+
+    assert result.output == f"'NoneType' object has no attribute 'Bucket'\n"
+
+
+def fake_acl_object():
+    acl = mock.Mock()
+    acl.info = []
+    acl.Object.return_value.Acl.return_value.put.side_effect = acl.info.append(
+        [["Testing"], ["FULL_CONTROL"]]
+    )
+    return acl
+
+
+def fake_acl_Bucket():
+    acl = mock.Mock()
+    acl.info = [[["Test user"], ["FULL_CONTROL"]]]
+    acl.Bucket.return_value.Acl.return_value.put.side_effect = acl.info.append(
+        [["Testing"], ["FULL_CONTROL"]]
+    )
+    return acl
+
+
+def test_acl_bucket(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_acl_Bucket)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "private"])
+    assert fake_acl_Bucket().info == [
+        [["Test user"], ["FULL_CONTROL"]],
+        [["Testing"], ["FULL_CONTROL"]],
+    ]
+    assert result.output == f"ACL changed successfully\n"
+
+
+def test_acl_object(monkeypatch):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_acl_object)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "obj1", "private"])
+    assert fake_acl_object().info == [[["Testing"], ["FULL_CONTROL"]]]
+
+    assert result.output == f"ACL changed successfully\n"
+
+
+def test_except_acl(resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "private"])
+
+    assert result.output == (
+        f"ACL change failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
+    )
+
+
+def test_get(monkeypatch, fs, resource):
+    def donwload():
+        fs.create_file("/obj1.jpg")
+        resource = mock.Mock()
+        resource.Object.return_value.download_file.side_effect = lambda name: None
+        return resource
+
+    monkeypatch.setattr(obs.storage.commands, "get_resources", donwload)
+    monkeypatch.setattr(
+        obs.libs.bucket, "is_exists", lambda resource, bucket, object: True
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "get", "bucket-one", "obj1.jpg"])
+    assert os.path.exists("/obj1.jpg")
+
+
+def test_except_get(monkeypatch, resource):
+    monkeypatch.setattr(
+        obs.libs.bucket, "is_exists", lambda resource, bucket, object: False
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "get", "bucket-one", "obj1"])
+
+    assert result.output == (f"Object download failed. \n" f"Object not exists: obj1\n")
+
+
+def test_put(monkeypatch, fs, resource):
+    def upload(**kwargs):
+        fs.create_file("upload/obj1.jpg")
+
+    monkeypatch.setattr(obs.libs.bucket, "upload_object", upload)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "put", "bucket-one", "path", "obj1"])
+    assert os.path.exists("upload/obj1.jpg")
+
+
+def test_except_put(resource):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["storage", "put", "bucket-one", "path", "obj1", "--use-basename"]
+    )
+
+    assert result.output == (
+        f"Object upload failed. \n" f"'NoneType' object has no attribute 'Object'\n"
+    )
+
+
+def fake_dir():
+    resource = mock.Mock()
+    resource.meta.client.put_object.side_effect = lambda **kwargs: "done"
+    return resource
+
+
+@pytest.mark.usefixtures("fs")
+def test_mkdir(monkeypatch, fs):
+    def mkdir():
+        fs.create_dir("/new/")
+        resource = mock.Mock()
+        resource.meta.client.put_object.side_effect = lambda **kwargs: None
+        return resource
+
+    monkeypatch.setattr(obs.storage.commands, "get_resources", mkdir)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mkdir", "bucket", "obs"])
+    assert os.path.exists("/new/")
+
+
+def test_except_mkdir(resource):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "mkdir", "bucket", "obs"])
+    assert result.output == (
+        f"Directory creation failed. \n" f"'NoneType' object has no attribute 'meta'\n"
+    )
