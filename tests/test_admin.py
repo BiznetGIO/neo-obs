@@ -330,3 +330,93 @@ def test_except_remove_cred(client):
     assert result.output == (
         f"Credential removal failed. \n" f"'NoneType' object has no attribute 'user'\n"
     )
+
+def fake_status_creds():
+    client = mock.Mock()
+    client.user.credentials.list.return_value = [
+        {
+            "accessKey": "394b287c9efake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
+            "active": True,
+        },
+        {
+            "accessKey": "Br432sd293fake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+            "active": False,
+        },
+    ]
+
+    def set_status():
+        client.user.credentials.list.return_value[1]["active"] = True
+        return "foo"
+
+    client.user.credentials.status.side_effect = set_status()
+    client.user.credentials.return_value = "Done"
+    return client
+
+
+def test_status_cred(monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_status_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "status", "--access-key", "Br432sd293fake"]
+    )
+    assert obs.libs.credential.list(fake_status_creds(), "user", "group")[1] == {
+        "accessKey": "Br432sd293fake",
+        "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+        "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+        "active": True,
+    }
+
+
+def test_except_status_cred(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "status"])
+    assert result.output == (
+        f"Credentials fetching failed. \n"
+        f"'NoneType' object has no attribute 'user'\n"
+    )
+
+
+def fake_create_creds():
+    client = mock.Mock()
+    client.user.credentials.list.return_value = []
+    cred = {
+        "accessKey": "Br432sd293fake",
+        "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+        "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+        "active": False,
+    }
+
+    def create():
+        client.user.credentials.list.return_value.append(cred)
+        return "foo"
+
+    client.user.credentials.return_value = create()
+    return client
+
+
+def test_create_cred(monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_create_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "create"])
+    assert obs.libs.credential.list(fake_create_creds(), "user", "group") == [
+        {
+            "accessKey": "Br432sd293fake",
+            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
+            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
+            "active": False,
+        }
+    ]
+
+
+def test_except_create_cred(client):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "create"])
+    assert result.output == (
+        f"Credential creation failed. \n" f"'NoneType' object has no attribute 'user'\n"
+    )
