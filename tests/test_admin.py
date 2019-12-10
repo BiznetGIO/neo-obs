@@ -203,6 +203,86 @@ def test_except_qos_info(monkeypatch):
     )
 
 
+def fake_qos():
+    client = mock.Mock()
+    client.qos.limits.return_value = "Done"
+    return client
+
+
+def test_qos_set(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_qos)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "admin",
+            "qos",
+            "set",
+            "--user-id",
+            "user",
+            "--group-id",
+            "group",
+            "--limit",
+            100,
+        ],
+    )
+
+    assert result.output == f"Storage limit changed\n"
+
+
+def test_except_qos_set(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "admin",
+            "qos",
+            "set",
+            "--user-id",
+            "user",
+            "--group-id",
+            "group",
+            "--limit",
+            100,
+        ],
+    )
+
+    assert (
+        result.output == f"Storage limit change failed. \n"
+        f"error [101]\n"
+        f"URL: http://testing\n"
+    )
+
+
+def test_qos_rm(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_qos)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "qos", "rm", "--user-id", "user", "--group-id", "group"]
+    )
+
+    assert result.output == f"Storage limit removed\n"
+
+
+def test_except_qos_rm(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "qos", "rm", "--user-id", "user", "--group-id", "group"]
+    )
+
+    assert (
+        result.output == f"Storage limit removal failed. \n"
+        f"error [101]\n"
+        f"URL: http://testing\n"
+    )
+
+
 def fake_cred_list(client, user_id, group_id):
     dt = datetime(2019, 9, 24, 13, 18, 7, 0).timestamp()
     credential = {
