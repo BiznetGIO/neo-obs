@@ -228,27 +228,8 @@ def test_except_cred_list(client):
 
 
 def fake_clients():
-    user = [
-        {
-            "userId": "jerrygarcia",
-            "fullName": "Jerry Garcia",
-            "emailAddr": "garcia@bgn.net",
-            "address1": "456 Shakedown St.",
-            "city": "Portsmouth",
-            "active": True,
-        },
-        {
-            "userId": "johnthompson",
-            "fullName": "John Thompson",
-            "emailAddr": "",
-            "address1": "",
-            "city": "",
-            "active": True,
-        },
-    ]
     client = mock.Mock()
-    client.user.list.return_value = user
-    client.user.side_effect = client.user.list().pop(1)
+    client.user.list.return_value = lambda: None
     return client
 
 
@@ -259,16 +240,7 @@ def test_remove_user(monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["admin", "user", "rm"])
 
-    assert fake_clients().user.list() == [
-        {
-            "userId": "jerrygarcia",
-            "fullName": "Jerry Garcia",
-            "emailAddr": "garcia@bgn.net",
-            "address1": "456 Shakedown St.",
-            "city": "Portsmouth",
-            "active": True,
-        }
-    ]
+    assert result.output == f"User removed successfully\n"
 
 
 def test_except_remove_user(client):
@@ -280,27 +252,8 @@ def test_except_remove_user(client):
 
 
 def fake_rm_creds():
-    credential = [
-        {
-            "accessKey": "394b287c9efake",
-            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
-            "active": True,
-        },
-        {
-            "accessKey": "Br432sd293fake",
-            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
-            "active": True,
-        },
-    ]
     cred = mock.Mock()
-    cred.user.credentials.list.return_value = credential
-
-    def remove():
-        del cred.user.credentials.list()[1]
-
-    cred.user.credentials.side_effect = remove()
+    cred.user.credentials.return_value = "Done"
     return cred
 
 
@@ -311,14 +264,7 @@ def test_remove_cred(monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["admin", "cred", "rm"])
 
-    assert fake_rm_creds().user.credentials.list() == [
-        {
-            "accessKey": "394b287c9efake",
-            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
-            "active": True,
-        }
-    ]
+    assert result.output == f"Credentials removed\n"
 
 
 def test_except_remove_cred(client):
@@ -332,27 +278,7 @@ def test_except_remove_cred(client):
 
 def fake_status_creds():
     client = mock.Mock()
-    client.user.credentials.list.return_value = [
-        {
-            "accessKey": "394b287c9efake",
-            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-            "createDate": "1970-01-19 10:55:05+0700 (WIB)",
-            "active": True,
-        },
-        {
-            "accessKey": "Br432sd293fake",
-            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
-            "active": False,
-        },
-    ]
-
-    def set_status():
-        client.user.credentials.list.return_value[1]["active"] = True
-        return "foo"
-
-    client.user.credentials.status.side_effect = set_status()
-    client.user.credentials.return_value = "Done"
+    client.user.credentials.status.return_value = "Done"
     return client
 
 
@@ -363,12 +289,8 @@ def test_status_cred(monkeypatch):
     result = runner.invoke(
         cli, ["admin", "cred", "status", "--access-key", "Br432sd293fake"]
     )
-    assert obs.libs.credential.list(fake_status_creds(), "user", "group")[1] == {
-        "accessKey": "Br432sd293fake",
-        "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-        "createDate": "2019-01-19 10:55:05+0700 (WIB)",
-        "active": True,
-    }
+
+    assert result.output == f"Credentials status changed\n"
 
 
 def test_except_status_cred(client):
@@ -382,19 +304,7 @@ def test_except_status_cred(client):
 
 def fake_create_creds():
     client = mock.Mock()
-    client.user.credentials.list.return_value = []
-    cred = {
-        "accessKey": "Br432sd293fake",
-        "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-        "createDate": "2019-01-19 10:55:05+0700 (WIB)",
-        "active": False,
-    }
-
-    def create():
-        client.user.credentials.list.return_value.append(cred)
-        return "foo"
-
-    client.user.credentials.return_value = create()
+    client.user.credentials.return_value = "Done"
     return client
 
 
@@ -403,14 +313,8 @@ def test_create_cred(monkeypatch):
 
     runner = CliRunner()
     result = runner.invoke(cli, ["admin", "cred", "create"])
-    assert obs.libs.credential.list(fake_create_creds(), "user", "group") == [
-        {
-            "accessKey": "Br432sd293fake",
-            "secretKey": "IgP23gfnbrguu21YqFRw4+7Mfake",
-            "createDate": "2019-01-19 10:55:05+0700 (WIB)",
-            "active": False,
-        }
-    ]
+
+    assert result.output == f"Credentials created\n"
 
 
 def test_except_create_cred(client):

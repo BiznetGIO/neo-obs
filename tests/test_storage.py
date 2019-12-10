@@ -354,16 +354,8 @@ def test_except_gmt(monkeypatch, resource):
 
 def fake_move():
     bucket = mock.Mock()
-    bucket.Bucket.return_value = [
-        {"Bucket": "bucket1", "Key": ["obj1"]},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
-    ]
-    bucket.Object.return_value.copy.side_effect = bucket.Bucket()[1]["Key"].append(
-        "obj1"
-    )
-    bucket.Object.return_value.delete.side_effect = bucket.Bucket()[0]["Key"].remove(
-        "obj1"
-    )
+    bucket.Object.return_value.copy.side_effect = lambda source: None
+    bucket.Object.return_value.delete.side_effect = lambda: None
     return bucket
 
 
@@ -374,10 +366,7 @@ def test_mv(monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "mv", "bucket-one", "bucket-two", "obj1"])
 
-    assert fake_move().Bucket() == [
-        {"Bucket": "bucket1", "Key": []},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3", "obj1"]},
-    ]
+    assert result.output == f'Object "obj1" moved to "bucket-two" bucket successfully\n'
 
 
 def test_except_mv(resource):
@@ -391,13 +380,7 @@ def test_except_mv(resource):
 
 def fake_copy():
     bucket = mock.Mock()
-    bucket.Bucket.return_value = [
-        {"Bucket": "bucket1", "Key": ["obj1"]},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
-    ]
-    bucket.Object.return_value.copy.side_effect = bucket.Bucket()[1]["Key"].append(
-        "obj1"
-    )
+    bucket.Object.return_value.copy.side_effect = lambda source: None
     return bucket
 
 
@@ -407,10 +390,7 @@ def test_cp(monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
 
-    assert fake_copy().Bucket() == [
-        {"Bucket": "bucket1", "Key": ["obj1"]},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3", "obj1"]},
-    ]
+    assert result.output == f'Object "obj1" copied successfully\n'
 
 
 def test_except_cp(resource):
@@ -424,13 +404,7 @@ def test_except_cp(resource):
 
 def fake_remove():
     bucket = mock.Mock()
-    bucket.Bucket.return_value = [
-        {"Bucket": "bucket1", "Key": ["obj1"]},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
-    ]
-    bucket.Object.return_value.delete.side_effect = bucket.Bucket()[0]["Key"].remove(
-        "obj1"
-    )
+    bucket.Object.return_value.delete.side_effect = lambda: None
     return bucket
 
 
@@ -441,10 +415,7 @@ def test_rm_object(monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "rm", "bucket-one", "obj1"])
 
-    assert fake_remove().Bucket() == [
-        {"Bucket": "bucket1", "Key": []},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
-    ]
+    assert result.output == f'Object "obj1" removed successfully\n'
 
 
 def test_except_rm_object(monkeypatch):
@@ -458,39 +429,20 @@ def test_except_rm_object(monkeypatch):
 
 
 def fake_mb(*args, **kwargs):
-    res = mock.Mock()
-    res.buckets.all.return_value = fake_buckets(resource)
-
-    bucket = mock.Mock()
-    bucket.name = "bucket-three"
-    dt = datetime(2019, 9, 24, 1, 1, 0, 0)
-    bucket.creation_date = dt
-
-    def put():
-        res.buckets.all().append(bucket)
-
     requests = mock.Mock()
-    requests.put.side_effect = put()
-    return res
+    requests.put.side_effect = lambda: None
+    return requests
 
 
-def test_mb(monkeypatch):
-    monkeypatch.setattr(obs.libs.auth, "plain_auth", lambda: ("foobar", "foo"))
+def test_mb(monkeypatch, plain_auth):
+    monkeypatch.setattr(obs.libs.auth, "strtobool", lambda http: True)
     monkeypatch.setattr(requests, "put", fake_mb)
     monkeypatch.setattr(obs.libs.utils, "check_plain", lambda response: None)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "mb", "bucket-one", "--random"])
 
-    echo = ""
-    for bucket in fake_mb().buckets.all():
-        echo += f"{bucket.creation_date:%Y-%m-%d %H:%M:%S} {bucket.name}\n"
-
-    assert echo == (
-        f"2019-09-24 01:01:00 bucket-one\n"
-        f"2019-09-24 01:01:00 bucket-two\n"
-        f"2019-09-24 01:01:00 bucket-three\n"
-    )
+    assert result.output == f'Bucket "bucket-one" created successfully\n'
 
 
 def test_except_mb(plain_auth):
@@ -504,17 +456,7 @@ def test_except_mb(plain_auth):
 
 def fake_remove_bucket():
     bucket = mock.Mock()
-    bucket.Buckets.return_value = [
-        {"Bucket": "bucket1", "Key": ["obj1"]},
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]},
-    ]
-
-    def del_bucket(bucket_name):
-        for index, foo in enumerate(bucket.Buckets()):
-            if foo["Bucket"] == bucket_name:
-                del bucket.Buckets()[index]
-
-    bucket.Bucket.return_value.delete.side_effect = del_bucket("bucket1")
+    bucket.Bucket.return_value.delete.side_effect = lambda: None
     return bucket
 
 
@@ -524,9 +466,7 @@ def test_rm_bucket(monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
 
-    assert fake_remove_bucket().Buckets() == [
-        {"Bucket": "bucket2", "Key": ["obj2", "obj3"]}
-    ]
+    assert result.output == f'Bucket "bucket-one" deleted successfully.\n'
 
 
 def test_except_rm_bucket(monkeypatch, resource):
@@ -559,6 +499,7 @@ def test_acl_bucket(monkeypatch):
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "acl", "bucket-one", "private"])
+
     assert fake_acl_Bucket().info == [
         [["Test user"], ["FULL_CONTROL"]],
         [["Testing"], ["FULL_CONTROL"]],
@@ -599,7 +540,9 @@ def test_get(monkeypatch, fs, resource):
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "get", "bucket-one", "obj1.jpg"])
+
     assert os.path.exists("/obj1.jpg")
+    assert result.output == f'Object "obj1.jpg" downloaded successfully\n'
 
 
 def test_except_get(monkeypatch, resource):
@@ -621,7 +564,9 @@ def test_put(monkeypatch, fs, resource):
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "put", "bucket-one", "path", "obj1"])
+
     assert os.path.exists("upload/obj1.jpg")
+    assert result.output == f"Object uploaded successfully\n"
 
 
 def test_except_put(resource):
@@ -652,7 +597,9 @@ def test_mkdir(monkeypatch, fs):
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "mkdir", "bucket", "obs"])
+
     assert os.path.exists("/new/")
+    assert result.output == f'Directory "obs" created successfully\n'
 
 
 def test_except_mkdir(resource):
