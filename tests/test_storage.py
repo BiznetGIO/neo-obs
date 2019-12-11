@@ -90,12 +90,20 @@ def test_ls(monkeypatch, resource):
     )
 
 
-def test_except_ls(resource):
+def fake_exc_buckets(resource):
+    bucket1 = mock.Mock()
+    bucket1.name = "bucket-one"
+    bucket1.creation_date = "date"
+
+    return [bucket1]
+
+
+def test_except_ls(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "buckets", fake_exc_buckets)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls"])
-    assert result.output == (
-        f"Bucket listing failed. \n" f"'NoneType' object has no attribute 'buckets'\n"
-    )
+    assert result.output == (f"Bucket listing failed. \n" f"Invalid format specifier\n")
 
 
 def fake_get_objects(resource, bucket_name, prefix=""):
@@ -127,11 +135,23 @@ def test_ls_storage(monkeypatch, resource):
     )
 
 
-def test_except_ls_storage(resource):
+def fake_exc_get_objects(resource, bucket_name, prefix=""):
+    obj1 = mock.Mock()
+    obj1.key = "obj-one"
+    obj1.size = "foo"
+    obj1.last_modified = "date"
+    obj1.bucket = "bucket-one"
+
+    return [obj1]
+
+
+def test_except_ls_storage(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_exc_get_objects)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
 
-    assert result.output == (f"'NoneType' object has no attribute 'Bucket'\n")
+    assert result.output == (f"bad operand type for abs(): 'str'\n")
 
 
 def test_else_ls_storage(monkeypatch, resource):
@@ -154,13 +174,15 @@ def test_bucket_usage(monkeypatch, resource):
     assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
 
 
-def test_except_bucket_usage(resource):
+def test_except_bucket_usage(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_exc_get_objects)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du", "bucket-one"])
 
     assert result.output == (
         f"Bucket usage fetching failed. \n"
-        f"'NoneType' object has no attribute 'Bucket'\n"
+        f"unsupported operand type(s) for +=: 'int' and 'str'\n"
     )
 
 
@@ -194,11 +216,33 @@ def test_bucket_info(monkeypatch, resource, plain_auth):
     )
 
 
-def test_except_bucket_info(resource, plain_auth):
+def fake_exc_bucket_info(resource, bucket_name, auth):
+    acl = [["Test user"], ["FULL_CONTROL"]]
+    info = {
+        "ACL": acl,
+        "CORS": None,
+        "Policy": None,
+        "Expiration": None,
+        "Location": "US",
+        "GmtPolicy": "2 Replication in Midplaza, 1 in Technovillage",
+    }
+    return info
+
+
+def test_except_bucket_info(resource, plain_auth, monkeypatch):
+    monkeypatch.setattr(obs.libs.bucket, "bucket_info", fake_exc_bucket_info)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one"])
+
+    print(result.output)
     assert result.output == (
-        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Bucket'\n"
+        f"Location: US\n"
+        f"Expiration Rule: None\n"
+        f"Policy: None\n"
+        f"CORS: None\n"
+        f"Info fetching failed. \n"
+        f"list index out of range\n"
     )
 
 
@@ -233,13 +277,26 @@ def test_object_info(monkeypatch, resource, plain_auth):
     )
 
 
-def test_except_object_info(resource, plain_auth):
+def fake_exc_object_info(resource, bucket_name, object_name):
+    info = {
+        "ACL": "foo",
+        "Size": 300,
+        "LastModified": "foo",
+        "MD5": "5610180790cf66a71cf5ea9ad0f920f5",
+        "MimeType": "binary/octet-stream",
+        "StorageClass": None,
+    }
+
+    return info
+
+
+def test_except_object_info(resource, plain_auth, monkeypatch):
+    monkeypatch.setattr(obs.libs.bucket, "object_info", fake_exc_object_info)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
 
-    assert result.output == (
-        f"Info fetching failed. \n" f"'NoneType' object has no attribute 'Object'\n"
-    )
+    assert result.output == (f"Info fetching failed. \n" f"Invalid format specifier\n")
 
 
 def fake_presign(resource, bucket_name, object_name, expire):
@@ -247,20 +304,24 @@ def fake_presign(resource, bucket_name, object_name, expire):
 
 
 def test_presign(monkeypatch, resource):
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
-
-    assert (
-        result.output == f"URL generation failed. \n"
-        f"'NoneType' object has no attribute 'meta'\n"
-    )
-
     monkeypatch.setattr(obs.libs.bucket, "generate_url", fake_presign)
+
+    runner = CliRunner()
     result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
 
     assert (
         result.output
         == "https://myendpotin.net/oneoneone/logo.png?AWSAccessKeyId=62fake123&Signature=rSNa6fake&Expires=15\n"
+    )
+
+
+def test_except_presign(monkeypatch, resource):
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
+
+    assert result.output == (
+        f"URL generation failed. \n" f"'NoneType' object has no attribute 'meta'\n"
     )
 
 
@@ -282,18 +343,9 @@ def fake_disk_usage(resource):
     return disk_usages
 
 
-def test_except_disk_usage(monkeypatch, resource):
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "du"])
-
-    assert result.output == (
-        f"Disk usage fetching failed. \n"
-        f"'NoneType' object has no attribute 'buckets'\n"
-    )
-
-
 def test_disk_usage(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.bucket, "disk_usage", fake_disk_usage)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du"])
 
@@ -302,6 +354,28 @@ def test_disk_usage(monkeypatch, resource):
         f'800.00 Byte, 3 objects in "black" bucket\n'
         f"---\n"
         f"1.07 KiB Total\n"
+    )
+
+
+def fake_exc_disk_usage(resource):
+    bucket_name = ["green", "black"]
+    disk_usages = []
+    buck = []
+    buck.append(create_fake_buck(12))
+    buck.append(create_fake_buck(10))
+    for bckt, obj in zip(bucket_name, buck):
+        disk_usages.append([bckt, obj])
+    return disk_usages
+
+
+def test_except_disk_usage(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "disk_usage", fake_exc_disk_usage)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "du"])
+
+    assert result.output == (
+        f"Disk usage fetching failed. \n" f"object of type 'int' has no len()\n"
     )
 
 
@@ -342,13 +416,13 @@ def test_notset_gmt(monkeypatch, resource):
 
 
 def test_except_gmt(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: None)
+    monkeypatch.setattr(obs.libs.gmt, "get_policies", lambda: {"foo": "bar"})
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "gmt", "--policy-id"])
 
     assert result.output == (
-        f"Show policies failed. \n" f"'NoneType' object is not iterable\n"
+        f"Show policies failed. \n" f"'str' object has no attribute 'values'\n"
     )
 
 
@@ -369,13 +443,14 @@ def test_mv(monkeypatch):
     assert result.output == f'Object "obj1" moved to "bucket-two" bucket successfully\n'
 
 
-def test_except_mv(resource):
+def test_except_mv(monkeypatch, resource):
+    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_move)
+    monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "mv", "bucket-one", "bucket-two", "obj1"])
 
-    assert result.output == (
-        f"Object moving failed. \n" f"'NoneType' object has no attribute 'Object'\n"
-    )
+    assert result.output == (f"Object moving failed. \n" f"Object not exists: obj1\n")
 
 
 def fake_copy():
@@ -394,6 +469,7 @@ def test_cp(monkeypatch):
 
 
 def test_except_cp(resource):
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
 
@@ -445,13 +521,27 @@ def test_mb(monkeypatch, plain_auth):
     assert result.output == f'Bucket "bucket-one" created successfully\n'
 
 
-def test_except_mb(plain_auth):
+def fake_response(**kwargs):
+    response = mock.Mock()
+    response.text = "Done"
+    return response
+
+
+import xmltodict
+
+
+def test_except_mb(monkeypatch, plain_auth):
+    monkeypatch.setattr(obs.libs.bucket, "create_bucket", fake_response)
+    monkeypatch.setattr(
+        xmltodict,
+        "parse",
+        lambda response: {"Error": {"Code": "101", "Message": "Error"}},
+    )
+
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "mb", "bucket-one"])
 
-    assert result.output == (
-        f"Bucket creation failed. \n" f"'NoneType' object has no attribute 'lower'\n"
-    )
+    assert result.output == (f"Bucket creation failed. \n" f"101: Error\n")
 
 
 def fake_remove_bucket():
