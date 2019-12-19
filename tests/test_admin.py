@@ -2,6 +2,7 @@ import pytest
 import io
 import os
 import mock
+import bitmath
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
@@ -17,22 +18,35 @@ def fake_client():
     pass
 
 
+def fake_response():
+    return {"reason": "error", "status_code": 101, "url": "http://testing"}
+
+
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setattr(obs.libs.auth, "admin_client", fake_client)
 
 
 def test_get_client(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
+
     runner = CliRunner()
-    result = runner.invoke(
-        cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
-    )
-    path = str(Path.home()) + "/.config/neo-obs/obs.env"
+    result = runner.invoke(cli, ["admin", "user", "ls"])
     assert result.output == (
-        f"[Errno 2] No such file or directory: '{path}'\n"
+        f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
         f"Consider running 'obs --configure' to create one\n"
     )
+
+
+def fake_exc_client():
+    client = mock.Mock()
+    client.user.list.return_value = fake_response()
+    client.user.return_value = fake_response()
+    client.qos.limits.return_value = fake_response()
+    client.user.credentials.list.return_value = fake_response()
+
+    return client
 
 
 def fake_list_users(client, group_id, user_type="all", user_status="active", limit=""):
@@ -81,12 +95,14 @@ def test_ls(monkeypatch, client):
     assert result.output == tabulated_users
 
 
-def test_except_ls(client):
+def test_except_ls(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
     runner = CliRunner()
     result = runner.invoke(cli, ["admin", "user", "ls"])
 
     assert result.output == (
-        f"Users fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
+        f"Users fetching failed. \n" f"error [101]\n" f"URL: http://testing\n"
     )
 
 
@@ -109,7 +125,8 @@ def test_info(monkeypatch, client):
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+        cli,
+        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
     )
 
     assert result.output == (
@@ -124,14 +141,17 @@ def test_info(monkeypatch, client):
     )
 
 
-def test_except_info(client):
+def test_except_info(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "tesng"]
+        cli,
+        ["admin", "user", "info", "--user-id", "StageTest", "--group-id", "testing"],
     )
 
     assert result.output == (
-        f"User info fetching failed. \n" f"'NoneType' object has no attribute 'user'\n"
+        f"User info fetching failed. \n" f"error [101]\n" f"URL: http://testing\n"
     )
 
 
@@ -152,6 +172,7 @@ def fake_qos_info(client, user_id, group_id):
 
 def test_qos_info(monkeypatch, client):
     monkeypatch.setattr(obs.libs.qos, "info", fake_qos_info)
+    monkeypatch.setattr(bitmath, "kB", fake_bitmath)
 
     runner = CliRunner()
     result = runner.invoke(
@@ -163,15 +184,102 @@ def test_qos_info(monkeypatch, client):
     )
 
 
-def test_except_qos_info(client):
+def fake_bitmath(limit):
+    limit = mock.Mock()
+    limit.to_GiB.return_value.best_prefix.return_value = "0.49234 GiB"
+    return limit
+
+
+def test_except_qos_info(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
     runner = CliRunner()
     result = runner.invoke(
         cli, ["admin", "qos", "info", "--user-id", "StageTest", "--group-id", "testing"]
     )
 
     assert result.output == (
-        f"Storage limit fetching failed. \n"
-        f"'NoneType' object has no attribute 'qos'\n"
+        f"Storage limit fetching failed. \n" f"error [101]\n" f"URL: http://testing\n"
+    )
+
+
+def fake_qos():
+    client = mock.Mock()
+    client.qos.limits.return_value = "Done"
+    return client
+
+
+def test_qos_set(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_qos)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "admin",
+            "qos",
+            "set",
+            "--user-id",
+            "user",
+            "--group-id",
+            "group",
+            "--limit",
+            100,
+        ],
+    )
+
+    assert result.output == f"Storage limit changed\n"
+
+
+def test_except_qos_set(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "admin",
+            "qos",
+            "set",
+            "--user-id",
+            "user",
+            "--group-id",
+            "group",
+            "--limit",
+            100,
+        ],
+    )
+
+    assert (
+        result.output == f"Storage limit change failed. \n"
+        f"error [101]\n"
+        f"URL: http://testing\n"
+    )
+
+
+def test_qos_rm(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_qos)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "qos", "rm", "--user-id", "user", "--group-id", "group"]
+    )
+
+    assert result.output == f"Storage limit removed\n"
+
+
+def test_except_qos_rm(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "qos", "rm", "--user-id", "user", "--group-id", "group"]
+    )
+
+    assert (
+        result.output == f"Storage limit removal failed. \n"
+        f"error [101]\n"
+        f"URL: http://testing\n"
     )
 
 
@@ -207,12 +315,131 @@ def test_cred_list(monkeypatch, client):
     )
 
 
-def test_except_cred_list(client):
+def test_except_cred_list(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_exc_client)
+
     runner = CliRunner()
     result = runner.invoke(
         cli, ["admin", "cred", "ls", "--user-id", "StageTest", "--group-id", "testing"]
     )
 
     assert result.output == (
-        f"Credentials listing failed. \n" f"'NoneType' object has no attribute 'user'\n"
+        f"Credentials listing failed. \n" f"error [101]\n" f"URL: http://testing\n"
+    )
+
+
+def fake_user():
+    client = mock.Mock()
+    client.user.return_value = fake_response()
+    return client
+
+
+def test_remove_user(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_user)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda response: None)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "user", "rm", "--user-id", "user", "--group-id", "group"]
+    )
+
+    assert result.output == f"User removed successfully\n"
+
+
+def test_except_remove_user(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_user)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "user", "rm", "--user-id", "user", "--group-id", "group"]
+    )
+    assert result.output == (
+        f"User removal failed. \n" f"error [101]\n" f"URL: http://testing\n"
+    )
+
+
+def fake_rm_creds():
+    cred = mock.Mock()
+    cred.user.credentials.return_value = fake_response()
+    return cred
+
+
+def test_remove_cred(monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_rm_creds)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "rm", "--access-key", "foo"])
+
+    assert result.output == f"Credentials removed\n"
+
+
+def test_except_remove_cred(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_admin_client", fake_rm_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["admin", "cred", "rm", "--access-key", "foo"])
+
+    assert result.output == (
+        f"Credential removal failed. \n" f"error [101]\n" f"URL: http://testing\n"
+    )
+
+
+def fake_status_creds():
+    client = mock.Mock()
+    client.user.credentials.status.return_value = fake_response()
+    return client
+
+
+def test_status_cred(monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_status_creds)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "status", "--access-key", "Br432sd293fake"]
+    )
+
+    assert result.output == f"Credentials status changed\n"
+
+
+def test_except_status_cred(client, monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_status_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "status", "--access-key", "Br432sd293fake"]
+    )
+    assert result.output == (
+        f"Credentials fetching failed. \n" f"error [101]\n" f"URL: http://testing\n"
+    )
+
+
+def fake_create_creds():
+    client = mock.Mock()
+    client.user.credentials.return_value = fake_response()
+    return client
+
+
+def test_create_cred(monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_create_creds)
+    monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "create", "--user-id", "user", "--group-id", "group"]
+    )
+
+    assert result.output == f"Credentials created\n"
+
+
+def test_except_create_cred(client, monkeypatch):
+    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_create_creds)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli, ["admin", "cred", "create", "--user-id", "user", "--group-id", "group"]
+    )
+    assert result.output == (
+        f"Credential creation failed. \n" f"error [101]\n" f"URL: http://testing\n"
     )
