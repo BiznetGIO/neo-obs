@@ -48,13 +48,15 @@ def remove_bucket(resource, bucket_name):
     resource.Bucket(bucket_name).delete()
 
 
-def get_objects(resource, bucket_name, prefix=""):
+def get_objects(resource, bucket_name, prefix=None):
     """List objects inside a bucket"""
-    objects = []
-    bucket = resource.Bucket(bucket_name)
-    for obj in bucket.objects.filter(Prefix=prefix):
-        objects.append(obj)
-    return objects
+    client = resource.meta.client
+    response = client.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+
+    return {
+        "Contents": response.get("Contents"),
+        "CommonPrefixes": response.get("CommonPrefixes"),
+    }
 
 
 def is_exists(resource, bucket_name, object_name):
