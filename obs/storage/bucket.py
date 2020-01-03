@@ -38,14 +38,24 @@ def remove_bucket(resource, bucket_name):
 
 def get_objects(resource, bucket_name, prefix):
     try:
-        objects = bucket_lib.get_objects(resource, bucket_name, prefix)
-        if len(objects) > 0:
-            for obj in objects:
-                key = obj.key
-                size = utils.sizeof_fmt(obj.size)
-                click.secho(f"{obj.last_modified:%Y-%m-%d %H:%M:%S}, {size}, {key}")
-        else:
+        response = bucket_lib.get_objects(resource, bucket_name, prefix)
+        if not response:
             click.secho(f'Bucket "{bucket_name}" is empty', fg="green")
+
+        if response["CommonPrefixes"]:
+            for prefix in response["CommonPrefixes"]:
+                dir_ = "DIR".rjust(12)
+                click.secho(f"{dir_} {bucket_name}/{prefix['Prefix']}")
+
+        if response["Contents"]:
+            for content in response["Contents"]:
+                key = content["Key"]
+                size = utils.sizeof_fmt(content["Size"])
+                last_modified = content["LastModified"]
+                click.secho(
+                    f"{last_modified:%Y-%m-%d %H:%M:%S}, {size}, {bucket_name}/{key}"
+                )
+
     except Exception as exc:
         click.secho(f"{exc}", fg="yellow", bold=True, err=True)
 
