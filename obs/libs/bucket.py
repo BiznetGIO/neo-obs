@@ -77,10 +77,13 @@ def remove_object(resource, bucket_name, object_name):
 
 def download_object(resource, bucket_name, object_name):
     """Download an object in a bucket."""
-    if is_exists(resource, bucket_name, object_name):
-        resource.Object(bucket_name, object_name).download_file(f"{object_name}")
-    else:
+    if not is_exists(resource, bucket_name, object_name):
         raise ValueError(f"Object not exists: {object_name}")
+
+    if os.path.dirname(object_name):
+        # if object contains '/'
+        os.makedirs(os.path.dirname(object_name), exist_ok=True)
+    resource.Object(bucket_name, object_name).download_file(f"{object_name}")
 
 
 def upload_object(**kwargs):
