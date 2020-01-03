@@ -214,7 +214,6 @@ def test_except_bucket_info(resource, plain_auth, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one"])
 
-    print(result.output)
     assert result.output == (
         f"Location: US\n"
         f"Expiration Rule: None\n"
