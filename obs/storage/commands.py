@@ -40,13 +40,12 @@ def storage():
 
 
 @storage.command("ls")
-@click.argument("bucket_name", default="", required=False)
-@click.option("-p", "prefix", default="", help="Prefix location")
-def list(bucket_name, prefix):
+@click.argument("uri", default="", required=False)
+def list(uri):
     """List bucket or object."""
     s3_resource = get_resources()
-    if bucket_name:
-        bucket.get_objects(s3_resource, bucket_name=bucket_name, prefix=prefix)
+    if uri:
+        bucket.get_objects(s3_resource, uri=uri)
     else:
         bucket.buckets(s3_resource)
 

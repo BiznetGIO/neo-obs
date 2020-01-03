@@ -36,8 +36,9 @@ def remove_bucket(resource, bucket_name):
         click.secho(f"{exc}", fg="yellow", bold=True, err=True)
 
 
-def get_objects(resource, bucket_name, prefix):
+def get_objects(resource, uri):
     try:
+        bucket_name, prefix = utils.get_bucket_key(uri)
         response = bucket_lib.get_objects(resource, bucket_name, prefix)
         if not response:
             click.secho(f'Bucket "{bucket_name}" is empty', fg="green")
