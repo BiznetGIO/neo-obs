@@ -20,6 +20,15 @@ class Testbucket:
         ]
         return resource
 
+    def fake_resource_(self):
+        resource = mock.Mock()
+        resource.buckets.all.return_value = ["bucket-one", "satu-b21f6bb7-39d5"]
+        resource.Bucket.return_value.objects.filter.return_value = [
+            "bucket-one",
+            "obj.png",
+        ]
+        return resource
+
     def test_buckets(self):
         assert bucket.buckets(self.fake_resource()) == [
             "bucket-one",
@@ -29,12 +38,6 @@ class Testbucket:
     def test_random(self, monkeypatch):
         monkeypatch.setattr(uuid, "uuid4", lambda: "71e43e94-c10d")
         assert bucket.gen_random_name("awesome") == f"awesome-71e43e94-c10d"
-
-    def test_get(self):
-        assert bucket.get_objects(self.fake_resource(), "satu-b21f6bb7-39d5") == [
-            "bucket-one",
-            "obj.png",
-        ]
 
     def fake_objects(self, resource, bucket_name):
         obj1 = mock.Mock()
