@@ -59,6 +59,15 @@ def get_objects(resource, bucket_name, prefix=None):
     }
 
 
+def get_files(resource, bucket_name, prefix=""):
+    """List only files inside a bucket (DIR excluded)."""
+    files = []
+    bucket = resource.Bucket(bucket_name)
+    for file_ in bucket.objects.filter(Prefix=prefix):
+        files.append(file_)
+    return files
+
+
 def is_exists(resource, bucket_name, object_name):
     response = get_objects(resource, bucket_name, prefix=object_name)
     if not response["Contents"]:
@@ -126,7 +135,7 @@ def move_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_
 
 def bucket_usage(resource, bucket_name):
     """Calculate bucket usage."""
-    objects = get_objects(resource, bucket_name)
+    objects = get_files(resource, bucket_name)
     total_objects = len(objects)
     total_size = 0
     for obj in objects:
