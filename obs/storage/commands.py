@@ -157,19 +157,17 @@ def du(bucket_name):
 
 
 @storage.command("info")
-@click.argument("uri", nargs=-1)
+@click.argument("uri")
 def info(uri):
     """Display bucket or object info."""
     s3_resource = get_resources()
     plain_auth = get_plain_auth()
-    if len(target_name) == 1:
-        bucket_name = target_name[0]
+
+    bucket_name, prefix = utils.get_bucket_key(uri)
+    if not prefix:
         bucket.bucket_info(s3_resource, bucket_name=bucket_name, auth=plain_auth)
-    if len(target_name) == 2:
-        bucket_name, object_name = target_name
-        bucket.object_info(
-            s3_resource, bucket_name=bucket_name, object_name=object_name
-        )
+    if bucket_name and prefix:
+        bucket.object_info(s3_resource, bucket_name=bucket_name, object_name=prefix)
 
 
 @storage.command("acl")
