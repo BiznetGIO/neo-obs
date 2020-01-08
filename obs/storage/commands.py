@@ -97,14 +97,12 @@ def make_bucket(bucket_name, acl, policy_id, random_name):
 
 
 @storage.command("get")
-@click.argument("bucket_name", default="")
-@click.argument("object_name", default="")
-def get_object(bucket_name, object_name):
+@click.argument("uri")
+def get_object(uri):
     """Download object in bucket."""
     s3_resource = get_resources()
-    bucket.download_object(
-        s3_resource, bucket_name=bucket_name, object_name=object_name
-    )
+    bucket_name, prefix = utils.get_bucket_key(uri)
+    bucket.download_object(s3_resource, bucket_name=bucket_name, object_name=prefix)
 
 
 @storage.command("put")

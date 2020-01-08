@@ -71,6 +71,12 @@ def remove_object(resource, bucket_name, object_name):
 
 
 def download_object(resource, bucket_name, object_name):
+    if object_name.endswith("/"):
+        click.secho(
+            f"Object download failed. \nExpecting filename", fg="yellow", bold=True
+        )
+        return
+
     try:
         bucket_lib.download_object(resource, bucket_name, object_name)
         click.secho(f'Object "{object_name}" downloaded successfully', fg="green")
