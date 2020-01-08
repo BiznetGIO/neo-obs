@@ -207,12 +207,13 @@ def url(uri, expire):
 
 
 @storage.command("mkdir")
-@click.argument("target_name", nargs=-1)
-def mkdir(target_name):
+@click.argument("uri")
+def mkdir(uri):
     """Create directory inside bucket"""
     s3_resource = get_resources()
-    bucket_name, dir_name = target_name
-    bucket.mkdir(resource=s3_resource, bucket_name=bucket_name, dir_name=dir_name)
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.mkdir(resource=s3_resource, bucket_name=bucket_name, dir_name=prefix)
 
 
 @storage.command("gmt")
