@@ -116,12 +116,12 @@ def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_
     resource.Object(dest_bucket, dest_object_name).copy(copy_source)
 
 
-def move_object(resource, src_bucket, dest_bucket, object_name):
+def move_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
     """Move an object into other bucket.
     Using copy then remove operation.
     """
-    copy_object(resource, src_bucket, dest_bucket, object_name)
-    remove_object(resource, src_bucket, object_name)
+    copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name)
+    remove_object(resource, src_bucket, src_object_name)
 
 
 def bucket_usage(resource, bucket_name):
