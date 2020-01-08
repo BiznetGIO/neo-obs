@@ -60,8 +60,11 @@ def get_objects(resource, bucket_name, prefix=None):
 
 
 def is_exists(resource, bucket_name, object_name):
-    objects = get_objects(resource, bucket_name)
-    if object_name in [x.key for x in objects]:
+    response = get_objects(resource, bucket_name, prefix=object_name)
+    if not response["Contents"]:
+        return False
+
+    if object_name in [x["Key"] for x in response["Contents"]]:
         return True
     else:
         return False

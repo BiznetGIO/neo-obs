@@ -4,6 +4,7 @@ import sys
 from obs.libs import auth
 from obs.storage import bucket
 from obs.storage import gmt
+from obs.libs import utils
 
 
 def warn_inexsit_config():
@@ -51,17 +52,16 @@ def list(uri):
 
 
 @storage.command("rm")
-@click.argument("target_name", nargs=-1)
-def remove(target_name):
+@click.argument("uri")
+def remove(uri):
     """Remove bucket or object."""
     s3_resource = get_resources()
-    if len(target_name) == 1:
-        bucket.remove_bucket(s3_resource, bucket_name=target_name[0])
-    if len(target_name) == 2:
-        bucket_name, object_name = target_name
-        bucket.remove_object(
-            s3_resource, bucket_name=bucket_name, object_name=object_name
-        )
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    if not prefix:
+        bucket.remove_bucket(s3_resource, bucket_name=bucket_name)
+    if bucket_name and prefix:
+        bucket.remove_object(s3_resource, bucket_name=bucket_name, object_name=prefix)
 
 
 @storage.command("mb")
@@ -172,8 +172,8 @@ def du(bucket_name):
 
 
 @storage.command("info")
-@click.argument("target_name", nargs=-1)
-def info(target_name):
+@click.argument("uri", nargs=-1)
+def info(uri):
     """Display bucket or object info."""
     s3_resource = get_resources()
     plain_auth = get_plain_auth()
