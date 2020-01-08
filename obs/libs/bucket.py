@@ -91,17 +91,17 @@ def download_object(resource, bucket_name, object_name):
 
 def upload_object(**kwargs):
     """Upload an object into bucket."""
-    filename = kwargs.get("path", "")  # use path as default filename
-    path = kwargs.get("path")
+    filename = kwargs.get("local_path", "")
+    local_path = kwargs.get("local_path")
 
     if kwargs.get("object_name"):
         filename = kwargs.get("object_name")
-    if kwargs.get("use_basename"):
-        filename = os.path.basename(path)
 
     resource = kwargs.get("resource")
     bucket_name = kwargs.get("bucket_name")
-    resource.Object(bucket_name, filename).upload_file(Filename=path)
+    resource.Object(bucket_name, filename).upload_file(Filename=local_path)
+
+    return filename
 
 
 def copy_object(resource, src_bucket, dest_bucket, object_name):

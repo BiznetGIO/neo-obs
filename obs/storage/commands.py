@@ -106,25 +106,17 @@ def get_object(uri):
 
 
 @storage.command("put")
-@click.argument("bucket_name", default="")
-@click.argument("path", default="")
-@click.argument("object_name", default="", required=False)
-@click.option(
-    "--use-basename",
-    "use_basename",
-    default=False,
-    is_flag=True,
-    help="Use basename for object name",
-)
-def put_object(bucket_name, path, object_name, use_basename):
+@click.argument("local_path", default="")
+@click.argument("uri")
+def put_object(local_path, uri):
     """Upload object to bucket."""
     s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
     bucket.upload_object(
         resource=s3_resource,
         bucket_name=bucket_name,
-        path=path,
-        object_name=object_name,
-        use_basename=use_basename,
+        local_path=local_path,
+        object_name=prefix,
     )
 
 

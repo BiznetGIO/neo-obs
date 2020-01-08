@@ -88,10 +88,15 @@ def download_object(resource, bucket_name, object_name):
 
 def upload_object(**kwargs):
     try:
-        bucket_lib.upload_object(**kwargs)
-        click.secho(f"Object uploaded successfully", fg="green")
+        filename = bucket_lib.upload_object(**kwargs)
+        click.secho(f'Object "{filename}" uploaded successfully', fg="green")
     except Exception as exc:
-        click.secho(f"Object upload failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(
+            f'Object "{filename}" upload failed. \n{exc}',
+            fg="yellow",
+            bold=True,
+            err=True,
+        )
 
 
 def copy_object(resource, src_bucket, dest_bucket, object_name):
