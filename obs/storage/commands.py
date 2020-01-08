@@ -171,44 +171,39 @@ def info(uri):
 
 
 @storage.command("acl")
-@click.argument("target_name", nargs=-1)
+@click.argument("uri")
 @click.argument("acl", default="private")
-def set_acl(target_name, acl):
+def set_acl(uri, acl):
     """Set ACL for bucket or object."""
     s3_resource = get_resources()
-    if len(target_name) == 1:
-        acl_type = "bucket"
-        bucket_name = target_name[0]
-        bucket.set_acl(
-            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type=acl_type
-        )
 
-    if len(target_name) == 2:
-        acl_type = "object"
-        bucket_name, object_name = target_name
+    bucket_name, prefix = utils.get_bucket_key(uri)
+    if not prefix:
+        bucket.set_acl(
+            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type="bucket"
+        )
+    if bucket_name and prefix:
         bucket.set_acl(
             resource=s3_resource,
             bucket_name=bucket_name,
-            object_name=object_name,
+            object_name=prefix,
             acl=acl,
-            acl_type=acl_type,
+            acl_type="object",
         )
 
 
 @storage.command("presign")
-@click.argument("target_name", nargs=-1)
+@click.argument("uri")
 @click.option("--expire", "expire", type=int, help="Set expiration time [default:3600]")
-def url(target_name, expire):
-    """Generate Url for bucket or object."""
+def url(uri, expire):
+    """Generate presign URL for object."""
     s3_resource = get_resources()
-    if len(target_name) == 2:
-        bucket_name, object_name = target_name
-        bucket.generate_url(
-            resource=s3_resource,
-            bucket_name=bucket_name,
-            object_name=object_name,
-            expire=expire,
-        )
+
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+    bucket.generate_url(
+        resource=s3_resource, bucket_name=bucket_name, object_name=prefix, expire=expire
+    )
 
 
 @storage.command("mkdir")
