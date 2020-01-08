@@ -121,18 +121,15 @@ def put_object(local_path, uri):
 
 
 @storage.command("cp")
-@click.argument("src_bucket", default="")
-@click.argument("dest_bucket", default="")
-@click.argument("object_name", default="")
-def copy_object(src_bucket, dest_bucket, object_name):
+@click.argument("src_uri", default="")
+@click.argument("dest_uri", default="")
+def copy_object(src_uri, dest_uri):
     """Copy object to other bucket."""
     s3_resource = get_resources()
-    bucket.copy_object(
-        s3_resource,
-        src_bucket=src_bucket,
-        dest_bucket=dest_bucket,
-        object_name=object_name,
-    )
+
+    src_bucket, src_prefix = utils.get_bucket_key(src_uri)
+    dest_bucket, dest_prefix = utils.get_bucket_key(dest_uri)
+    bucket.copy_object(s3_resource, src_bucket, src_prefix, dest_bucket, dest_prefix)
 
 
 @storage.command("mv")

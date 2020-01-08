@@ -99,12 +99,18 @@ def upload_object(**kwargs):
         )
 
 
-def copy_object(resource, src_bucket, dest_bucket, object_name):
+def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
+    if src_object_name.endswith("/") or not src_object_name:
+        click.secho(f"Object copy failed. \nExpecting filename", fg="yellow", bold=True)
+        return
+
     try:
-        bucket_lib.copy_object(resource, src_bucket, dest_bucket, object_name)
-        click.secho(f'Object "{object_name}" copied successfully', fg="green")
+        bucket_lib.copy_object(
+            resource, src_bucket, src_object_name, dest_bucket, dest_object_name
+        )
+        click.secho(f'Object "{src_object_name}" copied successfully', fg="green")
     except Exception as exc:
-        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(f"Object copy failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
 def bucket_usage(resource, bucket_name):

@@ -91,6 +91,7 @@ def download_object(resource, bucket_name, object_name):
 
 def upload_object(**kwargs):
     """Upload an object into bucket."""
+    # use local filename if not supplied
     filename = kwargs.get("local_path", "")
     local_path = kwargs.get("local_path")
 
@@ -104,10 +105,15 @@ def upload_object(**kwargs):
     return filename
 
 
-def copy_object(resource, src_bucket, dest_bucket, object_name):
+def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
     """Copy an object into other bucket."""
-    copy_source = {"Bucket": src_bucket, "Key": object_name}
-    resource.Object(dest_bucket, object_name).copy(copy_source)
+
+    if not dest_object_name:
+        # use source object name if not supplied
+        dest_object_name = src_object_name
+
+    copy_source = {"Bucket": src_bucket, "Key": src_object_name}
+    resource.Object(dest_bucket, dest_object_name).copy(copy_source)
 
 
 def move_object(resource, src_bucket, dest_bucket, object_name):
