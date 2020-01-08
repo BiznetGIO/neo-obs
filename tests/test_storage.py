@@ -106,7 +106,40 @@ def test_except_ls(monkeypatch, resource):
     assert result.output == (f"Bucket listing failed. \n" f"Invalid format specifier\n")
 
 
-def fake_get_objects(resource, bucket_name, prefix=""):
+def fake_get_objects(resource, bucket_name, prefix=None):
+    return {
+        "Contents": [
+            {
+                "Key": "a/b/foo.txt",
+                "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
+                "Size": 36,
+            }
+        ],
+        "CommonPrefixes": None,
+    }
+
+
+def test_ls_storage(monkeypatch, resource):
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "ls", "bucket-two"])
+
+    assert result.output == (f"2019-09-24 01:01:00, 36.0 B, bucket-two/a/b/foo.txt\n")
+
+
+def test_empty_storage(monkeypatch, resource):
+    monkeypatch.setattr(
+        obs.libs.bucket, "get_objects", lambda resource, bucket_name, prefix: ""
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
+
+    assert result.output == (f'Bucket "bucket-one" is empty\n')
+
+
+def fake_get_objects_(resource, bucket_name, prefix=""):
     obj1 = mock.Mock()
     obj1.key = "obj-one"
     obj1.size = 100
@@ -123,67 +156,13 @@ def fake_get_objects(resource, bucket_name, prefix=""):
     return [obj1, obj2]
 
 
-def test_ls_storage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "ls", "bucket-two"])
-
-    assert result.output == (
-        f"2019-09-24 01:01:00, 100.0 B, obj-one\n"
-        f"2019-09-24 01:01:00, 200.0 B, obj-two\n"
-    )
-
-
-def fake_exc_get_objects(resource, bucket_name, prefix=""):
-    obj1 = mock.Mock()
-    obj1.key = "obj-one"
-    obj1.size = "foo"
-    obj1.last_modified = "date"
-    obj1.bucket = "bucket-one"
-
-    return [obj1]
-
-
-def test_except_ls_storage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_exc_get_objects)
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
-
-    assert result.output == (f"bad operand type for abs(): 'str'\n")
-
-
-def test_else_ls_storage(monkeypatch, resource):
-    monkeypatch.setattr(
-        obs.libs.bucket, "get_objects", lambda resource, bucket_name, prefix: []
-    )
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
-
-    assert result.output == (f'Bucket "bucket-one" is empty\n')
-
-
 def test_bucket_usage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
+    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects_)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du", "bucket-one"])
 
     assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
-
-
-def test_except_bucket_usage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_exc_get_objects)
-
-    runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "du", "bucket-one"])
-
-    assert result.output == (
-        f"Bucket usage fetching failed. \n"
-        f"unsupported operand type(s) for +=: 'int' and 'str'\n"
-    )
 
 
 def fake_bucket_info(resource, bucket_name, auth):

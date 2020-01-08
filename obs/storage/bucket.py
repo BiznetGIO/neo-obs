@@ -41,6 +41,7 @@ def get_objects(resource, bucket_name, prefix):
         response = bucket_lib.get_objects(resource, bucket_name, prefix)
         if not response:
             click.secho(f'Bucket "{bucket_name}" is empty', fg="green")
+            return
 
         if response["CommonPrefixes"]:
             for prefix in response["CommonPrefixes"]:
