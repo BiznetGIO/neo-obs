@@ -1,0 +1,11 @@
+version: '3'
+services:
+   
+    monitor:
+        image: ./
+        ports:
+          - "6966:5000"
+        environment:
+          
+        command: ["sh","run.sh", "server", "production"]
+        
