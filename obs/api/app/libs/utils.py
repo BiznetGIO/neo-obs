@@ -9,9 +9,11 @@ def log_rep(stdin):
     coloredlogs.install()
     logging.info(stdin)
 
+
 def log_err(stdin):
     coloredlogs.install()
     logging.error(stdin)
+
 
 def send_http(url, data, headers=None):
     json_data = json.dumps(data)
@@ -23,19 +25,20 @@ def send_http(url, data, headers=None):
         respons = {
             "result": False,
             "Error": "Failed to establish a new connection",
-            "description": None
+            "description": None,
         }
         return respons
     else:
         result = {
-            "result": respons['result'],
+            "result": respons["result"],
             "time": response_time,
-            "data": respons['data'],
-            "status": respons['status']
+            "data": respons["data"],
+            "status": respons["status"],
         }
         return result
 
-def get_http(url, params = None):
+
+def get_http(url, params=None):
     try:
         response = requests.get(url, params)
     except requests.exceptions.RequestException as e:

@@ -3,9 +3,10 @@ import obs.libs.gmt as bucket_gmt
 import obs.libs.bucket as bucket
 import obs.libs.auth as resource
 
-from app.helpers import rest
+from app.helpers.rest import response
 from flask import request, jsonify
 from flask_restful import Resource, reqparse
+
 
 def get_resources():
     return resource.resource()
@@ -14,14 +15,17 @@ def get_resources():
 def get_plain_auth():
     return resource.plain_auth()
 
+
 class list(Resource):
     def get(self):
-        parser=reqparse.RequestParser()
-        parser.add_argument('bucket_name',type=str)
-        args=parser.parse_args()
+        parser = reqparse.RequestParser()
+        parser.add_argument("bucket_name", type=str)
+        args = parser.parse_args()
 
         if args["bucket_name"]:
-            buckets = bucket.get_objects(get_resources(), bucket_name=args["bucket_name"])
+            buckets = bucket.get_objects(
+                get_resources(), bucket_name=args["bucket_name"]
+            )
             all_bucket = []
             for index, obj in enumerate(buckets):
                 all_bucket.append(
@@ -33,38 +37,37 @@ class list(Resource):
                 )
             return jsonify(all_bucket)
 
-
         buckets = bucket.buckets(get_resources())
         all_bucket = []
         for index, buck in enumerate(buckets):
             all_bucket.append({"name": buck.name, "creation_date": buck.creation_date})
         return jsonify(all_bucket)
 
-class bucket_api(Resource):
-    def get(self,bucket_name):
-        bucket_info = bucket.bucket_info(
-            get_resources(), bucket_name, get_plain_auth()
-        )
-        return jsonify(bucket_info)
-        
-    def post(self,bucket_name):
-        bucket.create_bucket(auth=get_plain_auth(), bucket_name=bucket_name)
-        return f"Succes"
 
-    def delete(self,bucket_name):
+class bucket_api(Resource):
+    def get(self, bucket_name):
+        bucket_info = bucket.bucket_info(get_resources(), bucket_name, get_plain_auth())
+        return jsonify(bucket_info)
+
+    def post(self, bucket_name):
+        bucket.create_bucket(auth=get_plain_auth(), bucket_name=bucket_name)
+        return response(201)
+
+    def delete(self, bucket_name):
         bucket.remove_bucket(get_resources(), bucket_name)
-        return f"Succes"
+        return response(204)
+
 
 class object_api(Resource):
-    def get(self,bucket_name,object_name):
+    def get(self, bucket_name, object_name):
         object_info = bucket.object_info(get_resources(), bucket_name, object_name)
         return jsonify(object_info)
-    
-    def post(self,bucket_name,object_name,basename=None):
-        parser=reqparse.RequestParser()
-        parser.add_argument('file_name',type=str)
-        parser.add_argument('use_basename',type=str)
-        args=parser.parse_args()
+
+    def post(self, bucket_name, object_name, basename=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument("file_name", type=str)
+        parser.add_argument("use_basename", type=str)
+        args = parser.parse_args()
 
         if args["use_basename"]:
             basename = True
@@ -77,44 +80,40 @@ class object_api(Resource):
             use_basename=basename,
         )
 
-        return "Success"
+        return response(201)
 
+    def delete(self, bucket_name, object_name):
+        bucket.remove_object(get_resources(), bucket_name, object_name)
+        return response(204)
 
-    def delete(self,bucket_name,object_name):
-        bucket.remove_object(get_resources(),bucket_name,object_name)
-        return "Success"
 
 class move_object(Resource):
-    def post(self,bucket_name,object_name):
+    def post(self, bucket_name, object_name):
         bucket.move_object(
-            get_resources(),
-            bucket_name,
-            request.form["move_to"],
-            object_name,
+            get_resources(), bucket_name, request.form["move_to"], object_name,
         )
-        return "Success"
+        return response(204)
 
 
 class copy_object(Resource):
-    def post(self,bucket_name,object_name):
+    def post(self, bucket_name, object_name):
         bucket.copy_object(
-            get_resources(),
-            bucket_name,
-            request.form["copy_to"],
-            object_name,
+            get_resources(), bucket_name, request.form["copy_to"], object_name,
         )
-        return "Success"
+        return response(204)
+
 
 class download_object(Resource):
-    def get(self,bucket_name,object_name):
-        bucket.download_object(get_resources(),bucket_name,object_name)
-        return "Succes"
+    def get(self, bucket_name, object_name):
+        bucket.download_object(get_resources(), bucket_name, object_name)
+        return response(204)
+
 
 class usage(Resource):
     def get(self):
-        parser=reqparse.RequestParser()
-        parser.add_argument('name',type=str)
-        args=parser.parse_args()
+        parser = reqparse.RequestParser()
+        parser.add_argument("name", type=str)
+        args = parser.parse_args()
 
         if args["name"]:
             total_size, total_objects = bucket.bucket_usage(
@@ -136,13 +135,14 @@ class usage(Resource):
 
         return jsonify(disk_usage)
 
+
 class acl(Resource):
-    def post(self, acl_type = "bucket", acl="private"):
-        parser=reqparse.RequestParser()
-        parser.add_argument('bucket_name',type=str,required=True)
-        parser.add_argument('object_name',type=str)
-        parser.add_argument('acl',type=str)
-        args=parser.parse_args()
+    def post(self, acl_type="bucket", acl="private"):
+        parser = reqparse.RequestParser()
+        parser.add_argument("bucket_name", type=str, required=True)
+        parser.add_argument("object_name", type=str)
+        parser.add_argument("acl", type=str)
+        args = parser.parse_args()
 
         if args["object_name"]:
             acl_type = "object"
@@ -158,23 +158,25 @@ class acl(Resource):
             acl=acl,
         )
 
-        return "Success"
+        return response(204)
+
 
 class presign(Resource):
     def get(self, bucket_name, object_name):
-        parser=reqparse.RequestParser()
-        parser.add_argument('expire',type=int)
-        args=parser.parse_args()
+        parser = reqparse.RequestParser()
+        parser.add_argument("expire", type=int)
+        args = parser.parse_args()
 
         url = bucket.generate_url(
             get_resources(), bucket_name, object_name, args["expire"]
         )
         return jsonify({"url": url})
 
+
 class mkdir(Resource):
-    def post(self,bucket_name):
+    def post(self, bucket_name):
         bucket.mkdir(get_resources(), bucket_name, request.form["directory"])
-        return "Success"
+        return response(201)
 
 
 class gmt(Resource):

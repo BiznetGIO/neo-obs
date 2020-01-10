@@ -12,7 +12,7 @@ class MetaFlaskEnv(type):
         super(MetaFlaskEnv, cls).__init__(name, bases, dict)
 
         # Get our internal settings
-        prefix = dict.get('ENV_PREFIX', '')
+        prefix = dict.get("ENV_PREFIX", "")
 
         # Override default configuration from environment variables
         for key, value in os.environ.items():
@@ -21,17 +21,17 @@ class MetaFlaskEnv(type):
                 continue
 
             # Strip the prefix from the environment variable name
-            key = key[len(prefix):]
+            key = key[len(prefix) :]
 
             # If value is "true" or "false", parse as a boolean
             # Otherwise, if it contains a "." then try to parse as a float
             # Otherwise, try to parse as an integer
             # If all else fails, just keep it a string
-            if 'PASSWORD' in key:
+            if "PASSWORD" in key:
                 value = str(value)
-            elif value.lower() in ('true', 'false'):
-                value = True if value.lower() == 'true' else False
-            elif '.' in value:
+            elif value.lower() in ("true", "false"):
+                value = True if value.lower() == "true" else False
+            elif "." in value:
                 try:
                     value = float(value)
                 except ValueError:
