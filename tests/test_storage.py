@@ -10,12 +10,12 @@ import obs.libs.gmt
 import obs.libs.utils
 import obs.libs.config
 
-from obs.storage import commands
+from obs.cli.storage import commands
+from obs.cli.storage import bucket
 from requests_aws4auth import AWS4Auth
 from datetime import datetime
-from obs.main import cli
+from obs.cli.main import cli
 from click.testing import CliRunner
-from obs.storage import bucket
 from pathlib import Path
 
 
@@ -136,7 +136,9 @@ def test_empty_storage(monkeypatch, resource):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "ls", "bucket-one"])
 
-    assert result.output == (f'Bucket "bucket-one" is empty\n')
+    assert result.output == (
+        f'Bucket "bucket-one" is empty\n' f"string indices must be integers\n"
+    )
 
 
 def fake_get_objects_(resource, bucket_name, prefix=""):
@@ -214,7 +216,6 @@ def test_except_bucket_info(resource, plain_auth, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "info", "bucket-one"])
 
-    print(result.output)
     assert result.output == (
         f"Location: US\n"
         f"Expiration Rule: None\n"
@@ -413,7 +414,7 @@ def fake_move():
 
 
 def test_mv(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_move)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_move)
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
 
     runner = CliRunner()
@@ -423,7 +424,7 @@ def test_mv(monkeypatch):
 
 
 def test_except_mv(monkeypatch, resource):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_move)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_move)
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
 
     runner = CliRunner()
@@ -439,7 +440,7 @@ def fake_copy():
 
 
 def test_cp(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_copy)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_copy)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
@@ -464,7 +465,7 @@ def fake_remove():
 
 
 def test_rm_object(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_remove)
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
 
     runner = CliRunner()
@@ -474,7 +475,7 @@ def test_rm_object(monkeypatch):
 
 
 def test_except_rm_object(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_remove)
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
 
     runner = CliRunner()
@@ -530,7 +531,7 @@ def fake_remove_bucket():
 
 
 def test_rm_bucket(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_remove_bucket)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_remove_bucket)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
@@ -564,7 +565,7 @@ def fake_acl_Bucket():
 
 
 def test_acl_bucket(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_acl_Bucket)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_acl_Bucket)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "acl", "bucket-one", "private"])
@@ -577,7 +578,7 @@ def test_acl_bucket(monkeypatch):
 
 
 def test_acl_object(monkeypatch):
-    monkeypatch.setattr(obs.storage.commands, "get_resources", fake_acl_object)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_acl_object)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "acl", "bucket-one", "obj1", "private"])
@@ -602,7 +603,7 @@ def test_get(monkeypatch, fs, resource):
         resource.Object.return_value.download_file.side_effect = lambda name: None
         return resource
 
-    monkeypatch.setattr(obs.storage.commands, "get_resources", donwload)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", donwload)
     monkeypatch.setattr(
         obs.libs.bucket, "is_exists", lambda resource, bucket, object: True
     )
@@ -662,7 +663,7 @@ def test_mkdir(monkeypatch, fs):
         resource.meta.client.put_object.side_effect = lambda **kwargs: None
         return resource
 
-    monkeypatch.setattr(obs.storage.commands, "get_resources", mkdir)
+    monkeypatch.setattr(obs.cli.storage.commands, "get_resources", mkdir)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "mkdir", "bucket", "obs"])

@@ -90,7 +90,7 @@ class object_api(Resource):
 class move_object(Resource):
     def post(self, bucket_name, object_name):
         bucket.move_object(
-            get_resources(), bucket_name, request.form["move_to"], object_name,
+            get_resources(), bucket_name, request.form["move_to"], object_name
         )
         return response(204)
 
@@ -98,7 +98,7 @@ class move_object(Resource):
 class copy_object(Resource):
     def post(self, bucket_name, object_name):
         bucket.copy_object(
-            get_resources(), bucket_name, request.form["copy_to"], object_name,
+            get_resources(), bucket_name, request.form["copy_to"], object_name
         )
         return response(204)
 

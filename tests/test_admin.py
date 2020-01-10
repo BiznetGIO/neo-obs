@@ -6,11 +6,11 @@ import bitmath
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
-import obs.admin.commands as admin_client
+import obs.cli.admin.commands as admin_client
 
 from datetime import datetime
 from click.testing import CliRunner
-from obs.main import cli
+from obs.cli.main import cli
 from pathlib import Path
 
 
@@ -392,7 +392,7 @@ def fake_status_creds():
 
 
 def test_status_cred(monkeypatch):
-    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_status_creds)
+    monkeypatch.setattr(obs.cli.admin.commands, "get_admin_client", fake_status_creds)
     monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
 
     runner = CliRunner()
@@ -404,7 +404,7 @@ def test_status_cred(monkeypatch):
 
 
 def test_except_status_cred(client, monkeypatch):
-    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_status_creds)
+    monkeypatch.setattr(obs.cli.admin.commands, "get_admin_client", fake_status_creds)
 
     runner = CliRunner()
     result = runner.invoke(
@@ -422,7 +422,7 @@ def fake_create_creds():
 
 
 def test_create_cred(monkeypatch):
-    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_create_creds)
+    monkeypatch.setattr(obs.cli.admin.commands, "get_admin_client", fake_create_creds)
     monkeypatch.setattr(obs.libs.utils, "check", lambda cred: None)
 
     runner = CliRunner()
@@ -434,7 +434,7 @@ def test_create_cred(monkeypatch):
 
 
 def test_except_create_cred(client, monkeypatch):
-    monkeypatch.setattr(obs.admin.commands, "get_admin_client", fake_create_creds)
+    monkeypatch.setattr(obs.cli.admin.commands, "get_admin_client", fake_create_creds)
 
     runner = CliRunner()
     result = runner.invoke(

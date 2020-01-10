@@ -2,8 +2,8 @@ import click
 import sys
 
 from obs.libs import auth
-from obs.storage import bucket
-from obs.storage import gmt
+from obs.cli.storage import bucket
+from obs.cli.storage import gmt
 
 
 def warn_inexsit_config():

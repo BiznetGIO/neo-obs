@@ -2,7 +2,7 @@ import tabulate
 import click
 
 from obs.libs import user as user_lib
-from obs.admin import user_profile
+from obs.cli.admin import user_profile
 from obs.libs import utils
 
 
