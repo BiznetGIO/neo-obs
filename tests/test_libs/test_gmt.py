@@ -3,9 +3,7 @@ import mock
 import requests
 import yaml
 import builtins
-import pytest
 import obs.libs.gmt as gmt
-import obs.libs.auth as auth
 from obs.libs import config
 from obs.libs import auth as auth_lib
 
@@ -27,7 +25,7 @@ def test_policies_file(monkeypatch):
 def test_exists(monkeypatch):
     monkeypatch.setattr(gmt, "policies_file", fake_policies_file)
     monkeypatch.setattr(os.path, "isfile", lambda file: True)
-    assert gmt.is_policy_exists() == True
+    assert gmt.is_policy_exists() is True
 
 
 def fake_get_policies():
@@ -100,7 +98,7 @@ def test_policy_description(monkeypatch):
 
 def test_description_notset(monkeypatch):
     monkeypatch.setattr(gmt, "get_policies", fake_notset)
-    assert None == gmt.policy_description("d3031d77b")
+    assert gmt.policy_description("d3031d77b") is None
 
 
 def test_no_description(monkeypatch):

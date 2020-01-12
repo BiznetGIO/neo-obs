@@ -1,5 +1,4 @@
 import mock
-import pytest
 from obs.libs import credential as cred
 
 

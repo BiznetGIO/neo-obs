@@ -1,22 +1,17 @@
-import mock
 import pytest
-import boto3
-import sys
+import mock
 import os
 import requests
+import xmltodict
+from datetime import datetime
+
 import obs.libs.bucket
 import obs.libs.auth
 import obs.libs.gmt
 import obs.libs.utils
 import obs.libs.config
-
-from obs.storage import commands
-from requests_aws4auth import AWS4Auth
-from datetime import datetime
 from obs.main import cli
 from click.testing import CliRunner
-from obs.storage import bucket
-from pathlib import Path
 
 
 def fake_resource():
@@ -512,9 +507,6 @@ def fake_response(**kwargs):
     response = mock.Mock()
     response.text = "Done"
     return response
-
-
-import xmltodict
 
 
 def test_except_mb(monkeypatch, plain_auth):

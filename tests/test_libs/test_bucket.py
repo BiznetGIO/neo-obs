@@ -99,7 +99,7 @@ class Testbucket:
     def test_cors(self):
         assert bucket.get_cors(self.fake_cors()) == "1jfe"
 
-        assert bucket.get_cors("try") == None
+        assert bucket.get_cors("try") is None
 
     def fake_policy(self):
         fake = mock.Mock()
@@ -109,7 +109,7 @@ class Testbucket:
     def test_policy(self):
         assert bucket.get_policy(self.fake_policy()) == "newsk"
 
-        assert bucket.get_policy("try") == None
+        assert bucket.get_policy("try") is None
 
     def fake_location(self):
         locations = mock.Mock()
@@ -127,7 +127,7 @@ class Testbucket:
     def test_expiration(self):
         assert bucket.get_expiration(self.fake_expire(), "bucket-name") == "Expire"
 
-        assert bucket.get_expiration("try", "bucket-name") == None
+        assert bucket.get_expiration("try", "bucket-name") is None
 
     def fake_grant_name(self, types):
         grant = {
