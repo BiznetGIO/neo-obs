@@ -39,7 +39,7 @@ class Testbucket:
         monkeypatch.setattr(uuid, "uuid4", lambda: "71e43e94-c10d")
         assert bucket.gen_random_name("awesome") == f"awesome-71e43e94-c10d"
 
-    def fake_objects(self, resource, bucket_name):
+    def fake_get_files(self, resource, bucket_nam, prefix=None):
         obj1 = mock.Mock()
         obj1.key = "ddg.png"
         obj1.size = 234
@@ -50,14 +50,20 @@ class Testbucket:
 
         return [obj1, obj2]
 
-    def test_exists(self, monkeypatch):
-        monkeypatch.setattr(bucket, "get_objects", self.fake_objects)
-        assert bucket.is_exists(resource, "satu", "ddg.png") == True
+    def fake_get_objects(self, resource, bucket_nam, prefix=None):
+        return {
+            "Contents": [{"Key": "ddg.png"}],
+            "CommonPrefixes": [{"Prefix": "a/b/"}],
+        }
 
-        assert bucket.is_exists(resource, "satu", "ang.png") == False
+    def test_exists(self, monkeypatch):
+        monkeypatch.setattr(bucket, "get_objects", self.fake_get_objects)
+
+        assert bucket.is_exists(resource, "satu", "ddg.png") is True
+        assert bucket.is_exists(resource, "satu", "ang.png") is False
 
     def test_bucket_usage(self, monkeypatch):
-        monkeypatch.setattr(bucket, "get_objects", self.fake_objects)
+        monkeypatch.setattr(bucket, "get_files", self.fake_get_files)
         assert bucket.bucket_usage(resource, "bucket-name") == (1027, 2)
 
     def fake_bucket(self, resource):
