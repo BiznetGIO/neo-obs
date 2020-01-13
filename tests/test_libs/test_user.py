@@ -1,6 +1,5 @@
 import mock
 from obs.libs import user
-from obs.admin import user_profile
 
 
 def test_dump():
