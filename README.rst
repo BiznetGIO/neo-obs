@@ -58,7 +58,7 @@ Move object into other bucket
 
 .. code-block:: bash
 
-    $ obs storage mv awesomebuck duckduckbuck TODO
+    $ obs storage mv s3://awesomebuck/TODO s3://duckduckbuck/
     Object "TODO" moved to "awesomebuck" bucket successfully
 
 
