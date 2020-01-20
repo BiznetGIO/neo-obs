@@ -3,15 +3,14 @@ import io
 import os
 import mock
 import bitmath
+from datetime import datetime
+
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
 import obs.cli.admin.commands as admin_client
-
-from datetime import datetime
 from click.testing import CliRunner
 from obs.cli.main import cli
-from pathlib import Path
 
 
 def fake_client():

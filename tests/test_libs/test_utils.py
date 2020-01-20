@@ -1,10 +1,9 @@
 import mock
 import pytest
 import tzlocal
-import mock
 import xmltodict
 from obs.libs import utils
-from datetime import datetime, timezone
+from datetime import timezone
 
 
 def test_size():

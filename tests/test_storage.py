@@ -1,22 +1,17 @@
-import mock
 import pytest
-import boto3
-import sys
+import mock
 import os
 import requests
+import xmltodict
+from datetime import datetime
+
 import obs.libs.bucket
 import obs.libs.auth
 import obs.libs.gmt
 import obs.libs.utils
 import obs.libs.config
-
-from obs.cli.storage import commands
-from obs.cli.storage import bucket
-from requests_aws4auth import AWS4Auth
-from datetime import datetime
-from obs.cli.main import cli
+from obs.main import cli
 from click.testing import CliRunner
-from pathlib import Path
 
 
 def fake_resource():
@@ -72,7 +67,7 @@ def test_plain_auth(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "info"])
+    result = runner.invoke(cli, ["storage", "info", "s3://satu/"])
     assert result.output == (
         f"[Errno 2] No such file or directory: 'home/user/path'\n"
         f"Configuration file not available.\n"
@@ -110,12 +105,18 @@ def fake_get_objects(resource, bucket_name, prefix=None):
     return {
         "Contents": [
             {
-                "Key": "a/b/foo.txt",
+                "Key": "foo.txt",
                 "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
+                "ETag": '"d41d8cd98f00b204e9800998ecffake"',
                 "Size": 36,
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "john doe",
+                    "ID": "5ac765187f93d3f1cef810afakefake",
+                },
             }
         ],
-        "CommonPrefixes": None,
+        "CommonPrefixes": [{"Prefix": "a/b/"}],
     }
 
 
@@ -123,9 +124,9 @@ def test_ls_storage(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "ls", "bucket-two"])
+    result = runner.invoke(cli, ["storage", "ls", "s3://bucket-two/a/b/"])
 
-    assert result.output == (f"2019-09-24 01:01:00, 36.0 B, bucket-two/a/b/foo.txt\n")
+    assert "bucket-two/foo.txt" in result.output
 
 
 def test_empty_storage(monkeypatch, resource):
@@ -141,30 +142,25 @@ def test_empty_storage(monkeypatch, resource):
     )
 
 
-def fake_get_objects_(resource, bucket_name, prefix=""):
+def fake_get_files(resource, bucket_name, prefix=""):
     obj1 = mock.Mock()
-    obj1.key = "obj-one"
-    obj1.size = 100
-    dt1 = datetime(2019, 9, 24, 1, 1, 0, 0)
-    obj1.last_modified = dt1
-    obj1.bucket = "bucket-one"
+    obj1.key = "ddg.png"
+    obj1.size = 234
 
     obj2 = mock.Mock()
-    obj2.key = "obj-two"
-    obj2.size = 200
-    obj2.last_modified = dt1
-    obj2.bucket = "bucket-two"
+    obj2.key = "obj.txt"
+    obj2.size = 793
 
     return [obj1, obj2]
 
 
 def test_bucket_usage(monkeypatch, resource):
-    monkeypatch.setattr(obs.libs.bucket, "get_objects", fake_get_objects_)
+    monkeypatch.setattr(obs.libs.bucket, "get_files", fake_get_files)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "du", "bucket-one"])
+    result = runner.invoke(cli, ["storage", "du", "s3://bucket-one/"])
 
-    assert result.output == (f'300.00 Byte, 2 objects in "bucket-one" bucket\n')
+    assert result.output == (f'1.00 KiB, 2 objects in "s3://bucket-one/" bucket\n')
 
 
 def fake_bucket_info(resource, bucket_name, auth):
@@ -245,7 +241,7 @@ def test_object_info(monkeypatch, resource, plain_auth):
     monkeypatch.setattr(obs.libs.bucket, "object_info", fake_object_info)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
+    result = runner.invoke(cli, ["storage", "info", "s3://bucket-one/logo.png"])
 
     assert result.output == (
         f"File Size: 300.0 B\n"
@@ -274,7 +270,7 @@ def test_except_object_info(resource, plain_auth, monkeypatch):
     monkeypatch.setattr(obs.libs.bucket, "object_info", fake_exc_object_info)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "info", "bucket-one", "logo.png"])
+    result = runner.invoke(cli, ["storage", "info", "s3://bucket-one/logo.png"])
 
     assert result.output == (f"Info fetching failed. \n" f"Invalid format specifier\n")
 
@@ -287,7 +283,7 @@ def test_presign(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.bucket, "generate_url", fake_presign)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
+    result = runner.invoke(cli, ["storage", "presign", "s3://bucket-one/logo.png"])
 
     assert (
         result.output
@@ -298,7 +294,7 @@ def test_presign(monkeypatch, resource):
 def test_except_presign(monkeypatch, resource):
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "presign", "bucket-one", "logo.png"])
+    result = runner.invoke(cli, ["storage", "presign", "s3://bucket-one/logo.png"])
 
     assert result.output == (
         f"URL generation failed. \n" f"'NoneType' object has no attribute 'meta'\n"
@@ -418,7 +414,9 @@ def test_mv(monkeypatch):
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "mv", "bucket-one", "bucket-two", "obj1"])
+    result = runner.invoke(
+        cli, ["storage", "mv", "s3://bucket-one/obj1", "s3://bucket-two"]
+    )
 
     assert result.output == f'Object "obj1" moved to "bucket-two" bucket successfully\n'
 
@@ -428,9 +426,11 @@ def test_except_mv(monkeypatch, resource):
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "mv", "bucket-one", "bucket-two", "obj1"])
+    result = runner.invoke(
+        cli, ["storage", "mv", "s3://bucket-one/obj1", "s3://bucket-two"]
+    )
 
-    assert result.output == (f"Object moving failed. \n" f"Object not exists: obj1\n")
+    assert result.output == (f"Object move failed. \n" f"Object not exists: obj1\n")
 
 
 def fake_copy():
@@ -443,7 +443,9 @@ def test_cp(monkeypatch):
     monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_copy)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
+    result = runner.invoke(
+        cli, ["storage", "cp", "s3://bucket-one/obj1", "s3://bucket-two/"]
+    )
 
     assert result.output == f'Object "obj1" copied successfully\n'
 
@@ -451,10 +453,12 @@ def test_cp(monkeypatch):
 def test_except_cp(resource):
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "cp", "bucket-one", "bucket-two", "obj1"])
+    result = runner.invoke(
+        cli, ["storage", "cp", "s3://bucket-one/obj1", "s3://bucket-two/"]
+    )
 
     assert result.output == (
-        f"Object copying failed. \n" f"'NoneType' object has no attribute 'Object'\n"
+        f"Object copy failed. \n" f"'NoneType' object has no attribute 'Object'\n"
     )
 
 
@@ -469,7 +473,7 @@ def test_rm_object(monkeypatch):
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: True)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "rm", "bucket-one", "obj1"])
+    result = runner.invoke(cli, ["storage", "rm", "s3://bucket-one/obj1"])
 
     assert result.output == f'Object "obj1" removed successfully\n'
 
@@ -479,7 +483,7 @@ def test_except_rm_object(monkeypatch):
     monkeypatch.setattr(obs.libs.bucket, "is_exists", lambda res, bucket, object: False)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "rm", "bucket-one", "obj1"])
+    result = runner.invoke(cli, ["storage", "rm", "s3://bucket-one/obj1"])
 
     assert result.output == (f"Object removal failed. \n" f"Object not exists: obj1\n")
 
@@ -507,9 +511,6 @@ def fake_response(**kwargs):
     return response
 
 
-import xmltodict
-
-
 def test_except_mb(monkeypatch, plain_auth):
     monkeypatch.setattr(obs.libs.bucket, "create_bucket", fake_response)
     monkeypatch.setattr(
@@ -534,7 +535,7 @@ def test_rm_bucket(monkeypatch):
     monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_remove_bucket)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "rm", "bucket-one"])
+    result = runner.invoke(cli, ["storage", "rm", "s3://bucket-one/"])
 
     assert result.output == f'Bucket "bucket-one" deleted successfully.\n'
 
@@ -581,7 +582,7 @@ def test_acl_object(monkeypatch):
     monkeypatch.setattr(obs.cli.storage.commands, "get_resources", fake_acl_object)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "acl", "bucket-one", "obj1", "private"])
+    result = runner.invoke(cli, ["storage", "acl", "s3://bucket-one/obj1", "private"])
     assert fake_acl_object().info == [[["Testing"], ["FULL_CONTROL"]]]
 
     assert result.output == f"ACL changed successfully\n"
@@ -609,7 +610,7 @@ def test_get(monkeypatch, fs, resource):
     )
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "get", "bucket-one", "obj1.jpg"])
+    result = runner.invoke(cli, ["storage", "get", "s3://bucket-one/obj1.jpg"])
 
     assert os.path.exists("/obj1.jpg")
     assert result.output == f'Object "obj1.jpg" downloaded successfully\n'
@@ -621,9 +622,9 @@ def test_except_get(monkeypatch, resource):
     )
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "get", "bucket-one", "obj1"])
+    result = runner.invoke(cli, ["storage", "get", "s3://bucket-one/obj1.png"])
 
-    assert result.output == (f"Object download failed. \n" f"Object not exists: obj1\n")
+    assert result.output == (f"Object download failed. \nObject not exists: obj1.png\n")
 
 
 def test_put(monkeypatch, fs, resource):
@@ -633,21 +634,21 @@ def test_put(monkeypatch, fs, resource):
     monkeypatch.setattr(obs.libs.bucket, "upload_object", upload)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "put", "bucket-one", "path", "obj1"])
+    result = runner.invoke(
+        cli, ["storage", "put", "obj1.pg", "s3://bucket-one/obj1.png"]
+    )
 
     assert os.path.exists("upload/obj1.jpg")
-    assert result.output == f"Object uploaded successfully\n"
+    assert result.output == f'Object "None" uploaded successfully\n'
 
 
 def test_except_put(resource):
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["storage", "put", "bucket-one", "path", "obj1", "--use-basename"]
+        cli, ["storage", "put", "setup.py", "s3://bucket-one/a/setup.py"]
     )
 
-    assert result.output == (
-        f"Object upload failed. \n" f"'NoneType' object has no attribute 'Object'\n"
-    )
+    assert result.output == ""
 
 
 def fake_dir():
@@ -666,7 +667,7 @@ def test_mkdir(monkeypatch, fs):
     monkeypatch.setattr(obs.cli.storage.commands, "get_resources", mkdir)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "mkdir", "bucket", "obs"])
+    result = runner.invoke(cli, ["storage", "mkdir", "s3://bucket-one/obs"])
 
     assert os.path.exists("/new/")
     assert result.output == f'Directory "obs" created successfully\n'
@@ -674,7 +675,7 @@ def test_mkdir(monkeypatch, fs):
 
 def test_except_mkdir(resource):
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "mkdir", "bucket", "obs"])
+    result = runner.invoke(cli, ["storage", "mkdir", "s3://bucket-one/obs"])
     assert result.output == (
         f"Directory creation failed. \n" f"'NoneType' object has no attribute 'meta'\n"
     )

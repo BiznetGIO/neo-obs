@@ -32,25 +32,28 @@ don't hesitate to run `--help`
 
 .. code-block:: bash
 
-  $ obs storage mv --help
-  Usage: obs storage mv [OPTIONS] [SRC_BUCKET] [DEST_BUCKET] [OBJECT_NAME]
+   $ obs storage mv --help
+   Usage: obs storage mv [OPTIONS] [SRC_URI] [DEST_URI]
 
-    Move object into other bucket.
+       Move object into other bucket.
 
-  Options:
-    --help  Show this message and exit.
+   Options:
+       --help  Show this message and exit.
 
 See, I get the help message above which mean, I need to run the command below to
 move object
 
 .. code-block:: bash
 
-  $ obs storage mv sourcebucket destinationbucket awesomeobject
+  $ obs storage mv s3://source-bucket/awesomeobject.png s3://destination-bucket/  
 
 
 
 Usage Example
 -------------
+
+You can use either `s3://bucket-name` or `bucket-name` directly, both are
+accepted.
 
 .. code-block:: bash
 
@@ -58,16 +61,16 @@ Usage Example
   $ obs storage ls
 
   To list all object inside specific buckets
-  $ obs storage ls awesomebucket
+  $ obs storage ls s3://awesomebucket
 
   To list all object inside specific "directory"
-  $ obs storage ls awesomebucket -p foo-dir
+  $ obs storage ls s3://awesomebucket/foo-dir/
 
   To remove a bucket
-  $ obs storage rm awesomebucket
+  $ obs storage rm s3://awesomebucket
 
   To remove object inside bucket
-  $ obs storage rm awesomebucket myobject
+  $ obs storage rm s3://awesomebucket/myobject.png
 
   To make a bucket
   $ obs storage mb awesomebucket
@@ -82,26 +85,22 @@ Usage Example
   $ obs storage mb awesomebucket --policy-id c41e0a6f5e74663bexampleid
 
   To download an object
-  $ obs storage get awesomebucket myobject
+  $ obs storage get s3://awesomebucket/myobject.png
 
   To upload an object with specified name
-  [bucket name] [path] [object name]
-  $ obs storage put awesomebucket /path/to/myobject myawesomeobject
-
-  To upload an object with base name instead
-  $ obs storage put awesomebucket /path/to/myobject --use-basename
+  $ obs storage put myobject.png s3://awesomebucket/myobject.png
 
   To copy object between buckets
-  $ obs storage cp awesomebucket destbucket myobject
+  $ obs storage cp s3://awesomebucket/myobject.png s3://destbucket/
 
   To move object between buckets
-  $ obs storage mv awesomebucket destbucket myobject
+  $ obs storage mv s3://awesomebucket/myobject.png s3://destbucket
 
   To set bucket ACL
-  $ obs storage acl awesomebucket private
+  $ obs storage acl s3://awesomebucket private
 
   To set object ACL
-  $ obs storage acl awesomebucket myobject private
+  $ obs storage acl s3://awesomebucket/myobject private
 
   To show all gmt id policies
   $ obs storage gmt --policy-id

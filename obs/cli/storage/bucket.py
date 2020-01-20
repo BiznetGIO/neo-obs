@@ -36,8 +36,9 @@ def remove_bucket(resource, bucket_name):
         click.secho(f"{exc}", fg="yellow", bold=True, err=True)
 
 
-def get_objects(resource, bucket_name, prefix):
+def get_objects(resource, uri):
     try:
+        bucket_name, prefix = utils.get_bucket_key(uri)
         response = bucket_lib.get_objects(resource, bucket_name, prefix)
         if not response:
             click.secho(f'Bucket "{bucket_name}" is empty', fg="green")
@@ -69,6 +70,12 @@ def remove_object(resource, bucket_name, object_name):
 
 
 def download_object(resource, bucket_name, object_name):
+    if object_name.endswith("/"):
+        click.secho(
+            f"Object download failed. \nExpecting filename", fg="yellow", bold=True
+        )
+        return
+
     try:
         bucket_lib.download_object(resource, bucket_name, object_name)
         click.secho(f'Object "{object_name}" downloaded successfully', fg="green")
@@ -80,18 +87,29 @@ def download_object(resource, bucket_name, object_name):
 
 def upload_object(**kwargs):
     try:
-        bucket_lib.upload_object(**kwargs)
-        click.secho(f"Object uploaded successfully", fg="green")
+        filename = bucket_lib.upload_object(**kwargs)
+        click.secho(f'Object "{filename}" uploaded successfully', fg="green")
     except Exception as exc:
-        click.secho(f"Object upload failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(
+            f'Object "{filename}" upload failed. \n{exc}',
+            fg="yellow",
+            bold=True,
+            err=True,
+        )
 
 
-def copy_object(resource, src_bucket, dest_bucket, object_name):
+def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
+    if src_object_name.endswith("/") or not src_object_name:
+        click.secho(f"Object copy failed. \nExpecting filename", fg="yellow", bold=True)
+        return
+
     try:
-        bucket_lib.copy_object(resource, src_bucket, dest_bucket, object_name)
-        click.secho(f'Object "{object_name}" copied successfully', fg="green")
+        bucket_lib.copy_object(
+            resource, src_bucket, src_object_name, dest_bucket, dest_object_name
+        )
+        click.secho(f'Object "{src_object_name}" copied successfully', fg="green")
     except Exception as exc:
-        click.secho(f"Object copying failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(f"Object copy failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
 def bucket_usage(resource, bucket_name):
@@ -129,15 +147,22 @@ def disk_usage(resource):
         )
 
 
-def move_object(resource, src_bucket, dest_bucket, object_name):
+def move_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
+    if src_object_name.endswith("/") or not src_object_name:
+        click.secho(f"Object move failed. \nExpecting filename", fg="yellow", bold=True)
+        return
+
     try:
-        bucket_lib.move_object(resource, src_bucket, dest_bucket, object_name)
+        bucket_lib.move_object(
+            resource, src_bucket, src_object_name, dest_bucket, dest_object_name
+        )
+
         click.secho(
-            f'Object "{object_name}" moved to "{dest_bucket}" bucket successfully',
+            f'Object "{src_object_name}" moved to "{dest_bucket}" bucket successfully',
             fg="green",
         )
     except Exception as exc:
-        click.secho(f"Object moving failed. \n{exc}", fg="yellow", bold=True, err=True)
+        click.secho(f"Object move failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
 def bucket_info(resource, bucket_name, auth):

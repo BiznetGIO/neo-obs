@@ -1,6 +1,5 @@
 import os
 import yaml
-import errno
 import requests
 
 from obs.libs import config
