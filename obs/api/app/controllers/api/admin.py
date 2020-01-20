@@ -27,6 +27,8 @@ class user_api(Resource):
         try:
             if args["userId"]:
                 users = user.info(get_client(), args["userId"], args["groupId"])
+                if "reason" in users:
+                    return response(users["status_code"], message=users["reason"])
                 return response(200, data=users)
 
             user_type = args["user_type"] if args["user_type"] else "all"
@@ -71,10 +73,10 @@ class user_api(Resource):
                 if args[index] not in (option, None):
                     options[index] = args[index]
             status = user.create(get_client(), options)
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
-
-            return response(201)
+            else:
+                return response(201, data=status)
         except Exception:
             return response(500)
 
@@ -86,7 +88,7 @@ class user_api(Resource):
 
         try:
             status = user.remove(get_client(), args["userId"], args["groupId"])
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
             return response(204)
@@ -109,7 +111,7 @@ class qos_api(Resource):
     def post(self, groupId, userId):
         try:
             status = qos.set(get_client(), userId, groupId, request.form["limit"])
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
             return response(201)
@@ -119,7 +121,7 @@ class qos_api(Resource):
     def delete(self, groupId, userId):
         try:
             status = qos.rm(get_client(), userId, groupId)
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
             return response(204)
@@ -151,7 +153,7 @@ class cred_api(Resource):
             args = parser.parse_args()
 
             status = credential.create(get_client(), args["userId"], args["groupId"])
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
             return response(201)
@@ -166,7 +168,7 @@ class cred_api(Resource):
             args = parser.parse_args()
 
             status = credential.status(get_client(), args["access_key"], args["status"])
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
             return response(204)
@@ -176,7 +178,7 @@ class cred_api(Resource):
     def delete(self):
         try:
             status = credential.rm(get_client(), request.form["access_key"])
-            if "reason" in infos:
+            if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
             return response(204)
