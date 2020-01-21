@@ -158,7 +158,7 @@ def test_bucket_usage(monkeypatch, resource):
     runner = CliRunner()
     result = runner.invoke(cli, ["storage", "du", "s3://bucket-one/"])
 
-    assert result.output == (f'1.00 KiB, 2 objects in "s3://bucket-one/" bucket\n')
+    assert result.output == (f'1.00 KiB, 2 objects in "bucket-one" bucket\n')
 
 
 def fake_bucket_info(resource, bucket_name, auth):
