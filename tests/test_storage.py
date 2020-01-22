@@ -633,20 +633,11 @@ def test_put(monkeypatch, fs, resource):
 
     runner = CliRunner()
     result = runner.invoke(
-        cli, ["storage", "put", "obj1.pg", "s3://bucket-one/obj1.png"]
+        cli, ["storage", "put", "obj1.png", "s3://bucket-one/obj1.png"]
     )
 
     assert os.path.exists("upload/obj1.jpg")
-    assert result.output == f'Object "None" uploaded successfully\n'
-
-
-def test_except_put(resource):
-    runner = CliRunner()
-    result = runner.invoke(
-        cli, ["storage", "put", "setup.py", "s3://bucket-one/a/setup.py"]
-    )
-
-    assert result.output == ""
+    assert result.output == f'Object "obj1.png" uploaded successfully\n'
 
 
 def fake_dir():
