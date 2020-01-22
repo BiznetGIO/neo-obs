@@ -111,8 +111,6 @@ def upload_object(**kwargs):
     bucket_name = kwargs.get("bucket_name")
     resource.Object(bucket_name, filename).upload_file(Filename=local_path)
 
-    return filename
-
 
 def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
     """Copy an object into other bucket."""
