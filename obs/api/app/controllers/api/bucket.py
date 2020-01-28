@@ -1,36 +1,45 @@
-import bitmath
+import boto3
 import obs.libs.gmt as bucket_gmt
 import obs.libs.bucket as bucket
-import obs.libs.auth as auth
 
+from obs.libs import auth
+from requests_aws4auth import AWS4Auth
 from obs.libs import utils
+from obs.libs import config
 from app.helpers.rest import response
 from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 
-def get_resources():
-    return auth.resource()
+def get_resources(access_key,secret_key):
+    #config.load_config_file()
+    endpoint = auth.get_endpoint()
+    sess = boto3.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    s3_resource = sess.resource("s3", endpoint_url=endpoint)
+    return s3_resource
 
 
-def get_plain_auth():
-    return auth.plain_auth()
+def get_plain_auth(access_key,secret_key):
+    #config.load_config_file()
+    auth = AWS4Auth(access_key, secret_key, "eu-west-1", "s3")
+    return auth
 
 
 class list(Resource):
     def get(self):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
 
         try:
             if args["bucket_name"]:
-                buckets = bucket.get_objects(get_resources(), args["bucket_name"], "")
+                buckets = bucket.get_objects(get_resources(args["access_key"],args["secret_key"]), args["bucket_name"], "")
 
                 objects = []
                 if buckets["CommonPrefixes"]:
                     for prefix in buckets["CommonPrefixes"]:
-                        print(prefix)
                         objects.append({"directory": f"{prefix['Prefix']}"})
 
                 if buckets["Contents"]:
@@ -45,7 +54,7 @@ class list(Resource):
                         )
                 return response(200, data=objects)
 
-            buckets = bucket.buckets(get_resources())
+            buckets = bucket.buckets(get_resources(args["access_key"],args["secret_key"]))
             all_bucket = []
             for index, buck in enumerate(buckets):
                 all_bucket.append(
@@ -61,24 +70,44 @@ class list(Resource):
 
 class bucket_api(Resource):
     def get(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
+        args = parser.parse_args()
+
         try:
             bucket_info = bucket.bucket_info(
-                get_resources(), bucket_name, get_plain_auth()
+                get_resources(args["access_key"],args["secret_key"]), bucket_name,  get_plain_auth(args["access_key"],args["secret_key"])
             )
             return response(200, data=bucket_info)
         except Exception:
             return response(500)
 
     def post(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
+        parser.add_argument("acl", type=str)
+        parser.add_argument("policy_id", type=str)
+        args = parser.parse_args()
+        
+        acl = args["acl"] if args["acl"] else "private"
+        policy_id = args["policy_id"] if args["policy_id"] else ""
+
         try:
-            bucket.create_bucket(auth=get_plain_auth(), bucket_name=bucket_name)
+            bucket.create_bucket(auth=get_plain_auth(args["access_key"],args["secret_key"]), bucket_name=bucket_name,acl=acl,policy_id=policy_id)
             return response(201)
         except Exception:
             return response(500)
 
     def delete(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
+        args = parser.parse_args()
+
         try:
-            bucket.remove_bucket(get_resources(), bucket_name)
+            bucket.remove_bucket(get_resources(args["access_key"],args["secret_key"]), bucket_name)
             return response(204)
         except Exception:
             return response(500)
@@ -87,12 +116,14 @@ class bucket_api(Resource):
 class object_api(Resource):
     def get(self, bucket_name):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         args = parser.parse_args()
 
         try:
             object_info = bucket.object_info(
-                get_resources(), bucket_name, args["object_name"]
+                get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"]
             )
             for key, value in object_info.items():
                 object_info[key] = f"{value}"
@@ -102,11 +133,13 @@ class object_api(Resource):
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         args = parser.parse_args()
 
         try:
-            bucket.remove_object(get_resources(), bucket_name, args["object_name"])
+            bucket.remove_object(get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"])
             return response(204)
         except Exception:
             return response(500)
@@ -115,12 +148,14 @@ class object_api(Resource):
 class move_object(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         parser.add_argument("move_to", type=str)
         args = parser.parse_args()
         try:
             bucket.move_object(
-                get_resources(), bucket_name, args["object_name"], args["move_to"], None
+                get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"], args["move_to"], None
             )
             return response(204)
         except Exception:
@@ -130,13 +165,15 @@ class move_object(Resource):
 class copy_object(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         parser.add_argument("copy_to", type=str)
         args = parser.parse_args()
 
         try:
             bucket.copy_object(
-                get_resources(), bucket_name, args["object_name"], args["copy_to"], None
+                get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"], args["copy_to"], None
             )
             return response(204)
         except Exception:
@@ -146,11 +183,13 @@ class copy_object(Resource):
 class download_object(Resource):
     def get(self, bucket_name):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         args = parser.parse_args()
 
         try:
-            bucket.download_object(get_resources(), bucket_name, args["object_name"])
+            bucket.download_object(get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"])
             return response(204)
         except Exception:
             return response(500)
@@ -159,13 +198,15 @@ class download_object(Resource):
 class upload_object(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         parser.add_argument("path", type=str)
         args = parser.parse_args()
 
         try:
             bucket.upload_object(
-                resource=get_resources(),
+                resource=get_resources(args["access_key"],args["secret_key"]),
                 bucket_name=bucket_name,
                 local_path=args["path"],
                 object_name=args["object_name"],
@@ -173,19 +214,21 @@ class upload_object(Resource):
 
             return response(201)
         except Exception:
-            return Exception
+            return response(500)
 
 
 class usage(Resource):
     def get(self):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
 
         try:
             if args["bucket_name"]:
                 total_size, total_objects = bucket.bucket_usage(
-                    get_resources(), args["bucket_name"]
+                    get_resources(args["access_key"],args["secret_key"]), args["bucket_name"]
                 )
                 bucket_usage = {
                     "name": args["bucket_name"],
@@ -195,7 +238,7 @@ class usage(Resource):
                 return response(200, data=bucket_usage)
 
             disk_usage = {"bucket": [], "total_usage": 0}
-            disk_usages = bucket.disk_usage(get_resources())
+            disk_usages = bucket.disk_usage(get_resources(args["access_key"],args["secret_key"]))
             for usage in disk_usages:
                 bucket_name = usage[0]
                 total_size, total_objects = usage[1]
@@ -205,12 +248,14 @@ class usage(Resource):
                 )
             return response(200, data=disk_usage)
         except Exception:
-            return Exception
+            return response(500)
 
 
 class acl(Resource):
     def post(self):
         parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str)
@@ -221,7 +266,7 @@ class acl(Resource):
 
         try:
             bucket.set_acl(
-                resource=get_resources(),
+                resource=get_resources(args["access_key"],args["secret_key"]),
                 bucket_name=args["bucket_name"],
                 object_name=args["object_name"],
                 acl_type=acl_type,
@@ -236,11 +281,13 @@ class presign(Resource):
     def get(self, bucket_name, object_name):
         parser = reqparse.RequestParser()
         parser.add_argument("expire", type=int)
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
         args = parser.parse_args()
 
         try:
             url = bucket.generate_url(
-                get_resources(), bucket_name, object_name, args["expire"]
+                get_resources(args["access_key"],args["secret_key"]), bucket_name, object_name, args["expire"]
             )
             return response(200, data=url)
         except Exception:
@@ -249,8 +296,14 @@ class presign(Resource):
 
 class mkdir(Resource):
     def post(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("secret_key", type=str)
+        parser.add_argument("directory", type=str)
+        args = parser.parse_args()
+
         try:
-            bucket.mkdir(get_resources(), bucket_name, request.form["directory"])
+            bucket.mkdir(get_resources(args["access_key"],args["secret_key"]), bucket_name, args["directory"])
             return response(201)
         except Exception:
             return response(500)
@@ -258,6 +311,7 @@ class mkdir(Resource):
 
 class gmt(Resource):
     def get(self):
+        
         try:
             msg = []
             policies = bucket_gmt.get_policies()

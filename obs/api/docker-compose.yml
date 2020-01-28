@@ -1,0 +1,21 @@
+version: '3.3'
+services:
+  obs-api:
+    image: obs-api:0.0.1
+    ports:
+        - "5000:5000"
+    environment:
+      - FLASK_APP=autoapp.py
+      - FLASK_ENV=production
+      - GUNICORN_WORKERS=4
+      - FLASK_DEBUG=0
+      - APP_HOST=0.0.0.0
+      - APP_PORT=5000
+      - OBS_USER_URL=s3-stage.biznetgio.net
+      - OBS_USER_GMT_POLICY=/home/config/.config/neo-obs/gmt_policy.yaml
+      - OBS_ADMIN_USERNAME=sysadmin
+      - OBS_ADMIN_PASSWORD=public
+      - OBS_ADMIN_URL=cmc.biznetgio.net
+      - OBS_ADMIN_PORT=19443
+      - OBS_USE_HTTPS=false
+    command:  gunicorn 'autoapp:app' -b '0.0.0.0:5000' -w 4

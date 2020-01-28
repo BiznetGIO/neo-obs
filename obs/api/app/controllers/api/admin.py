@@ -5,6 +5,7 @@ import obs.libs.qos as qos
 import obs.cli.admin.qos as qos_limit
 import obs.libs.auth as client
 
+from distutils.util import strtobool
 from app.helpers.rest import response
 from flask import request, jsonify
 from flask_restful import Resource, reqparse
@@ -66,6 +67,7 @@ class user_api(Resource):
         parser = reqparse.RequestParser()
         for index, option in options.items():
             parser.add_argument(index, type=str, help=f"input user {index}")
+        parser.add_argument("quotaLimit", type=int)
         args = parser.parse_args()
 
         try:
@@ -73,12 +75,39 @@ class user_api(Resource):
                 if args[index] not in (option, None):
                     options[index] = args[index]
             status = user.create(get_client(), options)
+            if args["quotaLimit"]:
+                status=qos.set(get_client(), args["userId"], args["groupId"], args["quotaLimit"])
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
             else:
                 return response(201, data=status)
         except Exception:
             return response(500)
+
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
+        parser.add_argument("suspend", type=str, required=True)
+        args = parser.parse_args()
+        
+        try:
+            msg='suspended' if args['suspend']=='true' else 'unsuspended'
+
+            users = user.info(get_client(), args["userId"], args["groupId"])
+            if users['active']==f"{not strtobool(args['suspend'])}".lower():
+                return response(400,f"User already {msg}")   
+
+            del users["canonicalUserId"]
+            users["active"]=(not strtobool(args['suspend']))
+            status=user.update(get_client(),users)
+            if "reason" in status:
+                return response(status["status_code"], message=status["reason"])
+
+            message=f"User has been {msg}"
+            return response(200,message)
+        except Exception:
+            response(500)
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -109,8 +138,12 @@ class qos_api(Resource):
             return response(500)
 
     def post(self, groupId, userId):
+        parser = reqparse.RequestParser()
+        parser.add_argument("limit", type=int)
+        args = parser.parse_args()
+
         try:
-            status = qos.set(get_client(), userId, groupId, request.form["limit"])
+            status = qos.set(get_client(), userId, groupId, args["limit"])
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
@@ -131,12 +164,12 @@ class qos_api(Resource):
 
 class cred_api(Resource):
     def get(self):
-        try:
-            parser = reqparse.RequestParser()
-            parser.add_argument("userId", type=str)
-            parser.add_argument("groupId", type=str)
-            args = parser.parse_args()
+        parser = reqparse.RequestParser()
+        parser.add_argument("userId", type=str)
+        parser.add_argument("groupId", type=str)
+        args = parser.parse_args()
 
+        try:
             list = credential.list(get_client(), args["userId"], args["groupId"])
             if "reason" in list:
                 return response(list["status_code"], message=list["reason"])
@@ -146,12 +179,12 @@ class cred_api(Resource):
             return response(500)
 
     def post(self):
-        try:
-            parser = reqparse.RequestParser()
-            parser.add_argument("userId", type=str)
-            parser.add_argument("groupId", type=str)
-            args = parser.parse_args()
+        parser = reqparse.RequestParser()
+        parser.add_argument("userId", type=str)
+        parser.add_argument("groupId", type=str)
+        args = parser.parse_args()
 
+        try:
             status = credential.create(get_client(), args["userId"], args["groupId"])
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
@@ -161,12 +194,12 @@ class cred_api(Resource):
             return response(500)
 
     def put(self):
-        try:
-            parser = reqparse.RequestParser()
-            parser.add_argument("access_key", type=str)
-            parser.add_argument("status", type=str)
-            args = parser.parse_args()
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        parser.add_argument("status", type=str)
+        args = parser.parse_args()
 
+        try:
             status = credential.status(get_client(), args["access_key"], args["status"])
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
@@ -176,8 +209,12 @@ class cred_api(Resource):
             return response(500)
 
     def delete(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str)
+        args = parser.parse_args()
+
         try:
-            status = credential.rm(get_client(), request.form["access_key"])
+            status = credential.rm(get_client(), args["access_key"])
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
