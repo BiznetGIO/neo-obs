@@ -146,10 +146,12 @@ def move_object(src_uri, dest_uri):
 
 
 @storage.command("du")
-@click.argument("bucket_name", default="", required=False)
-def du(bucket_name):
+@click.argument("uri", default="", required=False)
+def du(uri):
     """Show disk or bucket usage."""
     s3_resource = get_resources()
+
+    bucket_name, prefix = utils.get_bucket_key(uri)
     if bucket_name:
         bucket.bucket_usage(s3_resource, bucket_name=bucket_name)
     else:

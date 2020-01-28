@@ -86,8 +86,9 @@ def download_object(resource, bucket_name, object_name):
 
 
 def upload_object(**kwargs):
+    filename = kwargs.get("local_path")
     try:
-        filename = bucket_lib.upload_object(**kwargs)
+        bucket_lib.upload_object(**kwargs)
         click.secho(f'Object "{filename}" uploaded successfully', fg="green")
     except Exception as exc:
         click.secho(
