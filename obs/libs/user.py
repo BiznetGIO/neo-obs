@@ -47,6 +47,12 @@ def create(client, data):
     return response
 
 
+def update(client, data):
+    """Update user info"""
+    response = client.user(method="POST", json=data)
+    return response
+
+
 def remove(client, user_id, group_id):
     """Remove user"""
     response = client.user(method="DELETE", userId=user_id, groupId=group_id)
