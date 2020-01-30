@@ -226,4 +226,5 @@ def mkdir(uri):
 def gmt_cmd(policy_id):
     """Manage Cloudian extensions to S3."""
     if policy_id:
+        config.load_config_file()
         gmt.show_policies()

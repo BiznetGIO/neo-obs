@@ -3,10 +3,10 @@ import sys
 from functools import partial
 
 from obs.libs import auth
-from obs.admin import user as user_cli
-from obs.admin import qos as qos_cli
-from obs.admin import credential as cred_cli
-from obs.admin import usage as usage_cli
+from obs.cli.admin import user as user_cli
+from obs.cli.admin import qos as qos_cli
+from obs.cli.admin import credential as cred_cli
+from obs.cli.admin import usage as usage_cli
 from obs.libs import config
 
 click.option = partial(click.option, show_default=True)
