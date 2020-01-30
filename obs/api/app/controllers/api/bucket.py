@@ -56,6 +56,8 @@ class list(Resource):
                                 "object_name": f"{content['Key']}",
                             }
                         )
+                if not objects:
+                    return response(200, f"Bucket is Empty.")
                 return response(200, data=objects)
 
             buckets = bucket.buckets(
@@ -69,6 +71,8 @@ class list(Resource):
                         "creation_date": f"{buck.creation_date:%Y-%m-%d %H:%M:%S}",
                     }
                 )
+            if not all_bucket:
+                return response(200, f"Storage is Empty.")
             return response(200, data=all_bucket)
         except Exception as exc:
             return response(500, exc)
