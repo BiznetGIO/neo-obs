@@ -11,16 +11,16 @@ from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 
-def get_resources(access_key,secret_key):
-    #config.load_config_file()
+def get_resources(access_key, secret_key):
+    config.load_config_file()
     endpoint = auth.get_endpoint()
     sess = boto3.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3_resource = sess.resource("s3", endpoint_url=endpoint)
     return s3_resource
 
 
-def get_plain_auth(access_key,secret_key):
-    #config.load_config_file()
+def get_plain_auth(access_key, secret_key):
+    config.load_config_file()
     auth = AWS4Auth(access_key, secret_key, "eu-west-1", "s3")
     return auth
 
@@ -35,7 +35,11 @@ class list(Resource):
 
         try:
             if args["bucket_name"]:
-                buckets = bucket.get_objects(get_resources(args["access_key"],args["secret_key"]), args["bucket_name"], "")
+                buckets = bucket.get_objects(
+                    get_resources(args["access_key"], args["secret_key"]),
+                    args["bucket_name"],
+                    "",
+                )
 
                 objects = []
                 if buckets["CommonPrefixes"]:
@@ -54,7 +58,9 @@ class list(Resource):
                         )
                 return response(200, data=objects)
 
-            buckets = bucket.buckets(get_resources(args["access_key"],args["secret_key"]))
+            buckets = bucket.buckets(
+                get_resources(args["access_key"], args["secret_key"])
+            )
             all_bucket = []
             for index, buck in enumerate(buckets):
                 all_bucket.append(
@@ -64,8 +70,8 @@ class list(Resource):
                     }
                 )
             return response(200, data=all_bucket)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class bucket_api(Resource):
@@ -77,11 +83,13 @@ class bucket_api(Resource):
 
         try:
             bucket_info = bucket.bucket_info(
-                get_resources(args["access_key"],args["secret_key"]), bucket_name,  get_plain_auth(args["access_key"],args["secret_key"])
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                get_plain_auth(args["access_key"], args["secret_key"]),
             )
             return response(200, data=bucket_info)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -90,15 +98,20 @@ class bucket_api(Resource):
         parser.add_argument("acl", type=str)
         parser.add_argument("policy_id", type=str)
         args = parser.parse_args()
-        
+
         acl = args["acl"] if args["acl"] else "private"
         policy_id = args["policy_id"] if args["policy_id"] else ""
 
         try:
-            bucket.create_bucket(auth=get_plain_auth(args["access_key"],args["secret_key"]), bucket_name=bucket_name,acl=acl,policy_id=policy_id)
+            bucket.create_bucket(
+                auth=get_plain_auth(args["access_key"], args["secret_key"]),
+                bucket_name=bucket_name,
+                acl=acl,
+                policy_id=policy_id,
+            )
             return response(201)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -107,10 +120,12 @@ class bucket_api(Resource):
         args = parser.parse_args()
 
         try:
-            bucket.remove_bucket(get_resources(args["access_key"],args["secret_key"]), bucket_name)
+            bucket.remove_bucket(
+                get_resources(args["access_key"], args["secret_key"]), bucket_name
+            )
             return response(204)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class object_api(Resource):
@@ -123,13 +138,15 @@ class object_api(Resource):
 
         try:
             object_info = bucket.object_info(
-                get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"]
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                args["object_name"],
             )
             for key, value in object_info.items():
                 object_info[key] = f"{value}"
             return response(200, data=object_info)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -139,10 +156,14 @@ class object_api(Resource):
         args = parser.parse_args()
 
         try:
-            bucket.remove_object(get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"])
+            bucket.remove_object(
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                args["object_name"],
+            )
             return response(204)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class move_object(Resource):
@@ -155,11 +176,15 @@ class move_object(Resource):
         args = parser.parse_args()
         try:
             bucket.move_object(
-                get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"], args["move_to"], None
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                args["object_name"],
+                args["move_to"],
+                None,
             )
             return response(204)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class copy_object(Resource):
@@ -173,11 +198,15 @@ class copy_object(Resource):
 
         try:
             bucket.copy_object(
-                get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"], args["copy_to"], None
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                args["object_name"],
+                args["copy_to"],
+                None,
             )
             return response(204)
-        except Exception:
-            return Exception
+        except Exception as exc:
+            return response(500, exc)
 
 
 class download_object(Resource):
@@ -189,10 +218,14 @@ class download_object(Resource):
         args = parser.parse_args()
 
         try:
-            bucket.download_object(get_resources(args["access_key"],args["secret_key"]), bucket_name, args["object_name"])
+            bucket.download_object(
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                args["object_name"],
+            )
             return response(204)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class upload_object(Resource):
@@ -206,15 +239,15 @@ class upload_object(Resource):
 
         try:
             bucket.upload_object(
-                resource=get_resources(args["access_key"],args["secret_key"]),
+                resource=get_resources(args["access_key"], args["secret_key"]),
                 bucket_name=bucket_name,
                 local_path=args["path"],
                 object_name=args["object_name"],
             )
 
             return response(201)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class usage(Resource):
@@ -228,7 +261,8 @@ class usage(Resource):
         try:
             if args["bucket_name"]:
                 total_size, total_objects = bucket.bucket_usage(
-                    get_resources(args["access_key"],args["secret_key"]), args["bucket_name"]
+                    get_resources(args["access_key"], args["secret_key"]),
+                    args["bucket_name"],
                 )
                 bucket_usage = {
                     "name": args["bucket_name"],
@@ -238,7 +272,9 @@ class usage(Resource):
                 return response(200, data=bucket_usage)
 
             disk_usage = {"bucket": [], "total_usage": 0}
-            disk_usages = bucket.disk_usage(get_resources(args["access_key"],args["secret_key"]))
+            disk_usages = bucket.disk_usage(
+                get_resources(args["access_key"], args["secret_key"])
+            )
             for usage in disk_usages:
                 bucket_name = usage[0]
                 total_size, total_objects = usage[1]
@@ -247,8 +283,8 @@ class usage(Resource):
                     {"name": bucket_name, "size": total_size, "objects": total_objects}
                 )
             return response(200, data=disk_usage)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class acl(Resource):
@@ -266,15 +302,15 @@ class acl(Resource):
 
         try:
             bucket.set_acl(
-                resource=get_resources(args["access_key"],args["secret_key"]),
+                resource=get_resources(args["access_key"], args["secret_key"]),
                 bucket_name=args["bucket_name"],
                 object_name=args["object_name"],
                 acl_type=acl_type,
                 acl=acl,
             )
             return response(204)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class presign(Resource):
@@ -287,11 +323,14 @@ class presign(Resource):
 
         try:
             url = bucket.generate_url(
-                get_resources(args["access_key"],args["secret_key"]), bucket_name, object_name, args["expire"]
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                object_name,
+                args["expire"],
             )
             return response(200, data=url)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class mkdir(Resource):
@@ -303,15 +342,19 @@ class mkdir(Resource):
         args = parser.parse_args()
 
         try:
-            bucket.mkdir(get_resources(args["access_key"],args["secret_key"]), bucket_name, args["directory"])
+            bucket.mkdir(
+                get_resources(args["access_key"], args["secret_key"]),
+                bucket_name,
+                args["directory"],
+            )
             return response(201)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)
 
 
 class gmt(Resource):
     def get(self):
-        
+
         try:
             msg = []
             policies = bucket_gmt.get_policies()
@@ -322,5 +365,5 @@ class gmt(Resource):
                     description = "No description"
                 msg.append({"Name": zone, "Id": policy_id, "Description": description})
             return response(200, data=msg)
-        except Exception:
-            return response(500)
+        except Exception as exc:
+            return response(500, exc)

@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   obs-api:
-    image: obs-api:0.0.1
+    image: obs-api
     ports:
         - "5000:5000"
     environment:
@@ -12,7 +12,7 @@ services:
       - APP_HOST=0.0.0.0
       - APP_PORT=5000
       - OBS_USER_URL=s3-stage.biznetgio.net
-      - OBS_USER_GMT_POLICY=/home/config/.config/neo-obs/gmt_policy.yaml
+      - OBS_USER_GMT_POLICY=/home/centos/.config/neo-obs/gmt_policy.yaml
       - OBS_ADMIN_USERNAME=sysadmin
       - OBS_ADMIN_PASSWORD=public
       - OBS_ADMIN_URL=cmc.biznetgio.net

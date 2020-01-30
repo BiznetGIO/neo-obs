@@ -21,7 +21,5 @@ api.add_resource(usage, "/storage/usage")
 api.add_resource(gmt, "/storage/gmt")
 
 api.add_resource(user_api, "/admin/user")
-api.add_resource(qos_api, "/admin/qos/<groupId>/<userId>")
+api.add_resource(qos_api, "/admin/qos")
 api.add_resource(cred_api, "/admin/cred")
-
-api.add_resource(config_api, "/config")
