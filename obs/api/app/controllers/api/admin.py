@@ -5,7 +5,6 @@ import obs.libs.qos as qos
 import obs.cli.admin.qos as qos_limit
 import obs.libs.auth as client
 
-from obs.libs import config
 from distutils.util import strtobool
 from app.helpers.rest import response
 from flask import request, jsonify
@@ -13,7 +12,6 @@ from flask_restful import Resource, reqparse
 
 
 def get_client():
-    config.load_config_file()
     return client.admin_client()
 
 
@@ -38,13 +36,13 @@ class user_api(Resource):
             user_status = args["user_status"] if args["user_status"] else "active"
             limit = args["limit"] if args["limit"] else ""
 
-            list = user.list_user(
+            user_list = user.list_user(
                 get_client(), args["groupId"], user_type, user_status, limit
             )
-            if "reason" in list:
+            if "reason" in user_list:
                 return response(list["status_code"], message=list["reason"])
 
-            return response(200, data=list)
+            return response(200, data=user_list)
         except Exception as exc:
             return response(500, exc)
 
@@ -101,6 +99,7 @@ class user_api(Resource):
             if users["active"] == f"{not strtobool(args['suspend'])}".lower():
                 return response(400, f"User already {msg}")
 
+            # canocicalUserId can't be included when updating user
             del users["canonicalUserId"]
             users["active"] = not strtobool(args["suspend"])
             status = user.update(get_client(), users)

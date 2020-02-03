@@ -2,7 +2,6 @@ from flask import Blueprint
 from flask_restful import Api
 from .bucket import *
 from .admin import *
-from .config import *
 
 api_blueprint = Blueprint("api", __name__, url_prefix="/api")
 api = Api(api_blueprint)
