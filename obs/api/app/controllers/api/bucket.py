@@ -1,3 +1,4 @@
+import os
 import boto3
 import obs.libs.gmt as bucket_gmt
 import obs.libs.bucket as bucket
@@ -7,12 +8,12 @@ from requests_aws4auth import AWS4Auth
 from obs.libs import utils
 from obs.libs import config
 from app.helpers.rest import response
+from werkzeug.utils import secure_filename
 from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 
 def get_resources(access_key, secret_key):
-    config.load_config_file()
     endpoint = auth.get_endpoint()
     sess = boto3.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3_resource = sess.resource("s3", endpoint_url=endpoint)
@@ -20,7 +21,6 @@ def get_resources(access_key, secret_key):
 
 
 def get_plain_auth(access_key, secret_key):
-    config.load_config_file()
     auth = AWS4Auth(access_key, secret_key, "eu-west-1", "s3")
     return auth
 
@@ -238,16 +238,23 @@ class upload_object(Resource):
         parser.add_argument("access_key", type=str)
         parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
-        parser.add_argument("path", type=str)
         args = parser.parse_args()
+        
+        file=request.files["files"]
+        filename=secure_filename(file.filename)
+        file.save(filename)
+
+        object_name=args["object_name"] if args["object_name"] else filename
 
         try:
             bucket.upload_object(
                 resource=get_resources(args["access_key"], args["secret_key"]),
                 bucket_name=bucket_name,
-                local_path=args["path"],
-                object_name=args["object_name"],
+                local_path=filename,
+                object_name=object_name,
             )
+
+            os.remove(filename)
 
             return response(201)
         except Exception as exc:
