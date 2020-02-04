@@ -5,10 +5,9 @@ import obs.libs.bucket as bucket
 
 from obs.libs import auth
 from requests_aws4auth import AWS4Auth
-from obs.libs import utils
 from app.helpers.rest import response
 from werkzeug.utils import secure_filename
-from flask import request, send_file,send_from_directory
+from flask import request, send_file
 from flask_restful import Resource, reqparse
 
 
@@ -226,7 +225,7 @@ class download_object(Resource):
                 bucket_name,
                 args["object_name"],
             )
-            file=send_file(f"/app/obs/api/{args['object_name']}",as_attachment=True)
+            file = send_file(f"/app/obs/api/{args['object_name']}", as_attachment=True)
             return file
         except Exception as exc:
             return response(500, exc)
@@ -239,12 +238,12 @@ class upload_object(Resource):
         parser.add_argument("secret_key", type=str)
         parser.add_argument("object_name", type=str)
         args = parser.parse_args()
-        
-        file=request.files["files"]
-        filename=secure_filename(file.filename)
+
+        file = request.files["files"]
+        filename = secure_filename(file.filename)
         file.save(filename)
 
-        object_name=args["object_name"] if args["object_name"] else filename
+        object_name = args["object_name"] if args["object_name"] else filename
 
         try:
             bucket.upload_object(

@@ -1,13 +1,10 @@
-import bitmath
 import obs.libs.user as user
 import obs.libs.credential as credential
 import obs.libs.qos as qos
-import obs.cli.admin.qos as qos_limit
 import obs.libs.auth as client
 
 from distutils.util import strtobool
 from app.helpers.rest import response
-from flask import request, jsonify
 from flask_restful import Resource, reqparse
 
 
@@ -136,8 +133,6 @@ class qos_api(Resource):
 
         try:
             infos = qos.info(get_client(), args["userId"], args["groupId"])
-            infos["Storage Limit"] = str(qos_limit.get_limit_kbytes(infos))
-            del infos["qosLimitList"]
             if "reason" in infos:
                 return response(infos["status_code"], message=infos["reason"])
 

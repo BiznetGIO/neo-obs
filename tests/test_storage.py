@@ -10,7 +10,7 @@ import obs.libs.auth
 import obs.libs.gmt
 import obs.libs.utils
 import obs.libs.config
-from obs.main import cli
+from obs.cli.main import cli
 from click.testing import CliRunner
 
 
