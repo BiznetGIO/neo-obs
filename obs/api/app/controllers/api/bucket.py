@@ -255,6 +255,14 @@ class upload_object(Resource):
             )
             os.remove(filename)
 
+            if args["acl"]:
+                bucket.set_acl(
+                    resource=get_resources(args["access_key"], args["secret_key"]),
+                    bucket_name=bucket_name,
+                    object_name=object_name,
+                    acl_type="object",
+                    acl=args["acl"],
+                )
             return response(201)
         except Exception as exc:
             return response(500, exc)
