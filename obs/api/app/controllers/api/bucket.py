@@ -26,8 +26,8 @@ def get_plain_auth(access_key, secret_key):
 class list(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
 
@@ -79,8 +79,8 @@ class list(Resource):
 class bucket_api(Resource):
     def get(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -95,8 +95,8 @@ class bucket_api(Resource):
 
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("acl", type=str)
         parser.add_argument("policy_id", type=str)
         args = parser.parse_args()
@@ -117,8 +117,8 @@ class bucket_api(Resource):
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -133,9 +133,9 @@ class bucket_api(Resource):
 class object_api(Resource):
     def get(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
-        parser.add_argument("object_name", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -152,9 +152,9 @@ class object_api(Resource):
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
-        parser.add_argument("object_name", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -171,10 +171,10 @@ class object_api(Resource):
 class move_object(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
-        parser.add_argument("object_name", type=str)
-        parser.add_argument("move_to", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
+        parser.add_argument("move_to", type=str, required=True)
         args = parser.parse_args()
         try:
             bucket.move_object(
@@ -192,10 +192,10 @@ class move_object(Resource):
 class copy_object(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
-        parser.add_argument("object_name", type=str)
-        parser.add_argument("copy_to", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
+        parser.add_argument("copy_to", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -214,9 +214,9 @@ class copy_object(Resource):
 class download_object(Resource):
     def get(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
-        parser.add_argument("object_name", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -234,9 +234,10 @@ class download_object(Resource):
 class upload_object(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("object_name", type=str)
+        parser.add_argument("acl", type=str)
         args = parser.parse_args()
 
         file = request.files["files"]
@@ -252,7 +253,6 @@ class upload_object(Resource):
                 local_path=filename,
                 object_name=object_name,
             )
-
             os.remove(filename)
 
             return response(201)
@@ -263,8 +263,8 @@ class upload_object(Resource):
 class usage(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
 
@@ -300,8 +300,8 @@ class usage(Resource):
 class acl(Resource):
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str)
@@ -327,8 +327,8 @@ class presign(Resource):
     def get(self, bucket_name, object_name):
         parser = reqparse.RequestParser()
         parser.add_argument("expire", type=int)
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -346,9 +346,9 @@ class presign(Resource):
 class mkdir(Resource):
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("secret_key", type=str)
-        parser.add_argument("directory", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("directory", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -364,7 +364,6 @@ class mkdir(Resource):
 
 class gmt(Resource):
     def get(self):
-
         try:
             msg = []
             policies = bucket_gmt.get_policies()

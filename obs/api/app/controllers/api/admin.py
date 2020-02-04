@@ -110,8 +110,8 @@ class user_api(Resource):
 
     def delete(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("userId", type=str)
-        parser.add_argument("groupId", type=str)
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -127,8 +127,8 @@ class user_api(Resource):
 class qos_api(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("userId", type=str)
-        parser.add_argument("groupId", type=str)
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -142,9 +142,9 @@ class qos_api(Resource):
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("userId", type=str)
-        parser.add_argument("groupId", type=str)
-        parser.add_argument("limit", type=int)
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
+        parser.add_argument("limit", type=int, required=True)
         args = parser.parse_args()
 
         try:
@@ -160,8 +160,8 @@ class qos_api(Resource):
 
     def delete(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("userId", type=str)
-        parser.add_argument("groupId", type=str)
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -177,8 +177,8 @@ class qos_api(Resource):
 class cred_api(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("userId", type=str)
-        parser.add_argument("groupId", type=str)
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -192,8 +192,8 @@ class cred_api(Resource):
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("userId", type=str)
-        parser.add_argument("groupId", type=str)
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -207,8 +207,8 @@ class cred_api(Resource):
 
     def put(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
-        parser.add_argument("status", type=str)
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("status", type=str, required=True)
         args = parser.parse_args()
 
         try:
@@ -222,7 +222,7 @@ class cred_api(Resource):
 
     def delete(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str)
+        parser.add_argument("access_key", type=str, required=True)
         args = parser.parse_args()
 
         try:
