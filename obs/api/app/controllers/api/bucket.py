@@ -6,10 +6,9 @@ import obs.libs.bucket as bucket
 from obs.libs import auth
 from requests_aws4auth import AWS4Auth
 from obs.libs import utils
-from obs.libs import config
 from app.helpers.rest import response
 from werkzeug.utils import secure_filename
-from flask import request, jsonify
+from flask import request, send_file,send_from_directory
 from flask_restful import Resource, reqparse
 
 
@@ -227,7 +226,8 @@ class download_object(Resource):
                 bucket_name,
                 args["object_name"],
             )
-            return response(204)
+            file=send_file(f"/app/obs/api/{args['object_name']}",as_attachment=True)
+            return file
         except Exception as exc:
             return response(500, exc)
 
