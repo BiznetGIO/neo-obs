@@ -1,8 +1,8 @@
-import obs.libs.user as user
-import obs.libs.credential as credential
-import obs.libs.qos as qos
-import obs.libs.auth as client
-
+from obs.libs import utils
+from obs.libs import qos
+from obs.libs import user
+from obs.libs import credential
+from obs.libs import auth as client
 from distutils.util import strtobool
 from app.helpers.rest import response
 from flask_restful import Resource, reqparse
@@ -41,7 +41,7 @@ class user_api(Resource):
 
             return response(200, data=user_list)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def post(self):
         options = {
@@ -79,9 +79,9 @@ class user_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
             else:
-                return response(201, data=status)
+                return response(201)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def put(self):
         parser = reqparse.RequestParser()
@@ -106,7 +106,7 @@ class user_api(Resource):
             message = f"User has been {msg}"
             return response(200, message)
         except Exception as exc:
-            response(500, exc)
+            response(500, str(exc))
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -121,7 +121,7 @@ class user_api(Resource):
 
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class qos_api(Resource):
@@ -133,12 +133,14 @@ class qos_api(Resource):
 
         try:
             infos = qos.info(get_client(), args["userId"], args["groupId"])
+            infos["Storage Limit"] = utils.sizeof_fmt(infos["qosLimitList"][0]["value"]*1024) if infos["qosLimitList"][0]["value"] != -1 else "unlimited"
+
             if "reason" in infos:
                 return response(infos["status_code"], message=infos["reason"])
 
             return response(200, data=infos)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -156,7 +158,7 @@ class qos_api(Resource):
 
             return response(201)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -171,7 +173,7 @@ class qos_api(Resource):
 
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class cred_api(Resource):
@@ -188,7 +190,7 @@ class cred_api(Resource):
 
             return response(200, data=list)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -203,7 +205,7 @@ class cred_api(Resource):
 
             return response(201)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def put(self):
         parser = reqparse.RequestParser()
@@ -218,7 +220,7 @@ class cred_api(Resource):
 
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -232,4 +234,4 @@ class cred_api(Resource):
 
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))

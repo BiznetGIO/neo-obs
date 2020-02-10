@@ -17,7 +17,7 @@ api.add_resource(mkdir, "/storage/mkdir/<bucket_name>")
 api.add_resource(acl, "/storage/acl")
 api.add_resource(list, "/storage/list")
 api.add_resource(usage, "/storage/usage")
-api.add_resource(gmt, "/storage/gmt")
+api.add_resource(gmt_policy, "/storage/gmt")
 
 api.add_resource(user_api, "/admin/user")
 api.add_resource(qos_api, "/admin/qos")

@@ -1,9 +1,11 @@
 import os
 import boto3
-import obs.libs.gmt as bucket_gmt
-import obs.libs.bucket as bucket
+import xmltodict
 
+from obs.libs import bucket
+from obs.libs import gmt 
 from obs.libs import auth
+from obs.libs import utils
 from requests_aws4auth import AWS4Auth
 from app.helpers.rest import response
 from werkzeug.utils import secure_filename
@@ -24,21 +26,24 @@ def get_plain_auth(access_key, secret_key):
 
 
 class list(Resource):
-    def get(self):
+    def get(self,prefix=""):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
 
+        bucket_name=args["bucket_name"]
+        if args["bucket_name"]:
+            bucket_name,prefix=utils.get_bucket_key(args['bucket_name'])
+
         try:
             if args["bucket_name"]:
                 buckets = bucket.get_objects(
                     get_resources(args["access_key"], args["secret_key"]),
-                    args["bucket_name"],
-                    "",
+                    bucket_name,
+                    prefix
                 )
-
                 objects = []
                 if buckets["CommonPrefixes"]:
                     for prefix in buckets["CommonPrefixes"]:
@@ -73,7 +78,7 @@ class list(Resource):
                 return response(200, f"Storage is Empty.")
             return response(200, data=all_bucket)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class bucket_api(Resource):
@@ -91,7 +96,7 @@ class bucket_api(Resource):
             )
             return response(200, data=bucket_info)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -105,15 +110,18 @@ class bucket_api(Resource):
         policy_id = args["policy_id"] if args["policy_id"] else ""
 
         try:
-            bucket.create_bucket(
+            responses=bucket.create_bucket(
                 auth=get_plain_auth(args["access_key"], args["secret_key"]),
                 bucket_name=bucket_name,
                 acl=acl,
                 policy_id=policy_id,
             )
+            if responses.text:
+                error=xmltodict.parse(responses.text)
+                return response(400,error["Error"]["Message"])
             return response(201)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -127,7 +135,7 @@ class bucket_api(Resource):
             )
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class object_api(Resource):
@@ -148,7 +156,7 @@ class object_api(Resource):
                 object_info[key] = f"{value}"
             return response(200, data=object_info)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -165,7 +173,7 @@ class object_api(Resource):
             )
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class move_object(Resource):
@@ -186,7 +194,7 @@ class move_object(Resource):
             )
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class copy_object(Resource):
@@ -208,7 +216,7 @@ class copy_object(Resource):
             )
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class download_object(Resource):
@@ -228,7 +236,7 @@ class download_object(Resource):
             file = send_file(f"/app/obs/api/{args['object_name']}", as_attachment=True)
             return file
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class upload_object(Resource):
@@ -265,7 +273,7 @@ class upload_object(Resource):
                 )
             return response(201)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class usage(Resource):
@@ -302,7 +310,7 @@ class usage(Resource):
                 )
             return response(200, data=disk_usage)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class acl(Resource):
@@ -328,7 +336,7 @@ class acl(Resource):
             )
             return response(204)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class presign(Resource):
@@ -348,7 +356,7 @@ class presign(Resource):
             )
             return response(200, data=url)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
 class mkdir(Resource):
@@ -367,14 +375,14 @@ class mkdir(Resource):
             )
             return response(201)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))
 
 
-class gmt(Resource):
+class gmt_policy(Resource):
     def get(self):
         try:
             msg = []
-            policies = bucket_gmt.get_policies()
+            policies = gmt.get_policies()
 
             for zone in policies:
                 policy_id, description, _ = policies[zone].values()
@@ -383,4 +391,4 @@ class gmt(Resource):
                 msg.append({"Name": zone, "Id": policy_id, "Description": description})
             return response(200, data=msg)
         except Exception as exc:
-            return response(500, exc)
+            return response(500, str(exc))

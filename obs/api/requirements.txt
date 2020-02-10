@@ -9,3 +9,5 @@ Flask_Cors==3.0.7
 Flask_RESTful==0.3.7
 python-dotenv==0.10.3
 cloudianapi==0.2.4
+xmltodict==0.12.0
+tzlocal==2.0.0
