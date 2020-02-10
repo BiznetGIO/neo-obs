@@ -3,7 +3,7 @@ import boto3
 import xmltodict
 
 from obs.libs import bucket
-from obs.libs import gmt 
+from obs.libs import gmt
 from obs.libs import auth
 from obs.libs import utils
 from requests_aws4auth import AWS4Auth
@@ -26,23 +26,22 @@ def get_plain_auth(access_key, secret_key):
 
 
 class list(Resource):
-    def get(self,prefix=""):
+    def get(self, prefix=""):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
-        bucket_name=args["bucket_name"]
+        bucket_name = args["bucket_name"]
         if args["bucket_name"]:
-            bucket_name,prefix=utils.get_bucket_key(args['bucket_name'])
+            bucket_name, prefix = utils.get_bucket_key(args["bucket_name"])
 
         try:
             if args["bucket_name"]:
                 buckets = bucket.get_objects(
-                    get_resources(args["access_key"], args["secret_key"]),
-                    bucket_name,
-                    prefix
+                    get_resources(args["access_key"], secret_key), bucket_name, prefix
                 )
                 objects = []
                 if buckets["CommonPrefixes"]:
@@ -52,20 +51,15 @@ class list(Resource):
                 if buckets["Contents"]:
                     for content in buckets["Contents"]:
                         last_modified = content["LastModified"]
-                        objects.append(
-                            {
-                                "modified": f"{last_modified:%Y-%m-%d %H:%M:%S}",
-                                "size": f"{content['Size']}",
-                                "object_name": f"{content['Key']}",
-                            }
-                        )
+                        content[
+                            "LastModified"
+                        ] = f'{content["LastModified"]:%Y-%m-%d %H:%M:%S}'
+                        objects.append(content)
                 if not objects:
                     return response(200, f"Bucket is Empty.")
                 return response(200, data=objects)
 
-            buckets = bucket.buckets(
-                get_resources(args["access_key"], args["secret_key"])
-            )
+            buckets = bucket.buckets(get_resources(args["access_key"], secret_key))
             all_bucket = []
             for index, buck in enumerate(buckets):
                 all_bucket.append(
@@ -87,12 +81,13 @@ class bucket_api(Resource):
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             bucket_info = bucket.bucket_info(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
-                get_plain_auth(args["access_key"], args["secret_key"]),
+                get_plain_auth(args["access_key"], secret_key),
             )
             return response(200, data=bucket_info)
         except Exception as exc:
@@ -105,20 +100,21 @@ class bucket_api(Resource):
         parser.add_argument("acl", type=str)
         parser.add_argument("policy_id", type=str)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         acl = args["acl"] if args["acl"] else "private"
         policy_id = args["policy_id"] if args["policy_id"] else ""
 
         try:
-            responses=bucket.create_bucket(
-                auth=get_plain_auth(args["access_key"], args["secret_key"]),
+            responses = bucket.create_bucket(
+                auth=get_plain_auth(args["access_key"], secret_key),
                 bucket_name=bucket_name,
                 acl=acl,
                 policy_id=policy_id,
             )
             if responses.text:
-                error=xmltodict.parse(responses.text)
-                return response(400,error["Error"]["Message"])
+                error = xmltodict.parse(responses.text)
+                return response(400, error["Error"]["Message"])
             return response(201)
         except Exception as exc:
             return response(500, str(exc))
@@ -128,10 +124,11 @@ class bucket_api(Resource):
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             bucket.remove_bucket(
-                get_resources(args["access_key"], args["secret_key"]), bucket_name
+                get_resources(args["access_key"], secret_key), bucket_name
             )
             return response(204)
         except Exception as exc:
@@ -145,10 +142,11 @@ class object_api(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             object_info = bucket.object_info(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["object_name"],
             )
@@ -164,10 +162,11 @@ class object_api(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             bucket.remove_object(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["object_name"],
             )
@@ -184,9 +183,11 @@ class move_object(Resource):
         parser.add_argument("object_name", type=str, required=True)
         parser.add_argument("move_to", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
+
         try:
             bucket.move_object(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["object_name"],
                 args["move_to"],
@@ -205,10 +206,11 @@ class copy_object(Resource):
         parser.add_argument("object_name", type=str, required=True)
         parser.add_argument("copy_to", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             bucket.copy_object(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["object_name"],
                 args["copy_to"],
@@ -226,10 +228,11 @@ class download_object(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             bucket.download_object(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["object_name"],
             )
@@ -247,6 +250,7 @@ class upload_object(Resource):
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         file = request.files["files"]
         filename = secure_filename(file.filename)
@@ -256,7 +260,7 @@ class upload_object(Resource):
 
         try:
             bucket.upload_object(
-                resource=get_resources(args["access_key"], args["secret_key"]),
+                resource=get_resources(args["access_key"], secret_key),
                 bucket_name=bucket_name,
                 local_path=filename,
                 object_name=object_name,
@@ -265,7 +269,7 @@ class upload_object(Resource):
 
             if args["acl"]:
                 bucket.set_acl(
-                    resource=get_resources(args["access_key"], args["secret_key"]),
+                    resource=get_resources(args["access_key"], secret_key),
                     bucket_name=bucket_name,
                     object_name=object_name,
                     acl_type="object",
@@ -283,12 +287,12 @@ class usage(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             if args["bucket_name"]:
                 total_size, total_objects = bucket.bucket_usage(
-                    get_resources(args["access_key"], args["secret_key"]),
-                    args["bucket_name"],
+                    get_resources(args["access_key"], secret_key), args["bucket_name"]
                 )
                 bucket_usage = {
                     "name": args["bucket_name"],
@@ -299,7 +303,7 @@ class usage(Resource):
 
             disk_usage = {"bucket": [], "total_usage": 0}
             disk_usages = bucket.disk_usage(
-                get_resources(args["access_key"], args["secret_key"])
+                get_resources(args["access_key"], secret_key)
             )
             for usage in disk_usages:
                 bucket_name = usage[0]
@@ -308,6 +312,7 @@ class usage(Resource):
                 disk_usage["bucket"].append(
                     {"name": bucket_name, "size": total_size, "objects": total_objects}
                 )
+            disk_usage["total_usage"] = f"{disk_usage['total_usage']}"
             return response(200, data=disk_usage)
         except Exception as exc:
             return response(500, str(exc))
@@ -322,13 +327,14 @@ class acl(Resource):
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         acl_type = "object" if args["object_name"] else "bucket"
         acl = args["acl"] if args["acl"] else "private"
 
         try:
             bucket.set_acl(
-                resource=get_resources(args["access_key"], args["secret_key"]),
+                resource=get_resources(args["access_key"], secret_key),
                 bucket_name=args["bucket_name"],
                 object_name=args["object_name"],
                 acl_type=acl_type,
@@ -346,10 +352,11 @@ class presign(Resource):
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             url = bucket.generate_url(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 object_name,
                 args["expire"],
@@ -366,10 +373,11 @@ class mkdir(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("directory", type=str, required=True)
         args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
 
         try:
             bucket.mkdir(
-                get_resources(args["access_key"], args["secret_key"]),
+                get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["directory"],
             )

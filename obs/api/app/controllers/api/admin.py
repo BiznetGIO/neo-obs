@@ -1,8 +1,8 @@
-from obs.libs import utils
 from obs.libs import qos
 from obs.libs import user
 from obs.libs import credential
 from obs.libs import auth as client
+from obs.libs import admin as admin_usage
 from distutils.util import strtobool
 from app.helpers.rest import response
 from flask_restful import Resource, reqparse
@@ -63,7 +63,9 @@ class user_api(Resource):
 
         parser = reqparse.RequestParser()
         for index, option in options.items():
-            parser.add_argument(index, type=str, help=f"input user {index}")
+            if index in ["userId", "groupId", "fullName"]:
+                parser.add_argument(index, type=str, required=True)
+            parser.add_argument(index, type=str)
         parser.add_argument("quotaLimit", type=int)
         args = parser.parse_args()
 
@@ -133,7 +135,11 @@ class qos_api(Resource):
 
         try:
             infos = qos.info(get_client(), args["userId"], args["groupId"])
-            infos["Storage Limit"] = utils.sizeof_fmt(infos["qosLimitList"][0]["value"]*1024) if infos["qosLimitList"][0]["value"] != -1 else "unlimited"
+            infos["Storage Limit"] = (
+                infos["qosLimitList"][0]["value"] * 1024
+                if infos["qosLimitList"][0]["value"] != -1
+                else "unlimited"
+            )
 
             if "reason" in infos:
                 return response(infos["status_code"], message=infos["reason"])
@@ -233,5 +239,22 @@ class cred_api(Resource):
                 return response(status["status_code"], message=status["reason"])
 
             return response(204)
+        except Exception as exc:
+            return response(500, str(exc))
+
+
+class user_usage(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("userId", type=str, required=True)
+        parser.add_argument("groupId", type=str, required=True)
+        args = parser.parse_args()
+
+        try:
+            status = admin_usage.usage(get_client(), args["userId"], args["groupId"])
+            if "reason" in status:
+                return response(status["status_code"], message=status["reason"])
+
+            return response(200, data=status[0])
         except Exception as exc:
             return response(500, str(exc))
