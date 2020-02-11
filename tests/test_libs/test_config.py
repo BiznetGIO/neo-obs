@@ -10,4 +10,4 @@ def test_config_file(monkeypatch):
 def test_exists(monkeypatch):
     monkeypatch.setattr(config, "config_file", lambda: None)
     monkeypatch.setattr(os.path, "isfile", lambda file: True)
-    assert config.is_config_exists() == True
+    assert config.is_config_exists() is True

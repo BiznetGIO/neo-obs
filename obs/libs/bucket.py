@@ -59,9 +59,21 @@ def get_objects(resource, bucket_name, prefix=None):
     }
 
 
+def get_files(resource, bucket_name, prefix=""):
+    """List only files inside a bucket (DIR excluded)."""
+    files = []
+    bucket = resource.Bucket(bucket_name)
+    for file_ in bucket.objects.filter(Prefix=prefix):
+        files.append(file_)
+    return files
+
+
 def is_exists(resource, bucket_name, object_name):
-    objects = get_objects(resource, bucket_name)
-    if object_name in [x.key for x in objects]:
+    response = get_objects(resource, bucket_name, prefix=object_name)
+    if not response["Contents"]:
+        return False
+
+    if object_name in [x["Key"] for x in response["Contents"]]:
         return True
     else:
         return False
@@ -88,36 +100,40 @@ def download_object(resource, bucket_name, object_name):
 
 def upload_object(**kwargs):
     """Upload an object into bucket."""
-    filename = kwargs.get("path", "")  # use path as default filename
-    path = kwargs.get("path")
+    # use local filename if not supplied
+    filename = kwargs.get("local_path", "")
+    local_path = kwargs.get("local_path")
 
     if kwargs.get("object_name"):
         filename = kwargs.get("object_name")
-    if kwargs.get("use_basename"):
-        filename = os.path.basename(path)
 
     resource = kwargs.get("resource")
     bucket_name = kwargs.get("bucket_name")
-    resource.Object(bucket_name, filename).upload_file(Filename=path)
+    resource.Object(bucket_name, filename).upload_file(Filename=local_path)
 
 
-def copy_object(resource, src_bucket, dest_bucket, object_name):
+def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
     """Copy an object into other bucket."""
-    copy_source = {"Bucket": src_bucket, "Key": object_name}
-    resource.Object(dest_bucket, object_name).copy(copy_source)
+
+    if not dest_object_name:
+        # use source object name if not supplied
+        dest_object_name = src_object_name
+
+    copy_source = {"Bucket": src_bucket, "Key": src_object_name}
+    resource.Object(dest_bucket, dest_object_name).copy(copy_source)
 
 
-def move_object(resource, src_bucket, dest_bucket, object_name):
+def move_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
     """Move an object into other bucket.
     Using copy then remove operation.
     """
-    copy_object(resource, src_bucket, dest_bucket, object_name)
-    remove_object(resource, src_bucket, object_name)
+    copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name)
+    remove_object(resource, src_bucket, src_object_name)
 
 
 def bucket_usage(resource, bucket_name):
     """Calculate bucket usage."""
-    objects = get_objects(resource, bucket_name)
+    objects = get_files(resource, bucket_name)
     total_objects = len(objects)
     total_size = 0
     for obj in objects:

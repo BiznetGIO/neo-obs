@@ -1,9 +1,9 @@
 import click
 
 
-from obs.storage import config
-from obs.storage import commands
-from obs.admin import commands as commands_admin
+from obs.cli.storage import config
+from obs.cli.storage import commands
+from obs.cli.admin import commands as commands_admin
 
 
 @click.group(invoke_without_command=True)

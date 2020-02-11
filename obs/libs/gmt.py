@@ -1,14 +1,11 @@
 import os
 import yaml
-import errno
 import requests
 
-from obs.libs import config
 from obs.libs import auth as auth_lib
 
 
 def policies_file():
-    config.load_config_file()
     policy_file = os.environ.get("OBS_USER_GMT_POLICY")
     return policy_file
 

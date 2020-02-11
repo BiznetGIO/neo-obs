@@ -4,6 +4,19 @@ import xmltodict
 from datetime import datetime
 
 
+def get_bucket_key(uri):
+    """Return bucket name and key from given S3 URI"""
+    if uri.startswith("s3://"):
+        uri = uri[5:]
+
+    components = uri.split("/")
+    bucket = components[0]
+    key = ""
+    if len(components) > 1:
+        key = "/".join(components[1:])
+    return bucket, key
+
+
 def sizeof_fmt(num, suffix="B"):
     """Convert any number to human readable size. By Fred Cirera"""
     for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:

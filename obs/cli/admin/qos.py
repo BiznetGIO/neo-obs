@@ -17,7 +17,7 @@ def get_limit_kbytes(qos):
     if limit == -1:
         limit = "Unlimited"
     else:
-        limit = bitmath.kB(limit).to_GiB().best_prefix()
+        limit = bitmath.kB(limit).best_prefix()
 
     return limit
 

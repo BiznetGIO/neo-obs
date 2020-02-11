@@ -1,0 +1,21 @@
+version: '3.3'
+services:
+  obs-api:
+    image: obs-api:0.0.1
+    ports:
+        - "5000:5000"
+    environment:
+      - FLASK_APP=autoapp.py
+      - FLASK_ENV=production
+      - GUNICORN_WORKERS=4
+      - FLASK_DEBUG=0
+      - APP_HOST=0.0.0.0
+      - APP_PORT=5000
+      - OBS_USER_URL=
+      - OBS_USER_GMT_POLICY=
+      - OBS_ADMIN_USERNAME=
+      - OBS_ADMIN_PASSWORD=
+      - OBS_ADMIN_URL=
+      - OBS_ADMIN_PORT=
+      - OBS_USE_HTTPS=
+    command:  gunicorn 'autoapp:app' -b '0.0.0.0:5000' -w 4
