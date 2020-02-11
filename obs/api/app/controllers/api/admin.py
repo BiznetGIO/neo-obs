@@ -190,11 +190,11 @@ class cred_api(Resource):
         args = parser.parse_args()
 
         try:
-            list = credential.list(get_client(), args["userId"], args["groupId"])
-            if "reason" in list:
+            cred_list = credential.list(get_client(), args["userId"], args["groupId"])
+            if "reason" in cred_list:
                 return response(list["status_code"], message=list["reason"])
 
-            return response(200, data=list)
+            return response(200, data=cred_list)
         except Exception as exc:
             return response(500, str(exc))
 

@@ -50,7 +50,6 @@ class list(Resource):
 
                 if buckets["Contents"]:
                     for content in buckets["Contents"]:
-                        last_modified = content["LastModified"]
                         content[
                             "LastModified"
                         ] = f'{content["LastModified"]:%Y-%m-%d %H:%M:%S}'
