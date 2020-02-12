@@ -4,8 +4,6 @@ from distutils.util import strtobool
 from cloudianapi.client import CloudianAPIClient
 from requests_aws4auth import AWS4Auth
 
-from obs.libs import config
-
 
 def get_endpoint(bucket=None):
     """generate endpoint.
@@ -26,7 +24,6 @@ def resource():
 
     :return: resource service client.
     """
-    config.load_config_file()
     access_key = os.environ.get("OBS_USER_ACCESS_KEY")
     secret_key = os.environ.get("OBS_USER_SECRET_KEY")
     endpoint = get_endpoint()
@@ -39,7 +36,6 @@ def resource():
 
 def plain_auth():
     """Sign S3 the auth manually"""
-    config.load_config_file()
     access_key = os.environ.get("OBS_USER_ACCESS_KEY")
     secret_key = os.environ.get("OBS_USER_SECRET_KEY")
 
@@ -52,7 +48,6 @@ def plain_auth():
 
 def admin_client():
     """:return: CloudianApiClient object"""
-    config.load_config_file()
     user = os.environ.get("OBS_ADMIN_USERNAME")
     passwd = os.environ.get("OBS_ADMIN_PASSWORD")
     endpoint = os.environ.get("OBS_ADMIN_URL")

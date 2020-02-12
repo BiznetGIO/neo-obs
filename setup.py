@@ -5,13 +5,13 @@ try:
 except ImportError:
     from distutils.core import setup
 
-with open("obs/__init__.py", "r", encoding="utf8") as f:
+with open("obs/cli/__init__.py", "r", encoding="utf8") as f:
     version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 with open("README.rst", "rb") as f:
     readme = f.read().decode("utf-8")
 
-with open("requirements.txt", "rb") as f:
+with open("obs/cli/requirements.txt", "rb") as f:
     requirements = f.read().decode("utf-8")
 
 setup(

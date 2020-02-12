@@ -2,9 +2,10 @@ import click
 import sys
 
 from obs.libs import auth
-from obs.storage import bucket
-from obs.storage import gmt
+from obs.cli.storage import bucket
+from obs.cli.storage import gmt
 from obs.libs import utils
+from obs.libs import config
 
 
 def warn_inexsit_config():
@@ -17,6 +18,7 @@ def warn_inexsit_config():
 
 def get_resources():
     try:
+        config.load_config_file()
         s3_resource = auth.resource()
         return s3_resource
     except Exception as exc:
@@ -27,6 +29,7 @@ def get_resources():
 
 def get_plain_auth():
     try:
+        config.load_config_file()
         plain_auth = auth.plain_auth()
         return plain_auth
     except Exception as exc:
@@ -223,4 +226,5 @@ def mkdir(uri):
 def gmt_cmd(policy_id):
     """Manage Cloudian extensions to S3."""
     if policy_id:
+        config.load_config_file()
         gmt.show_policies()
