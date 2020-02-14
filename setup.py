@@ -37,5 +37,5 @@ setup(
     include_package_data=True,
     packages=["obs"],
     install_requires=requirements,
-    entry_points={"console_scripts": ["obs=obs.main:cli"]},
+    entry_points={"console_scripts": ["obs=obs.cli.main:cli"]},
 )
