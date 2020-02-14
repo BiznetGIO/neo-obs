@@ -4,7 +4,7 @@ from obs.libs import credential
 from obs.libs import auth as client
 from obs.libs import admin as admin_usage
 from distutils.util import strtobool
-from app.helpers.rest import response
+from obs.api.app.helpers.rest import response
 from flask_restful import Resource, reqparse
 
 

@@ -7,7 +7,7 @@ from obs.libs import gmt
 from obs.libs import auth
 from obs.libs import utils
 from requests_aws4auth import AWS4Auth
-from app.helpers.rest import response
+from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
 from flask import request, send_file
 from flask_restful import Resource, reqparse
