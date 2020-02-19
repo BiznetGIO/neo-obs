@@ -4,6 +4,18 @@ import mock
 from obs.libs import user
 from obs.libs import credential
 from obs.libs import qos
+from obs.libs import admin
+from obs.api.app.controllers.api import admin as admin_client
+
+
+def fake_client():
+    client = mock.Mock()
+    client.user.return_value = ""
+    client.qos.limits.return_value = ""
+    client.user.credentials.return_value = ""
+    client.user.credentials.status.return_value = ""
+
+    return client
 
 
 def fake_list_users(client, group_id, user_type="all", user_status="active", limit=""):
@@ -14,6 +26,7 @@ def fake_list_users(client, group_id, user_type="all", user_status="active", lim
         "address1": "456 Shakedown St.",
         "city": "Portsmouth",
         "active": "true",
+        "canonicalUserId": "123",
     }
     user2 = {
         "userId": "johnthompson",
@@ -22,6 +35,7 @@ def fake_list_users(client, group_id, user_type="all", user_status="active", lim
         "address1": "",
         "city": "",
         "active": "true",
+        "canonicalUserId": "123",
     }
     return [user1, user2]
 
@@ -38,6 +52,7 @@ def test_list(client, monkeypatch):
             "address1": "456 Shakedown St.",
             "city": "Portsmouth",
             "active": "true",
+            "canonicalUserId": "123",
         },
         {
             "userId": "johnthompson",
@@ -46,6 +61,7 @@ def test_list(client, monkeypatch):
             "address1": "",
             "city": "",
             "active": "true",
+            "canonicalUserId": "123",
         },
     ]
 
@@ -89,3 +105,115 @@ def test_cred_list(client, monkeypatch):
     assert result.get_json()["data"] == [
         {"accessKey": "123", "secretKey": "abc", "createDate": 000, "active": True}
     ]
+
+
+def test_delete_user(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.delete("/api/admin/user", data={"groupId": "test", "userId": "foo"})
+    assert result.status_code == 204
+
+
+def test_create_user(client, monkeypatch):
+    pass
+
+
+def test_set_qos(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.post(
+        "/api/admin/qos", data={"groupId": "test", "userId": "foo", "limit": 100}
+    )
+    assert result.status_code == 201
+
+
+def fake_usage(client, user_id, group_id):
+    usage = [
+        {
+            "groupId": "test",
+            "userId": "foo",
+            "region": "stage",
+            "operation": "SB",
+            "uri": "",
+            "timestamp": "0",
+            "value": "100",
+            "count": "0",
+            "whitelistValue": "0",
+            "whitelistCount": "0",
+            "maxValue": "0",
+            "whitelistMaxValue": "0",
+            "ip": "",
+            "bucket": None,
+            "policyId": None,
+            "averageValue": "2001280",
+            "whitelistAverageValue": "0",
+        }
+    ]
+    return usage
+
+
+def test_usage(client, monkeypatch):
+    monkeypatch.setattr(admin, "usage", fake_usage)
+
+    result = client.get("/api/admin/usage", data={"groupId": "test", "userId": "foo"})
+    assert "100" in result.get_json()["data"].values()
+
+
+def test_create_cred(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.post("/api/admin/cred", data={"groupId": "test", "userId": "foo"})
+    assert result.status_code == 201
+
+
+def test_remove_cred(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.delete("/api/admin/cred", data={"access_key": "123"})
+    assert result.status_code == 204
+
+
+def test_status_cred(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.put("/api/admin/cred", data={"access_key": "123", "status": "true"})
+    assert result.status_code == 204
+
+
+def fake_user_info(client, group_id, user_id):
+    user = {
+        "userId": "jerrygarcia",
+        "fullName": "Jerry Garcia",
+        "emailAddr": "garcia@bgn.net",
+        "address1": "456 Shakedown St.",
+        "city": "Portsmouth",
+        "active": "true",
+        "canonicalUserId": "123",
+    }
+    return user
+
+
+def test_suspend_user(client, monkeypatch):
+    monkeypatch.setattr(user, "info", fake_user_info)
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.put(
+        "/api/admin/user", data={"groupId": "test", "userId": "foo", "suspend": "true"}
+    )
+    assert result.status_code == 200
+    assert result.get_json()["message"] == "User has been suspended"
+
+
+def test_create_user(client, monkeypatch):
+    monkeypatch.setattr(admin_client, "get_client", fake_client)
+
+    result = client.post(
+        "/api/admin/user",
+        data={
+            "groupId": "test",
+            "userId": "foo",
+            "fullName": "foobar",
+            "quotaLimit": 1000,
+        },
+    )
+    assert result.status_code == 201
