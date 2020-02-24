@@ -127,8 +127,9 @@ def test_set_qos(client, monkeypatch):
     assert result.status_code == 201
 
 
-def fake_usage(client, user_id, group_id):
-    usage = [
+def fake_usage():
+    client_user=mock.Mock()
+    client_user.usage.return_value= [
         {
             "groupId": "test",
             "userId": "foo",
@@ -145,15 +146,15 @@ def fake_usage(client, user_id, group_id):
             "ip": "",
             "bucket": None,
             "policyId": None,
-            "averageValue": "2001280",
+            "averageValue": "100",
             "whitelistAverageValue": "0",
         }
     ]
-    return usage
+    return client_user
 
 
 def test_usage(client, monkeypatch):
-    monkeypatch.setattr(admin, "usage", fake_usage)
+    monkeypatch.setattr(admin_client, "get_client", fake_usage)
 
     result = client.get("/api/admin/usage", data={"groupId": "test", "userId": "foo"})
     assert "100" in result.get_json()["data"].values()
