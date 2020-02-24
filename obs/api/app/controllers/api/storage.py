@@ -114,7 +114,7 @@ class bucket_api(Resource):
             if responses.text:
                 error = xmltodict.parse(responses.text)
                 return response(400, error["Error"]["Message"])
-            return response(201)
+            return response(201, f"Bucket {bucket_name} created successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -129,7 +129,7 @@ class bucket_api(Resource):
             bucket.remove_bucket(
                 get_resources(args["access_key"], secret_key), bucket_name
             )
-            return response(204)
+            return response(200, f"Bucket {bucket_name} deleted successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -169,7 +169,7 @@ class object_api(Resource):
                 bucket_name,
                 args["object_name"],
             )
-            return response(204)
+            return response(200, f"Object {args['object_name']} deleted successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -192,7 +192,7 @@ class move_object(Resource):
                 args["move_to"],
                 None,
             )
-            return response(204)
+            return response(201, f"Object {args['object_name']} moved successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -215,7 +215,7 @@ class copy_object(Resource):
                 args["copy_to"],
                 None,
             )
-            return response(204)
+            return response(201, f"Object {args['object_name']} copied successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -274,7 +274,7 @@ class upload_object(Resource):
                     acl_type="object",
                     acl=args["acl"],
                 )
-            return response(201)
+            return response(201, f"Object {args['object_name']} uploaded successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -330,6 +330,7 @@ class acl(Resource):
 
         acl_type = "object" if args["object_name"] else "bucket"
         acl = args["acl"] if args["acl"] else "private"
+        name = args["object_name"] if args["object_name"] else args["bucket_name"]
 
         try:
             bucket.set_acl(
@@ -339,7 +340,7 @@ class acl(Resource):
                 acl_type=acl_type,
                 acl=acl,
             )
-            return response(204)
+            return response(201, f"Added {acl} access to {acl_type} {name}.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -380,7 +381,7 @@ class mkdir(Resource):
                 bucket_name,
                 args["directory"],
             )
-            return response(201)
+            return response(201, f"Directory {args['directory']} added successfully.")
         except Exception as exc:
             return response(500, str(exc))
 

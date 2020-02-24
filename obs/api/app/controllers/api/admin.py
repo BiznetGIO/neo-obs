@@ -81,7 +81,7 @@ class user_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
             else:
-                return response(201)
+                return response(201, f"User {args['userId']} created successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -121,7 +121,7 @@ class user_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(204)
+            return response(200, f"User {args['userId']} deleted successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -162,7 +162,7 @@ class qos_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(201)
+            return response(201, f"User {args['userId']} quota changed successfully.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -177,7 +177,7 @@ class qos_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(204)
+            return response(200, f"User {args['userId']} quota changed to unlimited.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -209,7 +209,9 @@ class cred_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(201)
+            return response(
+                201, f"User {args['userId']} new credential created successfully."
+            )
         except Exception as exc:
             return response(500, str(exc))
 
@@ -220,11 +222,12 @@ class cred_api(Resource):
         args = parser.parse_args()
 
         try:
+            stats = "activated" if args["status"].lower() == "true" else "deactivated"
             status = credential.status(get_client(), args["access_key"], args["status"])
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(204)
+            return response(200, f"Credential status has been {stats}.")
         except Exception as exc:
             return response(500, str(exc))
 
@@ -238,7 +241,9 @@ class cred_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(204)
+            return response(
+                200, f"Access key {args['access_key']} deleted successfully."
+            )
         except Exception as exc:
             return response(500, str(exc))
 
