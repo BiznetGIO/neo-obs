@@ -162,7 +162,9 @@ class qos_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(201, f"User {args['userId']} quota changed successfully.")
+            return response(
+                201, f"User {args['userId']} quota changed successfully.", status
+            )
         except Exception as exc:
             return response(500, str(exc))
 
@@ -177,7 +179,9 @@ class qos_api(Resource):
             if "reason" in status:
                 return response(status["status_code"], message=status["reason"])
 
-            return response(200, f"User {args['userId']} quota changed to unlimited.")
+            return response(
+                200, f"User {args['userId']} quota changed to unlimited.", status
+            )
         except Exception as exc:
             return response(500, str(exc))
 

@@ -126,10 +126,10 @@ class bucket_api(Resource):
         secret_key = args["secret_key"].replace(" ", "+")
 
         try:
-            bucket.remove_bucket(
+            result = bucket.remove_bucket(
                 get_resources(args["access_key"], secret_key), bucket_name
             )
-            return response(200, f"Bucket {bucket_name} deleted successfully.")
+            return response(200, f"Bucket {bucket_name} deleted successfully.", result)
         except Exception as exc:
             return response(500, str(exc))
 
@@ -164,12 +164,14 @@ class object_api(Resource):
         secret_key = args["secret_key"].replace(" ", "+")
 
         try:
-            bucket.remove_object(
+            result = bucket.remove_object(
                 get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["object_name"],
             )
-            return response(200, f"Object {args['object_name']} deleted successfully.")
+            return response(
+                200, f"Object {args['object_name']} deleted successfully.", result
+            )
         except Exception as exc:
             return response(500, str(exc))
 
@@ -258,7 +260,7 @@ class upload_object(Resource):
         object_name = args["object_name"] if args["object_name"] else filename
 
         try:
-            bucket.upload_object(
+            result = bucket.upload_object(
                 resource=get_resources(args["access_key"], secret_key),
                 bucket_name=bucket_name,
                 local_path=filename,
@@ -274,7 +276,7 @@ class upload_object(Resource):
                     acl_type="object",
                     acl=args["acl"],
                 )
-            return response(201, f"Object {args['object_name']} uploaded successfully.")
+            return response(201, f"Object {object_name} uploaded successfully.", result)
         except Exception as exc:
             return response(500, str(exc))
 
@@ -333,14 +335,14 @@ class acl(Resource):
         name = args["object_name"] if args["object_name"] else args["bucket_name"]
 
         try:
-            bucket.set_acl(
+            result = bucket.set_acl(
                 resource=get_resources(args["access_key"], secret_key),
                 bucket_name=args["bucket_name"],
                 object_name=args["object_name"],
                 acl_type=acl_type,
                 acl=acl,
             )
-            return response(201, f"Added {acl} access to {acl_type} {name}.")
+            return response(200, f"Added {acl} access to {acl_type} {name}.", result)
         except Exception as exc:
             return response(500, str(exc))
 
@@ -376,12 +378,14 @@ class mkdir(Resource):
         secret_key = args["secret_key"].replace(" ", "+")
 
         try:
-            bucket.mkdir(
+            result = bucket.mkdir(
                 get_resources(args["access_key"], secret_key),
                 bucket_name,
                 args["directory"],
             )
-            return response(201, f"Directory {args['directory']} added successfully.")
+            return response(
+                201, f"Directory {args['directory']} added successfully.", result
+            )
         except Exception as exc:
             return response(500, str(exc))
 
