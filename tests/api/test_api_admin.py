@@ -111,7 +111,7 @@ def test_delete_user(client, monkeypatch):
     monkeypatch.setattr(admin_client, "get_client", fake_client)
 
     result = client.delete("/api/admin/user", data={"groupId": "test", "userId": "foo"})
-    assert result.status_code == 204
+    assert result.get_json()["message"] == f"User foo deleted successfully."
 
 
 def test_create_user(client, monkeypatch):
@@ -124,12 +124,12 @@ def test_set_qos(client, monkeypatch):
     result = client.post(
         "/api/admin/qos", data={"groupId": "test", "userId": "foo", "limit": 100}
     )
-    assert result.status_code == 201
+    assert result.get_json()["message"] == f"User foo quota changed successfully."
 
 
 def fake_usage():
-    client_user=mock.Mock()
-    client_user.usage.return_value= [
+    client_user = mock.Mock()
+    client_user.usage.return_value = [
         {
             "groupId": "test",
             "userId": "foo",
@@ -164,21 +164,23 @@ def test_create_cred(client, monkeypatch):
     monkeypatch.setattr(admin_client, "get_client", fake_client)
 
     result = client.post("/api/admin/cred", data={"groupId": "test", "userId": "foo"})
-    assert result.status_code == 201
+    assert (
+        result.get_json()["message"] == f"User foo new credential created successfully."
+    )
 
 
 def test_remove_cred(client, monkeypatch):
     monkeypatch.setattr(admin_client, "get_client", fake_client)
 
     result = client.delete("/api/admin/cred", data={"access_key": "123"})
-    assert result.status_code == 204
+    assert result.get_json()["message"] == f"Access key 123 deleted successfully."
 
 
 def test_status_cred(client, monkeypatch):
     monkeypatch.setattr(admin_client, "get_client", fake_client)
 
     result = client.put("/api/admin/cred", data={"access_key": "123", "status": "true"})
-    assert result.status_code == 204
+    assert result.get_json()["message"] == f"Credential status has been activated."
 
 
 def fake_user_info(client, group_id, user_id):
@@ -217,4 +219,4 @@ def test_create_user(client, monkeypatch):
             "quotaLimit": 1000,
         },
     )
-    assert result.status_code == 201
+    assert result.get_json()["message"] == f"User foo created successfully."
