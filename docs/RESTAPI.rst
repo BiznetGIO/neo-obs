@@ -4,9 +4,8 @@ RESTAPI
 .. toctree::
     :maxdepth: 1
 
-    restapi/storage.rst
+    restapi/Installation.rst
 
-.. toctree::
-    :maxdepth: 2
+    restapi/storage.rst
 
     restapi/admin.rst

@@ -1,5 +1,5 @@
-OBS Admin API
-=============
+Admin API
+=========
 
 .. contents::
    :local:

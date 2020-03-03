@@ -1,5 +1,5 @@
-OBS Storage API
-===============
+Storage API
+===========
 
 .. contents::
    :local:
