@@ -22,13 +22,19 @@ def fake_plain_auth():
     pass
 
 
+def load_config_file():
+    pass
+
+
 @pytest.fixture
 def resource(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "load_config_file", load_config_file)
     monkeypatch.setattr(obs.libs.auth, "resource", fake_resource)
 
 
 @pytest.fixture
 def plain_auth(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "load_config_file", load_config_file)
     monkeypatch.setattr(obs.libs.auth, "plain_auth", fake_plain_auth)
 
 
@@ -63,7 +69,7 @@ def test_resources(monkeypatch):
     )
 
 
-def test_plain_auth(monkeypatch, resource):
+def test_plain_auth(monkeypatch):
     monkeypatch.setattr(obs.libs.config, "config_file", lambda: "home/user/path")
 
     runner = CliRunner()
@@ -451,7 +457,6 @@ def test_cp(monkeypatch):
 
 
 def test_except_cp(resource):
-
     runner = CliRunner()
     result = runner.invoke(
         cli, ["storage", "cp", "s3://bucket-one/obj1", "s3://bucket-two/"]
@@ -629,7 +634,7 @@ def test_except_get(monkeypatch, resource):
 
 def test_put(monkeypatch, fs, resource):
     def upload(**kwargs):
-        fs.create_file("upload/obj1.jpg")
+        fs.create_file("upload/obj1.png")
 
     monkeypatch.setattr(obs.libs.bucket, "upload_object", upload)
 
@@ -638,7 +643,7 @@ def test_put(monkeypatch, fs, resource):
         cli, ["storage", "put", "obj1.png", "s3://bucket-one/obj1.png"]
     )
 
-    assert os.path.exists("upload/obj1.jpg")
+    assert os.path.exists("upload/obj1.png")
     assert result.output == f'Object "obj1.png" uploaded successfully\n'
 
 

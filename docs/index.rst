@@ -13,3 +13,4 @@ Table of contents
    api.rst
    resources.rst
    project.rst
+   RESTAPI.rst

@@ -8,6 +8,7 @@ from datetime import datetime
 import obs.libs.auth
 import obs.libs.user
 import obs.libs.utils
+import obs.libs.config
 import obs.cli.admin.commands as admin_client
 from click.testing import CliRunner
 from obs.cli.main import cli
@@ -21,8 +22,13 @@ def fake_response():
     return {"reason": "error", "status_code": 101, "url": "http://testing"}
 
 
+def load_config_file():
+    pass
+
+
 @pytest.fixture
 def client(monkeypatch):
+    monkeypatch.setattr(obs.libs.config, "load_config_file", load_config_file)
     monkeypatch.setattr(obs.libs.auth, "admin_client", fake_client)
 
 

@@ -45,7 +45,8 @@ def create_bucket(**kwargs):
 
 def remove_bucket(resource, bucket_name):
     """Remove a bucket."""
-    resource.Bucket(bucket_name).delete()
+    response = resource.Bucket(bucket_name).delete()
+    return response
 
 
 def get_objects(resource, bucket_name, prefix=None):
@@ -82,7 +83,8 @@ def is_exists(resource, bucket_name, object_name):
 def remove_object(resource, bucket_name, object_name):
     """Remove an object in a bucket."""
     if is_exists(resource, bucket_name, object_name):
-        resource.Object(bucket_name, object_name).delete()
+        response = resource.Object(bucket_name, object_name).delete()
+        return response
     else:
         raise ValueError(f"Object not exists: {object_name}")
 
@@ -266,7 +268,8 @@ def set_acl(**kwargs):
     if kwargs.get("acl_type") == "bucket":
         obj = resource.Bucket(bucket_name)
 
-    obj.Acl().put(ACL=kwargs.get("acl"))
+    response = obj.Acl().put(ACL=kwargs.get("acl"))
+    return response
 
 
 def generate_url(resource, bucket_name, object_name, expire=3600):
@@ -286,4 +289,5 @@ def mkdir(resource, bucket_name, dir_name):
     if not dir_name.endswith("/"):
         dir_name = f"{dir_name}/"
 
-    client.put_object(Bucket=bucket_name, Body="", Key=dir_name)
+    response = client.put_object(Bucket=bucket_name, Body="", Key=dir_name)
+    return response
