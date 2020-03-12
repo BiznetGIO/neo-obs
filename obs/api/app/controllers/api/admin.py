@@ -26,7 +26,10 @@ class user_api(Resource):
             if args["userId"]:
                 users = user.info(get_client(), args["userId"], args["groupId"])
                 if "reason" in users:
-                   
+                    if users["status_code"] == 204:
+                        current_app.logger.error(f"User {args['userId']} not found")
+                        return response(200, f"User {args['userId']} not found")
+
                     current_app.logger.error(users["reason"])
                     return response(users["status_code"], message=users["reason"])
                 return response(200, data=users)
@@ -105,6 +108,10 @@ class user_api(Resource):
         try:
             msg = "suspended" if args["suspend"] == True else "unsuspended"
             users = user.info(get_client(), args["userId"], args["groupId"])
+            if "reason" in users:
+                if users["status_code"] == 204:
+                    current_app.logger.error(f"User {args['userId']} not found")
+                    return response(200, f"User {args['userId']} not found")
 
             if users["active"] == f"{not args['suspend']}".lower():
                 return response(400, f"User already {msg}")
