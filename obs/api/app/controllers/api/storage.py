@@ -6,7 +6,6 @@ from obs.libs import bucket
 from obs.libs import gmt
 from obs.libs import auth
 from obs.libs import utils
-from obs.libs import config
 from requests_aws4auth import AWS4Auth
 from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
@@ -15,7 +14,6 @@ from flask_restful import Resource, reqparse
 
 
 def get_resources(access_key, secret_key):
-    config.load_config_file()
     endpoint = auth.get_endpoint()
     sess = boto3.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3_resource = sess.resource("s3", endpoint_url=endpoint)
@@ -23,7 +21,6 @@ def get_resources(access_key, secret_key):
 
 
 def get_plain_auth(access_key, secret_key):
-    config.load_config_file()
     auth = AWS4Auth(access_key, secret_key, "eu-west-1", "s3")
     return auth
 
@@ -74,7 +71,7 @@ class list(Resource):
                 return response(200, f"Storage is Empty.")
             return response(200, data=all_bucket)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -94,7 +91,7 @@ class bucket_api(Resource):
             )
             return response(200, data=bucket_info)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def post(self, bucket_name):
@@ -118,7 +115,7 @@ class bucket_api(Resource):
                 return response(400, error["Error"]["Message"])
             return response(201, f"Bucket {bucket_name} created successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
@@ -134,7 +131,7 @@ class bucket_api(Resource):
             )
             return response(200, f"Bucket {bucket_name} deleted successfully.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -157,7 +154,7 @@ class object_api(Resource):
                 object_info[key] = f"{value}"
             return response(200, data=object_info)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
@@ -178,7 +175,7 @@ class object_api(Resource):
                 200, f"Object {args['object_name']} deleted successfully.", result
             )
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -202,7 +199,7 @@ class move_object(Resource):
             )
             return response(201, f"Object {args['object_name']} moved successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -226,7 +223,7 @@ class copy_object(Resource):
             )
             return response(201, f"Object {args['object_name']} copied successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -248,7 +245,7 @@ class download_object(Resource):
             file = send_file(f"/app/obs/api/{args['object_name']}", as_attachment=True)
             return file
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -287,7 +284,7 @@ class upload_object(Resource):
                 )
             return response(201, f"Object {object_name} uploaded successfully.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -326,7 +323,7 @@ class usage(Resource):
             disk_usage["total_usage"] = f"{disk_usage['total_usage']}"
             return response(200, data=disk_usage)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -354,7 +351,7 @@ class acl(Resource):
             )
             return response(200, f"Added {acl} access to {acl_type} {name}.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -376,7 +373,7 @@ class presign(Resource):
             )
             return response(200, data=url)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -399,7 +396,7 @@ class mkdir(Resource):
                 201, f"Directory {args['directory']} added successfully.", result
             )
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -416,5 +413,5 @@ class gmt_policy(Resource):
                 msg.append({"Name": zone, "Id": policy_id, "Description": description})
             return response(200, data=msg)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")

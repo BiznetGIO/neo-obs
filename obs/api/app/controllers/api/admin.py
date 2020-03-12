@@ -26,6 +26,7 @@ class user_api(Resource):
             if args["userId"]:
                 users = user.info(get_client(), args["userId"], args["groupId"])
                 if "reason" in users:
+                   
                     current_app.logger.error(users["reason"])
                     return response(users["status_code"], message=users["reason"])
                 return response(200, data=users)
@@ -37,13 +38,14 @@ class user_api(Resource):
                 args["user_status"],
                 args["limit"],
             )
+
             if "reason" in user_list:
                 current_app.logger.error(user_list["reason"])
                 return response(user_list["status_code"], message=user_list["reason"])
 
             return response(200, data=user_list)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def post(self):
@@ -90,7 +92,7 @@ class user_api(Resource):
             else:
                 return response(201, f"User {args['userId']} created successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def put(self):
@@ -101,8 +103,9 @@ class user_api(Resource):
         args = parser.parse_args()
 
         try:
-            msg = "suspended" if args["suspend"] == "true" else "unsuspended"
+            msg = "suspended" if args["suspend"] == True else "unsuspended"
             users = user.info(get_client(), args["userId"], args["groupId"])
+
             if users["active"] == f"{not args['suspend']}".lower():
                 return response(400, f"User already {msg}")
 
@@ -117,7 +120,7 @@ class user_api(Resource):
             message = f"User has been {msg}"
             return response(200, message)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             response(500, f"{e}")
 
     def delete(self):
@@ -134,7 +137,7 @@ class user_api(Resource):
 
             return response(200, f"User {args['userId']} deleted successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -159,7 +162,7 @@ class qos_api(Resource):
 
             return response(200, data=infos)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def post(self):
@@ -181,7 +184,7 @@ class qos_api(Resource):
                 201, f"User {args['userId']} quota changed successfully.", status
             )
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def delete(self):
@@ -200,7 +203,7 @@ class qos_api(Resource):
                 200, f"User {args['userId']} quota changed to unlimited.", status
             )
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -219,7 +222,7 @@ class cred_api(Resource):
 
             return response(200, data=cred_list)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def post(self):
@@ -238,7 +241,7 @@ class cred_api(Resource):
                 201, f"User {args['userId']} new credential created successfully."
             )
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def put(self):
@@ -256,7 +259,7 @@ class cred_api(Resource):
 
             return response(200, f"Credential status has been {stats}.")
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def delete(self):
@@ -274,7 +277,7 @@ class cred_api(Resource):
                 200, f"Access key {args['access_key']} deleted successfully."
             )
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
@@ -293,5 +296,5 @@ class user_usage(Resource):
 
             return response(200, data=status[0])
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=True)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
