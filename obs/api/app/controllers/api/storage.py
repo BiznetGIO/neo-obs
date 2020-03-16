@@ -9,7 +9,7 @@ from obs.libs import utils
 from requests_aws4auth import AWS4Auth
 from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
-from flask import request, send_file
+from flask import request, send_file, current_app
 from flask_restful import Resource, reqparse
 
 
@@ -70,8 +70,9 @@ class list(Resource):
             if not all_bucket:
                 return response(200, f"Storage is Empty.")
             return response(200, data=all_bucket)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class bucket_api(Resource):
@@ -89,34 +90,33 @@ class bucket_api(Resource):
                 get_plain_auth(args["access_key"], secret_key),
             )
             return response(200, data=bucket_info)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
-        parser.add_argument("acl", type=str)
-        parser.add_argument("policy_id", type=str)
+        parser.add_argument("acl", type=str, default="private")
+        parser.add_argument("policy_id", type=str, default="")
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
-
-        acl = args["acl"] if args["acl"] else "private"
-        policy_id = args["policy_id"] if args["policy_id"] else ""
 
         try:
             responses = bucket.create_bucket(
                 auth=get_plain_auth(args["access_key"], secret_key),
                 bucket_name=bucket_name,
-                acl=acl,
-                policy_id=policy_id,
+                acl=args["acl"],
+                policy_id=args["policy_id"],
             )
             if responses.text:
                 error = xmltodict.parse(responses.text)
                 return response(400, error["Error"]["Message"])
             return response(201, f"Bucket {bucket_name} created successfully.")
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -130,8 +130,9 @@ class bucket_api(Resource):
                 get_resources(args["access_key"], secret_key), bucket_name
             )
             return response(200, f"Bucket {bucket_name} deleted successfully.", result)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class object_api(Resource):
@@ -152,8 +153,9 @@ class object_api(Resource):
             for key, value in object_info.items():
                 object_info[key] = f"{value}"
             return response(200, data=object_info)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def delete(self, bucket_name):
         parser = reqparse.RequestParser()
@@ -172,8 +174,9 @@ class object_api(Resource):
             return response(
                 200, f"Object {args['object_name']} deleted successfully.", result
             )
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class move_object(Resource):
@@ -195,8 +198,9 @@ class move_object(Resource):
                 None,
             )
             return response(201, f"Object {args['object_name']} moved successfully.")
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class copy_object(Resource):
@@ -218,8 +222,9 @@ class copy_object(Resource):
                 None,
             )
             return response(201, f"Object {args['object_name']} copied successfully.")
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class download_object(Resource):
@@ -239,8 +244,9 @@ class download_object(Resource):
             )
             file = send_file(f"/app/obs/api/{args['object_name']}", as_attachment=True)
             return file
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class upload_object(Resource):
@@ -277,8 +283,9 @@ class upload_object(Resource):
                     acl=args["acl"],
                 )
             return response(201, f"Object {object_name} uploaded successfully.", result)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class usage(Resource):
@@ -315,8 +322,9 @@ class usage(Resource):
                 )
             disk_usage["total_usage"] = f"{disk_usage['total_usage']}"
             return response(200, data=disk_usage)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class acl(Resource):
@@ -326,12 +334,11 @@ class acl(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
-        parser.add_argument("acl", type=str)
+        parser.add_argument("acl", type=str, default="private")
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
         acl_type = "object" if args["object_name"] else "bucket"
-        acl = args["acl"] if args["acl"] else "private"
         name = args["object_name"] if args["object_name"] else args["bucket_name"]
 
         try:
@@ -340,11 +347,12 @@ class acl(Resource):
                 bucket_name=args["bucket_name"],
                 object_name=args["object_name"],
                 acl_type=acl_type,
-                acl=acl,
+                acl=args["acl"],
             )
             return response(200, f"Added {acl} access to {acl_type} {name}.", result)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class presign(Resource):
@@ -364,8 +372,9 @@ class presign(Resource):
                 args["expire"],
             )
             return response(200, data=url)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class mkdir(Resource):
@@ -386,8 +395,9 @@ class mkdir(Resource):
             return response(
                 201, f"Directory {args['directory']} added successfully.", result
             )
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class gmt_policy(Resource):
@@ -402,5 +412,6 @@ class gmt_policy(Resource):
                     description = "No description"
                 msg.append({"Name": zone, "Id": policy_id, "Description": description})
             return response(200, data=msg)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")

@@ -1,6 +1,14 @@
 Unreleased
 ==========
 
+0.2.3 (2020-03-11)
+==================
+- Add log function
+- Fix bug: input bool value
+- Fix bug: no content when user id not found
+- Add testing for API
+- Update docs to add API documentation
+
 0.2.2 (2020-02-12)
 ==================
 - Added API to neo-obs

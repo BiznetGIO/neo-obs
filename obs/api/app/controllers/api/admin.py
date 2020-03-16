@@ -3,9 +3,9 @@ from obs.libs import user
 from obs.libs import credential
 from obs.libs import auth as client
 from obs.libs import admin as admin_usage
-from distutils.util import strtobool
 from obs.api.app.helpers.rest import response
-from flask_restful import Resource, reqparse
+from flask import current_app
+from flask_restful import Resource, reqparse, inputs
 
 
 def get_client():
@@ -15,9 +15,9 @@ def get_client():
 class user_api(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("user_type", type=str)
-        parser.add_argument("user_status", type=str)
-        parser.add_argument("limit", type=str)
+        parser.add_argument("user_type", type=str, default="all")
+        parser.add_argument("user_status", type=str, default="active")
+        parser.add_argument("limit", type=str, default="")
         parser.add_argument("userId", type=str)
         parser.add_argument("groupId", type=str, required=True)
         args = parser.parse_args()
@@ -26,22 +26,30 @@ class user_api(Resource):
             if args["userId"]:
                 users = user.info(get_client(), args["userId"], args["groupId"])
                 if "reason" in users:
+                    if users["status_code"] == 204:
+                        current_app.logger.error(f"User {args['userId']} not found")
+                        return response(200, f"User {args['userId']} not found")
+
+                    current_app.logger.error(users["reason"])
                     return response(users["status_code"], message=users["reason"])
                 return response(200, data=users)
 
-            user_type = args["user_type"] if args["user_type"] else "all"
-            user_status = args["user_status"] if args["user_status"] else "active"
-            limit = args["limit"] if args["limit"] else ""
-
             user_list = user.list_user(
-                get_client(), args["groupId"], user_type, user_status, limit
+                get_client(),
+                args["groupId"],
+                args["user_type"],
+                args["user_status"],
+                args["limit"],
             )
+
             if "reason" in user_list:
-                return response(list["status_code"], message=list["reason"])
+                current_app.logger.error(user_list["reason"])
+                return response(user_list["status_code"], message=user_list["reason"])
 
             return response(200, data=user_list)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def post(self):
         options = {
@@ -65,7 +73,10 @@ class user_api(Resource):
         for index, option in options.items():
             if index in ["userId", "groupId", "fullName"]:
                 parser.add_argument(index, type=str, required=True)
-            parser.add_argument(index, type=str)
+            elif index in ["active", "ldapEnabled"]:
+                parser.add_argument(index, type=inputs.boolean)
+            else:
+                parser.add_argument(index, type=str)
         parser.add_argument("quotaLimit", type=int)
         args = parser.parse_args()
 
@@ -79,36 +90,45 @@ class user_api(Resource):
                     get_client(), args["userId"], args["groupId"], args["quotaLimit"]
                 )
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
             else:
                 return response(201, f"User {args['userId']} created successfully.")
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def put(self):
         parser = reqparse.RequestParser()
         parser.add_argument("userId", type=str, required=True)
         parser.add_argument("groupId", type=str, required=True)
-        parser.add_argument("suspend", type=str, required=True)
+        parser.add_argument("suspend", type=inputs.boolean, required=True)
         args = parser.parse_args()
 
         try:
-            msg = "suspended" if args["suspend"] == "true" else "unsuspended"
+            msg = "suspended" if args["suspend"] == True else "unsuspended"
             users = user.info(get_client(), args["userId"], args["groupId"])
-            if users["active"] == f"{not strtobool(args['suspend'])}".lower():
+            if "reason" in users:
+                if users["status_code"] == 204:
+                    current_app.logger.error(f"User {args['userId']} not found")
+                    return response(200, f"User {args['userId']} not found")
+
+            if users["active"] == f"{not args['suspend']}".lower():
                 return response(400, f"User already {msg}")
 
             # canocicalUserId can't be included when updating user
             del users["canonicalUserId"]
-            users["active"] = not strtobool(args["suspend"])
+            users["active"] = not args["suspend"]
             status = user.update(get_client(), users)
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             message = f"User has been {msg}"
             return response(200, message)
-        except Exception as exc:
-            response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            response(500, f"{e}")
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -119,11 +139,13 @@ class user_api(Resource):
         try:
             status = user.remove(get_client(), args["userId"], args["groupId"])
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(200, f"User {args['userId']} deleted successfully.")
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class qos_api(Resource):
@@ -142,11 +164,13 @@ class qos_api(Resource):
             )
 
             if "reason" in infos:
+                current_app.logger.error(infos["reason"])
                 return response(infos["status_code"], message=infos["reason"])
 
             return response(200, data=infos)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -160,13 +184,15 @@ class qos_api(Resource):
                 get_client(), args["userId"], args["groupId"], args["limit"]
             )
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(
                 201, f"User {args['userId']} quota changed successfully.", status
             )
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -177,13 +203,15 @@ class qos_api(Resource):
         try:
             status = qos.rm(get_client(), args["userId"], args["groupId"])
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(
                 200, f"User {args['userId']} quota changed to unlimited.", status
             )
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class cred_api(Resource):
@@ -196,11 +224,13 @@ class cred_api(Resource):
         try:
             cred_list = credential.list(get_client(), args["userId"], args["groupId"])
             if "reason" in cred_list:
-                return response(list["status_code"], message=list["reason"])
+                current_app.logger.error(cred_list["reason"])
+                return response(cred_list["status_code"], message=cred_list["reason"])
 
             return response(200, data=cred_list)
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -211,29 +241,33 @@ class cred_api(Resource):
         try:
             status = credential.create(get_client(), args["userId"], args["groupId"])
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(
                 201, f"User {args['userId']} new credential created successfully."
             )
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def put(self):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("status", type=str, required=True)
+        parser.add_argument("status", type=str, required=True, default="true")
         args = parser.parse_args()
 
         try:
             stats = "activated" if args["status"].lower() == "true" else "deactivated"
             status = credential.status(get_client(), args["access_key"], args["status"])
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(200, f"Credential status has been {stats}.")
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
     def delete(self):
         parser = reqparse.RequestParser()
@@ -243,13 +277,15 @@ class cred_api(Resource):
         try:
             status = credential.rm(get_client(), args["access_key"])
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(
                 200, f"Access key {args['access_key']} deleted successfully."
             )
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
 
 
 class user_usage(Resource):
@@ -262,8 +298,10 @@ class user_usage(Resource):
         try:
             status = admin_usage.usage(get_client(), args["userId"], args["groupId"])
             if "reason" in status:
+                current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
             return response(200, data=status[0])
-        except Exception as exc:
-            return response(500, str(exc))
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
