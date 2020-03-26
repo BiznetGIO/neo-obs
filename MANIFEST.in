@@ -1,7 +1,8 @@
 recursive-exclude *.egg-info *
 recursive-include obs tests *.py
 
-include requirements*.txt
+include requirements-dev.txt
+include obs/cli/requirements.txt
 include README.rst
 include LICENSE
 include setup.py
