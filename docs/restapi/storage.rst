@@ -170,7 +170,7 @@ secret_key   string    user secret key
 
 Response :
 
-.. code-block:: JSON
+.. code-block:: bash
 
     {
     code: 200,

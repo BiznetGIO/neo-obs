@@ -236,7 +236,7 @@ userId       string    name of user
 
 Response :
 
-.. code-block:: JSON
+.. code-block:: bash
 
     {
     code: 200,
