@@ -71,7 +71,7 @@ Response :
       ]
     status: success,
     message: Operation succeeded
-    } 
+    }
 
 Get User Information
 ~~~~~~~~~~~~~~~~~~~~
@@ -242,8 +242,8 @@ Response :
     code: 200,
     count: 8,
     data: {
-        groupId: testing,
-        userId: hasan,
+        groupId: test,
+        userId: foo,
         labelId: qos.userQosOverrides.title,
         qosLimitList: [
             {
@@ -339,7 +339,7 @@ Response :
     count: 0,
     data: null,
     status: success,
-    message: User hasan quota changed to unlimited.
+    message: User foo quota changed to unlimited.
     }
 
 Credential
@@ -411,7 +411,7 @@ Response :
     count: 0,
     data: null,
     status: success,
-    message: User hasan new credential created successfully.
+    message: User foo new credential created successfully.
     } 
 
 Activate/Deactive User Credential
