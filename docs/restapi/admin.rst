@@ -14,15 +14,16 @@ List Avaible User
 
     GET api/admin/user
 
-Request body:
+Query Parametes:
 
-===========  =======   ===========================
-Name         Type      Description
-===========  =======   ===========================
-groupId      string    name of user group
-user_type    string    type of user
-limit        integer    number of user shown
-===========  =======   ===========================
+===========  =======   =====================
+Name         Type      Description          
+===========  =======   =====================
+groupId      string    name of user group         
+user_type    string    type of user         
+user_status  string    status of user       
+limit        integer   number of user shown 
+===========  =======   =====================
 
 Response :
 
@@ -80,14 +81,14 @@ Get User Information
 
     GET api/admin/user
 
-Request body:
+Query Parametes:
 
-===========  =======   ===========================
-Name         Type      Description
-===========  =======   ===========================
-groupId      string    name of user group
-userId       string    name of user
-===========  =======   ===========================
+===========  =======   ===================
+Name         Type      Description        
+===========  =======   ===================
+groupId      string    name of user group 
+userId       string    name of user       
+===========  =======   ===================
 
 Response :
 
@@ -125,26 +126,26 @@ Create New User
 
     POST api/admin/user
 
-Request body:
+Query Parametes:
 
-===========  =======   ===========================
-Name         Type      Description
-===========  =======   ===========================
-groupId      string    name of user group
-userId       string    name of user
-userType     string    type of user
-fullName     string    user full name
-emailAddr    string    user email address
-address1     string    user home address
-city         string    user cities
-state        string    user state
-zip          string    user zip code
-country      string    user country
-phone        string    user phone number
-website      string    user website address
-active       boolean   user active status
-ldapEnabled  boolean   user ldap status
-===========  =======   ===========================
+===========  =======   ===================== =================
+Name         Type      Description           Status
+===========  =======   ===================== =================
+groupId      string    name of user group    Required
+userId       string    name of user          Required
+userType     string    type of user          default ("user")
+fullName     string    user full name        Required
+emailAddr    string    user email address     
+address1     string    user home address      
+city         string    user cities           
+state        string    user state             
+zip          string    user zip code         
+country      string    user country          
+phone        string    user phone number      
+website      string    user website address   
+active       boolean   user active status    default ("true")
+ldapEnabled  boolean   user ldap status      default (False)
+===========  =======   ===================== =================
 
 Response :
 
@@ -165,15 +166,15 @@ Suspend User
 
     PUT api/admin/user
 
-Request body:
+Query Parametes:
 
-===========  =======   ===========================
+===========  =======   ===================
 Name         Type      Description
-===========  =======   ===========================
+===========  =======   ===================
 groupId      string    name of user group
 userId       string    name of user
 suspend      boolean   status of suspend
-===========  =======   ===========================
+===========  =======   ===================
 
 Response :
 
@@ -194,7 +195,7 @@ Delete User
 
     DELETE api/admin/user
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -225,7 +226,7 @@ Get Quota User
 
     GET api/admin/qos
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -292,7 +293,7 @@ Set User Quota
 
     POST api/admin/qos
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -321,7 +322,7 @@ Delete User Quota
 
     DELETE api/admin/qos
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -352,7 +353,7 @@ Get User Credential
 
     GET api/admin/cred
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -393,7 +394,7 @@ Create New Credential
 
     POST api/admin/cred
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -421,7 +422,7 @@ Activate/Deactive User Credential
 
     PUT api/admin/cred
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -449,7 +450,7 @@ Delete User Credential
 
     DELETE api/admin/cred
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -479,7 +480,7 @@ Get User Usage
 
     GET api/admin/usage
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description

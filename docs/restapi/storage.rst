@@ -11,7 +11,7 @@ Get List Buckets
 
     GET api/storage/list
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -47,7 +47,7 @@ Get List Objects
 
     GET api/storage/list
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -91,7 +91,7 @@ Get Bucket Info
 
     GET api/storage/bucket/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -131,7 +131,7 @@ Create New Bucket
 
     POST api/storage/bucket/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -159,14 +159,14 @@ Delete Bucket
 
     DELETE api/storage/bucket/:bucket_name
 
-Request body:
+Query Parametes:
 
-===========  =======   ===========================
-Name         Type      Description
-===========  =======   ===========================
+===========  =======   =========================== 
+Name         Type      Description 
+===========  =======   =========================== 
 access_key   string    user access key 
-secret_key   string    user secret key
-===========  =======   ===========================
+secret_key   string    user secret key 
+===========  =======   =========================== 
 
 Response :
 
@@ -199,7 +199,7 @@ Get Object Info
 
     GET api/storage/object/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -235,7 +235,7 @@ Delete Object
 
     DELETE api/storage/object/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -276,7 +276,7 @@ Upload Object
 
     POST api/storage/object/upload/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -307,7 +307,7 @@ Download Object
 
     GET api/storage/object/download/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -330,7 +330,7 @@ Move Object
 
     POST api/storage/object/move/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -360,7 +360,7 @@ Copy Object
 
     POST api/storage/object/copy/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -390,7 +390,7 @@ Get Usage
 
     GET api/storage/usage
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -428,7 +428,7 @@ Create New Directory
 
     POST api/storage/mkdir/:bucket_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -472,7 +472,7 @@ Get URL Object
 
     GET api/storage/presign/:bucket_name/:object_name
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -500,7 +500,7 @@ Set ACL
 
     GET api/storage/acl
 
-Request body:
+Query Parametes:
 
 ===========  =======   =============================
 Name         Type      Description
