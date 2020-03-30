@@ -14,6 +14,7 @@ Admin Usage
   Commands:
     cred  administrate user credentials.
     qos   administrate QoS.
+    usage administrate usage.
     user  administrate user.
 
 
@@ -36,3 +37,6 @@ Usage Example
 
   To show user credentials
   $ obs admin cred ls --user-id StageTest --group-id awsmgroup
+
+  To show user storage usage
+  $ obs admin usage du --user-id StageTest --group-id awsmgroup

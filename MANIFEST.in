@@ -1,5 +1,6 @@
 recursive-exclude *.egg-info *
-recursive-include obs tests *.py
+recursive-include obs *.py
+recursive-include tests *.py
 
 include requirements*.txt
 include README.rst
