@@ -197,10 +197,10 @@ def test_create_bucket(client, monkeypatch):
     monkeypatch.setattr(requests, "put", fake_create_bucket)
 
     result = client.post(
-        "/api/storage/bucket/bucket_name",
+        "/api/storage/bucket/bucket-name",
         data={"access_key": "123", "secret_key": "123"},
     )
-    assert result.get_json()["message"] == f"Bucket bucket_name created successfully."
+    assert result.get_json()["message"] == f"Bucket bucket-name created successfully."
 
 
 def test_copy(client, monkeypatch):
