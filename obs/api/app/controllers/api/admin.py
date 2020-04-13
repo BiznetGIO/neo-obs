@@ -1,3 +1,5 @@
+import re
+
 from obs.libs import qos
 from obs.libs import user
 from obs.libs import credential
@@ -10,6 +12,21 @@ from flask_restful import Resource, reqparse, inputs
 
 def get_client():
     return client.admin_client()
+
+
+def sanitize(args):
+    arg = {}
+    regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
+    regexuid = r"[^a-z0-9.-]"
+
+    for key, value in args.items():
+        if key == "userId":
+            arg[key] = re.sub(regexuid, "", value)
+        elif type(value) == str:
+            arg[key] = re.sub(regex, "", value)
+        else:
+            arg[key] = value
+    return arg
 
 
 class user_api(Resource):
@@ -81,9 +98,12 @@ class user_api(Resource):
         args = parser.parse_args()
 
         try:
+            regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
+
             for index, option in options.items():
                 if args[index] not in (option, None):
                     options[index] = args[index]
+            options = sanitize(options)
             status = user.create(get_client(), options)
             if args["quotaLimit"]:
                 status = qos.set(

@@ -1,4 +1,5 @@
 import os
+import re
 import boto3
 import xmltodict
 
@@ -104,6 +105,11 @@ class bucket_api(Resource):
         secret_key = args["secret_key"].replace(" ", "+")
 
         try:
+            regex = r"[^a-z0-9.-]"
+            bucket_name = re.sub(regex, "", bucket_name)
+            if len(bucket_name) < 3:
+                return response(400, f"'{bucket_name}' too short for bucket name")
+
             responses = bucket.create_bucket(
                 auth=get_plain_auth(args["access_key"], secret_key),
                 bucket_name=bucket_name,
@@ -266,6 +272,9 @@ class upload_object(Resource):
         object_name = args["object_name"] if args["object_name"] else filename
 
         try:
+            regex = r"[\"\{}^%`\]\[~<>|#]|[\x80-\xFf]"
+            object_name = re.sub(regex, "", object_name)
+
             result = bucket.upload_object(
                 resource=get_resources(args["access_key"], secret_key),
                 bucket_name=bucket_name,
