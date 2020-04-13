@@ -143,7 +143,7 @@ zip          string    user zip code
 country      string    user country          
 phone        string    user phone number      
 website      string    user website address   
-active       boolean   user active status    default ("true")
+active       boolean   user active status    default (True)
 ldapEnabled  boolean   user ldap status      default (False)
 ===========  =======   ===================== =================
 
