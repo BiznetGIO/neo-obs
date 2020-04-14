@@ -107,9 +107,13 @@ class bucket_api(Resource):
         try:
             regex = r"[^a-z0-9.-]"
             bucket_name = re.sub(regex, "", bucket_name)
-            if len(bucket_name) < 3:
-                return response(400, f"'{bucket_name}' too short for bucket name")
+            current_app.logger.error(len(bucket_name))
+            if not 2 < len(bucket_name) < 64:
+                return response(
+                    400, f"'{bucket_name}' too short or too long for bucket name"
+                )
 
+            current_app.logger.error(len(bucket_name))
             responses = bucket.create_bucket(
                 auth=get_plain_auth(args["access_key"], secret_key),
                 bucket_name=bucket_name,
@@ -272,7 +276,7 @@ class upload_object(Resource):
         object_name = args["object_name"] if args["object_name"] else filename
 
         try:
-            regex = r"[\"\{}^%`\]\[~<>|#]|[\x80-\xFf]"
+            regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
             object_name = re.sub(regex, "", object_name)
 
             result = bucket.upload_object(

@@ -17,7 +17,7 @@ def get_client():
 def sanitize(args):
     arg = {}
     regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
-    regexuid = r"[^a-z0-9.-]"
+    regexuid = r"[^\w\d@#_\-.]"
 
     for key, value in args.items():
         if key == "userId":
