@@ -64,8 +64,6 @@ The following characters will be filtered in object name because of significant 
 
 * curly brace **{ }**
 
-* Non-printable ASCII characters (128–255 decimal characters)
-
 * Caret **^**
 
 * Percent character **%**
@@ -85,6 +83,8 @@ The following characters will be filtered in object name because of significant 
 * 'Pound' character **#**
 
 * Vertical bar / pipe **|**
+
+* Non-printable ASCII characters (128–255 decimal characters)
 
 .. Note:: Characters that not shown in this section might require special handling, either use URL encoding or referenced as HEX
 
@@ -108,8 +108,6 @@ The following are the rules for creating user in neo-OBS:
 
 * Parameter required to fill when creating user is **user id**, **group id**, **fullname**
 
-* Parameter **user id**  have same rules with bucket naming, see `Bucket Name Rules`_
-
 * The following characters will be filtered when creating user:
     
     * 'Greater Than' symbol **>**
@@ -123,6 +121,22 @@ The following are the rules for creating user in neo-OBS:
     * Vertical bar / pipe **|**
 
     * Grave accent / back tick **\`**
+
+* Parameter **user id**  have another rules. The following characters can be used for user id name:
+
+    * All of alphanumeric characters
+
+    * 'Pound' character **#**
+
+    * Backslash **\\**
+
+    * Hyphen **-**
+
+    * Underscore **_**
+
+    * Dot **.**
+
+    * 'At' symbol **@**
 
 Example
 ~~~~~~~
