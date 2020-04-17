@@ -1,6 +1,7 @@
 import os
 import re
 import boto3
+import shutil
 import xmltodict
 
 from obs.libs import bucket
@@ -252,7 +253,12 @@ class download_object(Resource):
                 bucket_name,
                 args["object_name"],
             )
+            folder=args["object_name"].split("/")
             file = send_file(f"/app/obs/api/{args['object_name']}", as_attachment=True)
+            if len(folder)>1:
+                shutil.rmtree(folder[0])
+            else:
+                os.remove(f"/app/obs/api/{args['object_name']}")
             return file
         except Exception as e:
             current_app.logger.error(f"{e}")
