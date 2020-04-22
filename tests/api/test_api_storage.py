@@ -48,30 +48,22 @@ def test_list(client, monkeypatch):
     ]
 
 
-def fake_list_objects(resource, bucket_name, prefix=None):
-    content = [
-        {
+def fake_list_objects(resource, bucket_name, prefix=""):
+    content = {
+        "Contents":[{
             "Key": "foo.txt",
             "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
             "ETag": '"d41d8cd98f00b204e9800998ecffake"',
             "Size": 36,
-            "StorageClass": "STANDARD",
-            "Owner": {
-                "DisplayName": "john doe",
-                "ID": "5ac765187f93d3f1cef810afakefake",
-            },
-        }
-    ]
-    prefix = [{"Prefix": "a/b/"}]
-    res_object = mock.Mock()
-    res = res_object.meta.client
-    res.list_objects.return_value.get.side_effect = [content, prefix]
-
-    return res_object
+            "StorageClass": "STANDARD"
+        }],
+        "CommonPrefixes":[{"Prefix": "a/b/"}]
+    }
+    return content
 
 
 def test_list_object(client, monkeypatch):
-    monkeypatch.setattr(storage, "get_resources", fake_list_objects)
+    monkeypatch.setattr(bucket, "get_objects", fake_list_objects)
 
     result = client.get(
         "api/storage/list",
@@ -110,6 +102,7 @@ def test_download(client, monkeypatch, fs):
         return resource
 
     monkeypatch.setattr(storage, "get_resources", donwload)
+    monkeypatch.setattr(bucket, "get_objects", fake_list_objects)
     monkeypatch.setattr(bucket, "is_exists", lambda resource, bucket, object: True)
 
     result = client.get(
