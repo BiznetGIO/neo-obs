@@ -242,17 +242,17 @@ class copy_object(Resource):
             return response(500, f"{e}")
 
 
-def dl_object(resources, bucket_name, prefix):
+def file_download(resources, bucket_name, prefix):
     status = bucket.get_objects(resources, bucket_name, prefix)
     status = list_objects(status)
     for obj in status:
         if "Key" in obj and obj["Key"][-1] != "/":
             bucket.download_object(resources, bucket_name, obj["Key"])
         if "directory" in obj:
-            dl_object(resources, bucket_name, obj["directory"])
+            file_download(resources, bucket_name, obj["directory"])
 
 
-def download_dir(dir_name):
+def archive(dir_name):
     with zipfile.ZipFile(f"{dir_name[:-1]}.zip", "w", zipfile.ZIP_DEFLATED) as zip_file:
         for root, dirs, files in os.walk("."):
             for file in files:
@@ -274,14 +274,16 @@ class download_object(Resource):
         os.mkdir("Downloads")
         os.chdir("Downloads")
 
+
+        print('tes')
         try:
             resources = get_resources(args["access_key"], secret_key)
-            dl_object(resources, bucket_name, args["object_name"])
+            file_download(resources, bucket_name, args["object_name"])
 
             if args["object_name"] == "":
-                name = download_dir(bucket_name + "/")
+                name = archive(bucket_name + "/")
             elif args["object_name"][-1] == "/":
-                name = download_dir(args["object_name"])
+                name = archive(args["object_name"])
             else:
                 name = args["object_name"]
             file = send_file(f"/app/obs/api/Downloads/{name}", as_attachment=True)
