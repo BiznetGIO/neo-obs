@@ -102,7 +102,6 @@ def test_download(client, monkeypatch, fs):
         return resource
 
     monkeypatch.setattr(storage, "get_resources", donwload)
-    monkeypatch.setattr(bucket, "get_objects", fake_list_objects)
     monkeypatch.setattr(bucket, "is_exists", lambda resource, bucket, object: True)
 
     result = client.get(
