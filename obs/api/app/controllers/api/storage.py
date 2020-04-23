@@ -274,8 +274,6 @@ class download_object(Resource):
         os.mkdir("Downloads")
         os.chdir("Downloads")
 
-
-        print('tes')
         try:
             resources = get_resources(args["access_key"], secret_key)
             file_download(resources, bucket_name, args["object_name"])

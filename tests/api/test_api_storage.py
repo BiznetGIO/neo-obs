@@ -50,14 +50,16 @@ def test_list(client, monkeypatch):
 
 def fake_list_objects(resource, bucket_name, prefix=""):
     content = {
-        "Contents":[{
-            "Key": "foo.txt",
-            "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
-            "ETag": '"d41d8cd98f00b204e9800998ecffake"',
-            "Size": 36,
-            "StorageClass": "STANDARD"
-        }],
-        "CommonPrefixes":[{"Prefix": "a/b/"}]
+        "Contents": [
+            {
+                "Key": "foo.txt",
+                "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
+                "ETag": '"d41d8cd98f00b204e9800998ecffake"',
+                "Size": 36,
+                "StorageClass": "STANDARD",
+            }
+        ],
+        "CommonPrefixes": [{"Prefix": "a/b/"}],
     }
     return content
 
@@ -94,18 +96,35 @@ def test_remove_object(client, monkeypatch):
     assert result.get_json()["message"] == f"Object object.png deleted successfully."
 
 
+def fake_object(resource, bucket_name, prefix=""):
+    content = {
+        "Contents": [
+            {
+                "Key": "obj1.jpg",
+                "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
+                "ETag": '"d41d8cd98f00b204e9800998ecffake"',
+                "Size": 36,
+                "StorageClass": "STANDARD",
+            }
+        ],
+        "CommonPrefixes": None,
+    }
+    return content
+
+
 def test_download(client, monkeypatch, fs):
     def donwload(access_key, secret_key):
-        fs.create_file("/app/obs/api/obj1.jpg")
+        fs.create_file("/app/obs/api/Downloads/obj1.jpg")
         resource = mock.Mock()
         resource.Object.return_value.download_file.side_effect = lambda name: None
         return resource
 
+    monkeypatch.setattr(bucket, "get_objects", fake_object)
     monkeypatch.setattr(storage, "get_resources", donwload)
     monkeypatch.setattr(bucket, "is_exists", lambda resource, bucket, object: True)
 
     result = client.get(
-        "/api/storage/object/download/name",
+        "/api/storage/object/download/tes_bucket",
         data={"access_key": "123", "secret_key": "123", "object_name": "obj1.jpg"},
     )
     assert "obj1.jpg" in result.headers["Content-Disposition"]
