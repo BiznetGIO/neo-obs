@@ -272,8 +272,8 @@ class download_object(Resource):
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        try:
-            with tempfile.TemporaryDirectory() as tempdir:
+        with tempfile.TemporaryDirectory() as tempdir:
+            try:
                 os.chdir(tempdir)
 
                 resources = get_resources(args["access_key"], secret_key)
@@ -287,9 +287,9 @@ class download_object(Resource):
                     name = args["object_name"]
                 file = send_file(f"{tempdir}/{name}", as_attachment=True)
                 return file
-        except Exception as e:
-            current_app.logger.error(f"{e}")
-            return response(500, f"{e}")
+            except Exception as e:
+                current_app.logger.error(f"{e}")
+                return response(500, f"{e}")
 
 
 class upload_object(Resource):
