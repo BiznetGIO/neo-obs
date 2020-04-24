@@ -15,6 +15,8 @@ from werkzeug.utils import secure_filename
 from flask import request, send_file, current_app
 from flask_restful import Resource, reqparse
 
+sys_path = "/app/obs/api"
+
 
 def get_resources(access_key, secret_key):
     endpoint = auth.get_endpoint()
@@ -285,7 +287,9 @@ class download_object(Resource):
                 name = archive(args["object_name"])
             else:
                 name = args["object_name"]
-            file = send_file(f"../Downloads/{name}", as_attachment=True)
+            file = send_file(
+                os.path.join(sys_path, f"Downloads/{name}"), as_attachment=True
+            )
             os.chdir("../")
             shutil.rmtree("Downloads")
             return file
