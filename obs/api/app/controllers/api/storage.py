@@ -271,7 +271,8 @@ class download_object(Resource):
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        os.mkdir("Downloads")
+        if not os.path.exists("Downloads"):
+            os.mkdir("Downloads")
         os.chdir("Downloads")
 
         try:
@@ -284,7 +285,7 @@ class download_object(Resource):
                 name = archive(args["object_name"])
             else:
                 name = args["object_name"]
-            file = send_file(f"/app/obs/api/Downloads/{name}", as_attachment=True)
+            file = send_file(f"../Downloads/{name}", as_attachment=True)
             os.chdir("../")
             shutil.rmtree("Downloads")
             return file
