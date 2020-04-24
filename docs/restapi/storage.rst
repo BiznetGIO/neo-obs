@@ -488,6 +488,7 @@ Name         Type      Description
 ===========  =======   =============================
 access_key   string    user access key 
 secret_key   string    user secret key
+expire       integer   URL expired time in seconds
 ===========  =======   =============================
 
 Response :

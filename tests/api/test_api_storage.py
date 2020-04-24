@@ -113,14 +113,14 @@ def fake_object(resource, bucket_name, prefix=""):
 
 
 def test_download(client, monkeypatch, fs):
-    def donwload(access_key, secret_key):
+    def download(access_key, secret_key):
         fs.create_file("/app/obs/api/Downloads/obj1.jpg")
         resource = mock.Mock()
         resource.Object.return_value.download_file.side_effect = lambda name: None
         return resource
 
     monkeypatch.setattr(bucket, "get_objects", fake_object)
-    monkeypatch.setattr(storage, "get_resources", donwload)
+    monkeypatch.setattr(storage, "get_resources", download)
     monkeypatch.setattr(bucket, "is_exists", lambda resource, bucket, object: True)
 
     result = client.get(
