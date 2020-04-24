@@ -1,6 +1,7 @@
 import requests
 import pytest
 import mock
+import tempfile
 import os
 
 from datetime import datetime
@@ -114,19 +115,22 @@ def fake_object(resource, bucket_name, prefix=""):
 
 def test_download(client, monkeypatch, fs):
     def download(access_key, secret_key):
-        fs.create_file("/app/obs/api/Downloads/obj1.jpg")
         resource = mock.Mock()
         resource.Object.return_value.download_file.side_effect = lambda name: None
         return resource
 
+    def fake_download(resource, bucket_name, prefix):
+        fs.create_file("obj1.jpg")
+
     monkeypatch.setattr(bucket, "get_objects", fake_object)
+    monkeypatch.setattr(storage, "file_download", fake_download)
     monkeypatch.setattr(storage, "get_resources", download)
-    monkeypatch.setattr(bucket, "is_exists", lambda resource, bucket, object: True)
 
     result = client.get(
         "/api/storage/object/download/tes_bucket",
         data={"access_key": "123", "secret_key": "123", "object_name": "obj1.jpg"},
     )
+
     assert "obj1.jpg" in result.headers["Content-Disposition"]
     assert result.status_code == 200
 

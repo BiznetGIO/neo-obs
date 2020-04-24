@@ -3,6 +3,7 @@ import re
 import boto3
 import shutil
 import zipfile
+import tempfile
 import xmltodict
 
 from obs.libs import bucket
@@ -14,8 +15,6 @@ from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
 from flask import request, send_file, current_app
 from flask_restful import Resource, reqparse
-
-sys_path = "/app/obs/api"
 
 
 def get_resources(access_key, secret_key):
@@ -273,29 +272,22 @@ class download_object(Resource):
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        if not os.path.exists("Downloads"):
-            os.mkdir("Downloads")
-        os.chdir("Downloads")
-
         try:
-            resources = get_resources(args["access_key"], secret_key)
-            file_download(resources, bucket_name, args["object_name"])
+            with tempfile.TemporaryDirectory() as tempdir:
+                os.chdir(tempdir)
 
-            if args["object_name"] == "":
-                name = archive(bucket_name + "/")
-            elif args["object_name"][-1] == "/":
-                name = archive(args["object_name"])
-            else:
-                name = args["object_name"]
-            file = send_file(
-                os.path.join(sys_path, f"Downloads/{name}"), as_attachment=True
-            )
-            os.chdir("../")
-            shutil.rmtree("Downloads")
-            return file
+                resources = get_resources(args["access_key"], secret_key)
+                file_download(resources, bucket_name, args["object_name"])
+
+                if args["object_name"] == "":
+                    name = archive(bucket_name + "/")
+                elif args["object_name"][-1] == "/":
+                    name = archive(args["object_name"])
+                else:
+                    name = args["object_name"]
+                file = send_file(f"{tempdir}/{name}", as_attachment=True)
+                return file
         except Exception as e:
-            os.chdir("../")
-            shutil.rmtree("Downloads")
             current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
