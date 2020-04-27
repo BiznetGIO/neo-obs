@@ -49,15 +49,27 @@ def remove_bucket(resource, bucket_name):
     return response
 
 
-def get_objects(resource, bucket_name, prefix=None):
+def get_objects(resource, bucket_name, prefix=""):
     """List objects inside a bucket"""
     client = resource.meta.client
-    response = client.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+    next_token = ""
+    content = []
+    directory = []
+    add_list = lambda keys, values: keys.extend(values) if values is not None else None
 
-    return {
-        "Contents": response.get("Contents"),
-        "CommonPrefixes": response.get("CommonPrefixes"),
-    }
+    while True:
+        response = client.list_objects_v2(
+            Bucket=bucket_name,
+            Prefix=prefix,
+            Delimiter="/",
+            ContinuationToken=next_token,
+        )
+        add_list(content, response.get("Contents"))
+        add_list(directory, response.get("CommonPrefixes"))
+        next_token = response.get("NextContinuationToken")
+
+        if next_token is None:
+            return {"Contents": content, "CommonPrefixes": directory}
 
 
 def get_files(resource, bucket_name, prefix=""):

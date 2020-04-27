@@ -1,6 +1,9 @@
 import os
 import re
 import boto3
+import shutil
+import zipfile
+import tempfile
 import xmltodict
 
 from obs.libs import bucket
@@ -26,6 +29,19 @@ def get_plain_auth(access_key, secret_key):
     return auth
 
 
+def list_objects(buckets):
+    objects = []
+    if buckets["CommonPrefixes"]:
+        for prefix in buckets["CommonPrefixes"]:
+            objects.append({"directory": f"{prefix['Prefix']}"})
+
+    if buckets["Contents"]:
+        for content in buckets["Contents"]:
+            content["LastModified"] = f'{content["LastModified"]:%Y-%m-%d %H:%M:%S}'
+            objects.append(content)
+    return objects
+
+
 class list(Resource):
     def get(self, prefix=""):
         parser = reqparse.RequestParser()
@@ -44,17 +60,7 @@ class list(Resource):
                 buckets = bucket.get_objects(
                     get_resources(args["access_key"], secret_key), bucket_name, prefix
                 )
-                objects = []
-                if buckets["CommonPrefixes"]:
-                    for prefix in buckets["CommonPrefixes"]:
-                        objects.append({"directory": f"{prefix['Prefix']}"})
-
-                if buckets["Contents"]:
-                    for content in buckets["Contents"]:
-                        content[
-                            "LastModified"
-                        ] = f'{content["LastModified"]:%Y-%m-%d %H:%M:%S}'
-                        objects.append(content)
+                objects = list_objects(buckets)
                 if not objects:
                     return response(200, f"Bucket is Empty.")
                 return response(200, data=objects)
@@ -237,26 +243,53 @@ class copy_object(Resource):
             return response(500, f"{e}")
 
 
+def file_download(resources, bucket_name, prefix):
+    status = bucket.get_objects(resources, bucket_name, prefix)
+    status = list_objects(status)
+    for obj in status:
+        if "Key" in obj and obj["Key"][-1] != "/":
+            bucket.download_object(resources, bucket_name, obj["Key"])
+        if "directory" in obj:
+            file_download(resources, bucket_name, obj["directory"])
+
+
+def archive(dir_name):
+    with zipfile.ZipFile(f"{dir_name[:-1]}.zip", "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for root, dirs, files in os.walk("."):
+            for file in files:
+                file_path = os.path.join(root, file)
+                if "zip" not in file:
+                    zip_file.write(file_path, file_path.replace(dir_name, ""))
+    return f"{dir_name[:-1]}.zip"
+
+
 class download_object(Resource):
-    def get(self, bucket_name):
+    def get(self, bucket_name, name=""):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
-        parser.add_argument("object_name", type=str, required=True)
+        parser.add_argument("object_name", type=str, default="")
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        try:
-            bucket.download_object(
-                get_resources(args["access_key"], secret_key),
-                bucket_name,
-                args["object_name"],
-            )
-            file = send_file(f"/app/obs/api/{args['object_name']}", as_attachment=True)
-            return file
-        except Exception as e:
-            current_app.logger.error(f"{e}")
-            return response(500, f"{e}")
+        with tempfile.TemporaryDirectory() as tempdir:
+            try:
+                os.chdir(tempdir)
+
+                resources = get_resources(args["access_key"], secret_key)
+                file_download(resources, bucket_name, args["object_name"])
+
+                if args["object_name"] == "":
+                    name = archive(bucket_name + "/")
+                elif args["object_name"][-1] == "/":
+                    name = archive(args["object_name"])
+                else:
+                    name = args["object_name"]
+                file = send_file(f"{tempdir}/{name}", as_attachment=True)
+                return file
+            except Exception as e:
+                current_app.logger.error(f"{e}")
+                return response(500, f"{e}")
 
 
 class upload_object(Resource):

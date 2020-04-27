@@ -17,7 +17,7 @@ def get_client():
 def sanitize(args):
     arg = {}
     regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
-    regexuid = r"[^\w\d@#_\-.]"
+    regexuid = r"[^\w@#_\-.]"
 
     for key, value in args.items():
         if key == "userId":
@@ -98,8 +98,6 @@ class user_api(Resource):
         args = parser.parse_args()
 
         try:
-            regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
-
             for index, option in options.items():
                 if args[index] not in (option, None):
                     options[index] = args[index]
@@ -126,7 +124,7 @@ class user_api(Resource):
         args = parser.parse_args()
 
         try:
-            msg = "suspended" if args["suspend"] == True else "unsuspended"
+            msg = "suspended" if args["suspend"] is True else "unsuspended"
             users = user.info(get_client(), args["userId"], args["groupId"])
             if "reason" in users:
                 if users["status_code"] == 204:

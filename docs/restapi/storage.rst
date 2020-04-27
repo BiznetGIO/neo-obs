@@ -11,7 +11,7 @@ Get List Buckets
 
     GET api/storage/list
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -47,7 +47,7 @@ Get List Objects
 
     GET api/storage/list
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -91,7 +91,7 @@ Get Bucket Info
 
     GET api/storage/bucket/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -131,7 +131,7 @@ Create New Bucket
 
     POST api/storage/bucket/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   ===========================
 Name         Type      Description
@@ -159,7 +159,7 @@ Delete Bucket
 
     DELETE api/storage/bucket/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =========================== 
 Name         Type      Description 
@@ -199,7 +199,7 @@ Get Object Info
 
     GET api/storage/object/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -235,7 +235,7 @@ Delete Object
 
     DELETE api/storage/object/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -276,7 +276,7 @@ Upload Object
 
     POST api/storage/object/upload/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -307,15 +307,24 @@ Download Object
 
     GET api/storage/object/download/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
 ===========  =======   =============================
 access_key   string    user access key 
 secret_key   string    user secret key
-object_name  string    name of object with extension
+object_name  string    name of object or directory with extension
 ===========  =======   =============================
+
+.. Note:: 
+    Use object_name with path to download objec, directory path to download directory, and don't use paramater key to download all object in bucket.
+
+Example:
+
+    * object.png
+
+    * folder/directory/first/
 
 Response :
 
@@ -330,7 +339,7 @@ Move Object
 
     POST api/storage/object/move/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -360,7 +369,7 @@ Copy Object
 
     POST api/storage/object/copy/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -390,7 +399,7 @@ Get Usage
 
     GET api/storage/usage
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -428,7 +437,7 @@ Create New Directory
 
     POST api/storage/mkdir/:bucket_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
@@ -472,13 +481,14 @@ Get URL Object
 
     GET api/storage/presign/:bucket_name/:object_name
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
 ===========  =======   =============================
 access_key   string    user access key 
 secret_key   string    user secret key
+expire       integer   URL expired time in seconds
 ===========  =======   =============================
 
 Response :
@@ -500,7 +510,7 @@ Set ACL
 
     GET api/storage/acl
 
-Query Parametes:
+Query Parameters:
 
 ===========  =======   =============================
 Name         Type      Description
