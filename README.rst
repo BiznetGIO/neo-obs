@@ -94,6 +94,6 @@ Project information
 -------------------
 
 * `Documentation <https://neo-obs.readthedocs.io/en/latest/>`_
-* `Contributing <https://biznetgio.github.io/guide/engineering/contrib-guide/>`_
+* `Contributing <https://biznetgio.github.io/guide/contrib-guide/>`_
 * `Changelog <CHANGELOG.rst>`_
 * `License <LICENSE>`_
