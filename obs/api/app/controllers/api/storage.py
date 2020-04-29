@@ -1,7 +1,6 @@
 import os
 import re
 import boto3
-import shutil
 import zipfile
 import tempfile
 import xmltodict
@@ -402,7 +401,7 @@ class acl(Resource):
 
 
 class presign(Resource):
-    def get(self, bucket_name, object_name):
+    def post(self, bucket_name, object_name):
         parser = reqparse.RequestParser()
         parser.add_argument("expire", type=int)
         parser.add_argument("access_key", type=str, required=True)
