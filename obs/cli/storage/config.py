@@ -32,7 +32,7 @@ def run_configure():
         (
             "admin_url",
             "Admin URL",
-            f"Admin url and port are your url and port location to your admin panel. \nUse the defaults to use Neo Object Storage Admin.",
+            f"Admin url and port are your url and port location to your admin panel.",
         ),
         ("admin_port", "Admin port"),
         (
