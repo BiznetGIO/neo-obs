@@ -1,6 +1,12 @@
 Unreleased
 ==========
 
+0.2.5 (2020-04-29)
+==================
+- Add directory download function
+- Add bucket download function
+- refactor default value in config
+
 0.2.3 (2020-03-11)
 ==================
 - Add log function
