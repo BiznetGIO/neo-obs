@@ -401,7 +401,7 @@ class acl(Resource):
 
 
 class presign(Resource):
-    def post(self, bucket_name, object_name):
+    def get(self, bucket_name, object_name):
         parser = reqparse.RequestParser()
         parser.add_argument("expire", type=int)
         parser.add_argument("access_key", type=str, required=True)
