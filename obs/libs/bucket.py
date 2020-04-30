@@ -123,7 +123,9 @@ def upload_object(**kwargs):
 
     resource = kwargs.get("resource")
     bucket_name = kwargs.get("bucket_name")
-    resource.Object(bucket_name, filename).upload_file(Filename=local_path)
+    resource.Object(bucket_name, filename).upload_file(
+        Filename=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
+    )
 
 
 def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):

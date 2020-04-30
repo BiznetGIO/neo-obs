@@ -316,6 +316,7 @@ class upload_object(Resource):
                 bucket_name=bucket_name,
                 local_path=filename,
                 object_name=object_name,
+                content_type=file.content_type,
             )
             os.remove(filename)
 
