@@ -1,7 +1,6 @@
 import os
 import re
 import boto3
-import shutil
 import zipfile
 import tempfile
 import xmltodict
