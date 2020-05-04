@@ -19,7 +19,7 @@ def fake_resource(access_key, secret_key):
         "ResponseMetaData": {"RequestId": "e12"}
     }
     resouce.Object.return_value.download_file.side_effect = lambda: ""
-    resouce.Object.return_value.upload_file.side_effect = lambda Filename: ""
+    resouce.Object.return_value.upload_file.side_effect = lambda Filename, ExtraArgs: ""
     resouce.Object.return_value.copy.side_effect = lambda source: ""
     return resouce
 
