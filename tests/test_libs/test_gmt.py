@@ -82,7 +82,7 @@ def fake_auth():
 
 def test_policy_id(monkeypatch):
     monkeypatch.setattr(requests, "get", fake_request)
-    monkeypatch.setattr(auth_lib, "get_endpoint", lambda bucket_name: None)
+    monkeypatch.setattr(auth_lib, "get_endpoint", lambda url, bucket_name: None)
     assert "dd7e84cfe467c0fc11b5b075ac9acd73" == gmt.policy_id(
         "awesome-bucket", fake_auth()
     )

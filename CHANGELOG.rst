@@ -1,6 +1,12 @@
 Unreleased
 ==========
 
+0.2.6 (2020-05-12)
+==================
+- fix api cannot access cloudian with secure url
+- refactor upload file to use tempdir
+- change acl message when success
+
 0.2.5 (2020-04-29)
 ==================
 - Add directory download function
