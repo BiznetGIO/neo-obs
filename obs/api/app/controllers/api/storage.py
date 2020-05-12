@@ -4,6 +4,7 @@ import boto3
 import zipfile
 import tempfile
 import xmltodict
+import mimetypes
 
 from obs.libs import bucket
 from obs.libs import gmt
@@ -17,7 +18,7 @@ from flask_restful import Resource, reqparse
 
 
 def get_resources(access_key, secret_key):
-    endpoint = auth.get_endpoint()
+    endpoint = auth.get_endpoint("storage")
     sess = boto3.Session(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3_resource = sess.resource("s3", endpoint_url=endpoint)
     return s3_resource
@@ -301,37 +302,38 @@ class upload_object(Resource):
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        file = request.files["files"]
-        filename = secure_filename(file.filename)
-        file.save(filename)
+        with tempfile.TemporaryDirectory() as tempdir:
+            file = request.files["files"]
+            filename = secure_filename(file.filename)
+            object_name = args["object_name"] if args["object_name"] else filename
+            filename = os.path.join(tempdir, filename)
+            file.save(filename)
 
-        object_name = args["object_name"] if args["object_name"] else filename
+            try:
+                regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
+                object_name = re.sub(regex, "", object_name)
 
-        try:
-            regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
-            object_name = re.sub(regex, "", object_name)
-
-            result = bucket.upload_object(
-                resource=get_resources(args["access_key"], secret_key),
-                bucket_name=bucket_name,
-                local_path=filename,
-                object_name=object_name,
-                content_type=file.content_type,
-            )
-            os.remove(filename)
-
-            if args["acl"]:
-                bucket.set_acl(
+                result = bucket.upload_object(
                     resource=get_resources(args["access_key"], secret_key),
                     bucket_name=bucket_name,
+                    local_path=filename,
                     object_name=object_name,
-                    acl_type="object",
-                    acl=args["acl"],
+                    content_type=mimetypes.guess_type(filename)[0],
                 )
-            return response(201, f"Object {object_name} uploaded successfully.", result)
-        except Exception as e:
-            current_app.logger.error(f"{e}")
-            return response(500, f"{e}")
+                if args["acl"]:
+                    bucket.set_acl(
+                        resource=get_resources(args["access_key"], secret_key),
+                        bucket_name=bucket_name,
+                        object_name=object_name,
+                        acl_type="object",
+                        acl=args["acl"],
+                    )
+                return response(
+                    201, f"Object {object_name} uploaded successfully.", result
+                )
+            except Exception as e:
+                current_app.logger.error(f"{e}")
+                return response(500, f"{e}")
 
 
 class usage(Resource):
@@ -395,7 +397,9 @@ class acl(Resource):
                 acl_type=acl_type,
                 acl=args["acl"],
             )
-            return response(200, f"Added {acl} access to {acl_type} {name}.", result)
+            return response(
+                200, f"Added {args['acl']} access to {acl_type} {name}.", result
+            )
         except Exception as e:
             current_app.logger.error(f"{e}")
             return response(500, f"{e}")

@@ -28,7 +28,7 @@ def get_policies():
 def policy_id(bucket_name, auth):
     """Get GMT-Policy id from S3 API response headers."""
 
-    endpoint = auth_lib.get_endpoint(bucket_name)
+    endpoint = auth_lib.get_endpoint("storage", bucket_name)
     response = requests.get(endpoint, auth=auth)
     policy_id = response.headers.get("x-gmt-policyid")
 

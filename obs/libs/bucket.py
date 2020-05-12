@@ -36,7 +36,7 @@ def create_bucket(**kwargs):
     if kwargs.get("random_name"):
         bucket_name = gen_random_name(bucket_name)
 
-    endpoint = auth_lib.get_endpoint(bucket_name)
+    endpoint = auth_lib.get_endpoint("storage", bucket_name)
     headers = {"x-gmt-policyid": policy_id, "x-amz-acl": acl}
 
     response = requests.put(endpoint, auth=auth, headers=headers)
@@ -123,9 +123,13 @@ def upload_object(**kwargs):
 
     resource = kwargs.get("resource")
     bucket_name = kwargs.get("bucket_name")
-    resource.Object(bucket_name, filename).upload_file(
-        Filename=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
-    )
+    resource_upload = resource.Object(bucket_name, filename)
+    if kwargs.get("content_type"):
+        resource_upload.upload_file(
+            Filename=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
+        )
+    else:
+        resource_upload.upload_file(Filename=local_path)
 
 
 def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
