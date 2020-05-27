@@ -1,6 +1,11 @@
 Unreleased
 ==========
 
+0.2.7 (2020-05-27)
+==================
+- add file_uploadobj in libs and use it in obs api
+- add threads in gunicorn config
+
 0.2.6 (2020-05-12)
 ==================
 - fix api cannot access cloudian with secure url
