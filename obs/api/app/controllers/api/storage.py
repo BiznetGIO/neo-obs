@@ -292,18 +292,6 @@ class download_object(Resource):
 
 
 class upload_object(Resource):
-    def get(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
-        args = parser.parse_args()
-        secret_key = args["secret_key"].replace(" ", "+")
-
-        objects = bucket.list_multipartupload(
-            get_resources(args["access_key"], secret_key), bucket_name
-        )
-        return objects
-
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)

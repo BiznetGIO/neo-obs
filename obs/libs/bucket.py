@@ -125,8 +125,8 @@ def upload_object(**kwargs):
     bucket_name = kwargs.get("bucket_name")
     resource_upload = resource.Object(bucket_name, filename)
     if kwargs.get("content_type"):
-        resource_upload.upload_fileobj(
-            local_path=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
+        resource_upload.upload_file(
+            Filename=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
         )
     else:
         resource_upload.upload_file(Filename=local_path)
