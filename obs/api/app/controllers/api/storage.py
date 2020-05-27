@@ -4,7 +4,6 @@ import boto3
 import zipfile
 import tempfile
 import xmltodict
-import mimetypes
 
 from obs.libs import bucket
 from obs.libs import gmt
@@ -13,7 +12,7 @@ from obs.libs import utils
 from requests_aws4auth import AWS4Auth
 from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
-from flask import request, send_file, current_app
+from flask import request, current_app, send_from_directory
 from flask_restful import Resource, reqparse
 
 
@@ -285,14 +284,26 @@ class download_object(Resource):
                     name = archive(args["object_name"])
                 else:
                     name = args["object_name"]
-                file = send_file(f"{tempdir}/{name}", as_attachment=True)
+                file = send_from_directory(tempdir, name, as_attachment=True)
                 return file
             except Exception as e:
-                current_app.logger.error(f"{e}")
+                current_app.logger.error(f"{e}", exc_info=1)
                 return response(500, f"{e}")
 
 
 class upload_object(Resource):
+    def get(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
+
+        objects = bucket.list_multipartupload(
+            get_resources(args["access_key"], secret_key), bucket_name
+        )
+        return objects
+
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
@@ -302,38 +313,33 @@ class upload_object(Resource):
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        with tempfile.TemporaryDirectory() as tempdir:
-            file = request.files["files"]
-            filename = secure_filename(file.filename)
-            object_name = args["object_name"] if args["object_name"] else filename
-            filename = os.path.join(tempdir, filename)
-            file.save(filename)
+        file = request.files["files"]
+        filename = secure_filename(file.filename)
+        object_name = args["object_name"] if args["object_name"] else filename
 
-            try:
-                regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
-                object_name = re.sub(regex, "", object_name)
+        try:
+            regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
+            object_name = re.sub(regex, "", object_name)
 
-                result = bucket.upload_object(
+            result = bucket.upload_bin_object(
+                resource=get_resources(args["access_key"], secret_key),
+                bucket_name=bucket_name,
+                fileobj=file,
+                object_name=object_name,
+                content_type=file.content_type,
+            )
+            if args["acl"]:
+                bucket.set_acl(
                     resource=get_resources(args["access_key"], secret_key),
                     bucket_name=bucket_name,
-                    local_path=filename,
                     object_name=object_name,
-                    content_type=mimetypes.guess_type(filename)[0],
+                    acl_type="object",
+                    acl=args["acl"],
                 )
-                if args["acl"]:
-                    bucket.set_acl(
-                        resource=get_resources(args["access_key"], secret_key),
-                        bucket_name=bucket_name,
-                        object_name=object_name,
-                        acl_type="object",
-                        acl=args["acl"],
-                    )
-                return response(
-                    201, f"Object {object_name} uploaded successfully.", result
-                )
-            except Exception as e:
-                current_app.logger.error(f"{e}")
-                return response(500, f"{e}")
+            return response(201, f"Object {object_name} uploaded successfully.", result)
+        except Exception as e:
+            current_app.logger.error(f"{e}", exc_info=1)
+            return response(500, f"{e}")
 
 
 class usage(Resource):
