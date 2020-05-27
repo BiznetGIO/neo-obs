@@ -125,11 +125,28 @@ def upload_object(**kwargs):
     bucket_name = kwargs.get("bucket_name")
     resource_upload = resource.Object(bucket_name, filename)
     if kwargs.get("content_type"):
-        resource_upload.upload_file(
-            Filename=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
+        resource_upload.upload_fileobj(
+            local_path=local_path, ExtraArgs={"ContentType": kwargs.get("content_type")}
         )
     else:
         resource_upload.upload_file(Filename=local_path)
+
+
+def upload_bin_object(**kwargs):
+    """Upload an binary object into bucket."""
+    fileobj = kwargs.get("fileobj")
+    filename = kwargs.get("object_name")
+
+    resource = kwargs.get("resource")
+    bucket_name = kwargs.get("bucket_name")
+    resource_upload = resource.Object(bucket_name, filename)
+
+    if kwargs.get("content_type"):
+        resource_upload.upload_fileobj(
+            Fileobj=fileobj, ExtraArgs={"ContentType": kwargs.get("content_type")}
+        )
+    else:
+        resource_upload.upload_fileobj(Fileobj=fileobj)
 
 
 def copy_object(resource, src_bucket, src_object_name, dest_bucket, dest_object_name):
