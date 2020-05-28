@@ -1,21 +1,20 @@
 language: python
 python:
-  - '3.7'
+- '3.7'
 install:
-  - 'pip install -r requirements.txt'
-  - 'pip install -r obs/api/requirements.txt'
-  - 'pip install -r requirements-dev.txt'
-  - 'pip install -e .'
+- pip install -r requirements.txt
+- pip install -r obs/api/requirements.txt
+- pip install -r requirements-dev.txt
+- pip install -e .
 script:
-  - 'black --check .'
-  - 'pytest -vv -s'
-before_deploy:
-    awk 'NR>23' README.rst > README.tmp && mv README.tmp README.rst
+- black --check .
+- pytest -vv -s
+before_deploy: awk 'NR>23' README.rst > README.tmp && mv README.tmp README.rst
 deploy:
   provider: pypi
   user: biznetgio
   password:
-    secure: cM/KHHNbMXkrEcQkEARt7bpgPEHLB/nQIcmXKQTsygQ+twwu4wMS2c7sc0+vfSQqDUByhKE/WH7oPP47ddQlX2HUCitKdFAHzEW7vr9pRmlxsnGxeVW2dtesCUfJzutLk3Og5sRqWB5klmW0qGZcG9996NfDjuDLZ9ar94FD5ciCp5775gceUiopSsEDUZ9w9UKYPlWP+VomD0fNOYSqbRc3uZ1e9N/kVe+bNIx3MPclrdZWDprV1F4bA0eSYm3wpKlV56OniG6K6Q9qXUUN8WdAa1cv4dx4jftnbBiWuq0+THHfSGqFZ531EKFCy73Q0VPdn2yXqRgPxdqevDUPF55H6wRwZG/2qTD0dc8FtH7exGRxu74zO3d0koCajGSOgzgzDJDzoFJFTan6opsTkS7J2VcprSVzR10bVYJTwTD5hZ+QSenTyfH3iOzcM7tOQ1SMMGLrjckoQ9QXvMv0nRLbnCsc3ov6EP2lAKfvi6PGzqsW+mufiCSyrzSYOxCPYJD491kWpVAoMVUFzA0UdtvBvBul3InLMSpoGSDuw24pqvptjZKO7cweurzfbUp5d7jmM4Ns0FP5taMSSusMZzPAljfluXVrvRuaV9cabSuA7r37Il5fNA82YQP8J9goJWGGX33ySS7rxLa8KLXaTt6iJ4ByRSy1erdXbmVM66o=
+    secure: GRsVWTvvqxQBhV65KiVdW75mfhUzfSydnwPxd0npYGofCKL4eO6wumAnZ1w/cywrk2wJdVzuqgfZAjTnrXLXOzZqKKjuVlvT0P4Oq8JOInAlY5ESP2z9GxczigK6s6bPEU8N3t+vV2tZJoa/hOFWnDU/Esbnrrddc8P9DefOqkM+EX/5xURJp/ngPErrI1Y0SiJGcp9rINljc2ZrUQ5BDrAzmkDKCLapewBZTmvEC8g0psBGRuRUFwHyh3S93W7FWjhAXosknfipOxIsr9zhscLUliKsP1zQ+ylUNQvDlQ+0eJTO86kZeWzcOqItVjUZwyubuMgUcWOCsbPH/bTFDJ9Niz0SsPPtbBEvt8zsmc6M+kZRbut6Epo70UJxiZV4c8+EJhIHoaGbaDjgmMgT+HCSX2M1XgmdYlamFHNHhOZcYQsYMPjvBguiEHaP+a6K/PzAewnOJYzlUpqEIJuDjCzAB54tlELKk3RNbixQ5UzheiPOfT8Jn0HLZvzPaR0faOhBYoXQ8M4Sfj/jmO/iJrLrawg4vH6BhmO61Zxw3ntW9oEtMI0+YIkmyk2HP8r23bqBBbvV0KGYo+beaolYRzQ96v4z/C1bPJS0QyGlZqmiahceeOqV322JEwHU89tjHR35NIesHrtEdnTsUHZptMirINWW59W6f8H/g2HZlzo=
   skip_cleanup: true
   on:
     tags: true
