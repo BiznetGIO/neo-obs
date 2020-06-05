@@ -28,15 +28,15 @@ def get_plain_auth(access_key, secret_key):
     return auth
 
 
-def list_objects(buckets):
+def list_objects(buckets, contents="Contents", date="LastModified"):
     objects = []
     if buckets["CommonPrefixes"]:
         for prefix in buckets["CommonPrefixes"]:
             objects.append({"directory": f"{prefix['Prefix']}"})
 
-    if buckets["Contents"]:
-        for content in buckets["Contents"]:
-            content["LastModified"] = f'{content["LastModified"]:%Y-%m-%d %H:%M:%S}'
+    if buckets[contents]:
+        for content in buckets[contents]:
+            content[date] = f"{content[date]:%Y-%m-%d %H:%M:%S}"
             objects.append(content)
     return objects
 
@@ -287,11 +287,96 @@ class download_object(Resource):
                 file = send_from_directory(tempdir, name, as_attachment=True)
                 return file
             except Exception as e:
-                current_app.logger.error(f"{e}", exc_info=1)
+                current_app.logger.error(f"{e}")
                 return response(500, f"{e}")
 
 
 class upload_object(Resource):
+    def get(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, default="")
+        parser.add_argument("upload_id", type=str)
+        args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
+
+        try:
+            if args["upload_id"]:
+                parts = bucket.list_part(
+                    get_resources(args["access_key"], secret_key),
+                    bucket_name,
+                    args["object_name"],
+                    args["upload_id"],
+                )
+                if parts is None:
+                    return response(
+                        404,
+                        f"there is no part in this object, please abort this object.",
+                    )
+                for part in parts["Parts"]:
+                    part["LastModified"] = f'{part["LastModified"]:%Y-%m-%d %H:%M:%S}'
+                return response(201, data=parts)
+
+            mpu = bucket.list_multipart_upload(
+                get_resources(args["access_key"], secret_key),
+                bucket_name,
+                args["object_name"],
+            )
+            lmpu = list_objects(mpu, "Uploads", "Initiated")
+            return response(201, data=mpu)
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
+
+    def delete(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
+        parser.add_argument("upload_id", type=str, required=True)
+        args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
+
+        try:
+            mpu = bucket.abort_multipart_upload(
+                get_resources(args["access_key"], secret_key),
+                bucket_name,
+                args["object_name"],
+                args["upload_id"],
+            )
+            return response(
+                201,
+                f"multipart upload for {args['object_name']} has been aborted.",
+                mpu,
+            )
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
+
+    def put(self, bucket_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument("access_key", type=str, required=True)
+        parser.add_argument("secret_key", type=str, required=True)
+        parser.add_argument("object_name", type=str, required=True)
+        parser.add_argument("upload_id", type=str, required=True)
+        args = parser.parse_args()
+        secret_key = args["secret_key"].replace(" ", "+")
+
+        try:
+            mpu = bucket.complete_multipart_upload(
+                get_resources(args["access_key"], secret_key),
+                bucket_name,
+                args["object_name"],
+                args["upload_id"],
+            )
+            return response(
+                201, f"multipart upload for {args['object_name']} has been completed."
+            )
+        except Exception as e:
+            current_app.logger.error(f"{e}")
+            return response(500, f"{e}")
+
     def post(self, bucket_name):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
@@ -326,7 +411,7 @@ class upload_object(Resource):
                 )
             return response(201, f"Object {object_name} uploaded successfully.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=1)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
 
