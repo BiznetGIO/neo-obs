@@ -310,11 +310,8 @@ class upload_object(Resource):
                     args["upload_id"],
                 )
                 if parts is None:
-                    return response(
-                        404,
-                        f"there is no part in this object, please abort this object.",
-                    )
-                for part in parts["Parts"]:
+                    return response(404, f"Part not found, please abort this object.")
+                for part in parts:
                     part["LastModified"] = f'{part["LastModified"]:%Y-%m-%d %H:%M:%S}'
                 return response(201, data=parts)
 
@@ -347,7 +344,7 @@ class upload_object(Resource):
             )
             return response(
                 201,
-                f"multipart upload for {args['object_name']} has been aborted.",
+                f"Multipart upload for {args['object_name']} has been aborted.",
                 mpu,
             )
         except Exception as e:
@@ -371,7 +368,7 @@ class upload_object(Resource):
                 args["upload_id"],
             )
             return response(
-                201, f"multipart upload for {args['object_name']} has been completed."
+                201, f"Multipart upload for {args['object_name']} has been completed."
             )
         except Exception as e:
             current_app.logger.error(f"{e}")
