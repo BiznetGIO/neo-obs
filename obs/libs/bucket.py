@@ -164,7 +164,6 @@ def list_part(resource, bucket_name, object_name, upload_id):
     mpupload = client.list_parts(
         Bucket=bucket_name, Key=object_name, UploadId=upload_id
     )
-
     return mpupload.get("Parts")
 
 
@@ -178,7 +177,7 @@ def complete_multipart_upload(resource, bucket_name, object_name, upload_id):
     parts = list_part(resource, bucket_name, object_name, upload_id)
 
     multipart = []
-    for part in parts["Parts"]:
+    for part in parts:
         multipart.append(
             {"ETag": part.get("ETag"), "PartNumber": part.get("PartNumber")}
         )
