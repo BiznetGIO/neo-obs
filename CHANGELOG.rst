@@ -7,7 +7,7 @@ Unreleased
 - Add list part function
 - Add abort multipart uploads function
 - Add complete multipart uploads function
-- update docs
+- Update docs
 
 0.2.8 (2020-05-28)
 ==================
