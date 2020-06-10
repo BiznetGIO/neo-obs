@@ -1,22 +1,35 @@
 Unreleased
 ==========
 
+0.2.9 (2020-05-27)
+==================
+- Add list multipart uploads function
+- Add list part function
+- Add abort multipart uploads function
+- Add complete multipart uploads function
+- update docs
+
+0.2.8 (2020-05-28)
+==================
+- Fix: Pypi doesn't support raw html tag
+- Add: hook upload to Pypi in travis
+
 0.2.7 (2020-05-27)
 ==================
-- add file_uploadobj in libs and use it in obs api
-- add threads in gunicorn config
+- Add file_uploadobj in libs and use it in obs api
+- Add threads in gunicorn config
 
 0.2.6 (2020-05-12)
 ==================
-- fix api cannot access cloudian with secure url
-- refactor upload file to use tempdir
-- change acl message when success
+- Fix api cannot access cloudian with secure url
+- Refactor upload file to use tempdir
+- Change acl message when success
 
 0.2.5 (2020-04-29)
 ==================
 - Add directory download function
 - Add bucket download function
-- refactor default value in config
+- Refactor default value in config
 
 0.2.3 (2020-03-11)
 ==================
