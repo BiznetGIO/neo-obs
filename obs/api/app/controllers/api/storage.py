@@ -321,7 +321,7 @@ class upload_object(Resource):
                 args["object_name"],
             )
             lmpu = list_objects(mpu, "Uploads", "Initiated")
-            return response(201, data=mpu)
+            return response(200, data=mpu)
         except Exception as e:
             current_app.logger.error(f"{e}")
             return response(500, f"{e}")
@@ -343,7 +343,7 @@ class upload_object(Resource):
                 args["upload_id"],
             )
             return response(
-                201,
+                200,
                 f"Multipart upload for {args['object_name']} has been aborted.",
                 mpu,
             )
@@ -368,7 +368,7 @@ class upload_object(Resource):
                 args["upload_id"],
             )
             return response(
-                201, f"Multipart upload for {args['object_name']} has been completed."
+                200, f"Multipart upload for {args['object_name']} has been completed."
             )
         except Exception as e:
             current_app.logger.error(f"{e}")

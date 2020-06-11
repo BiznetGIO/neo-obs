@@ -37,7 +37,8 @@ Response :
             creation_date: 2020-03-02 06:51:12
         }
     ],
-    ...
+    status: success,
+    message: Operation succeeded
     } 
 
 Get List Objects
@@ -300,6 +301,176 @@ Response :
     message: Object foo.png uploaded successfully.
     }
 
+List Multipart Upload
+---------------------
+ 
+.. code-block:: bash
+
+    GET api/storage/object/upload/:bucket_name
+
+Query Parameters:
+
+===========  =======   =============================
+Name         Type      Description
+===========  =======   =============================
+access_key   string    user access key 
+secret_key   string    user secret key
+object_name  string    name of object with extension
+===========  =======   =============================
+
+Response :
+
+.. code-block:: bash
+
+    {
+    code: 200,
+    count: 0,
+    data: {
+        "Uploads": [
+            {
+                "UploadId": "id-1",
+                "Key": "img",
+                "Initiated": "2020-01-01 00:00:00",
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "owner",
+                    "ID": "123"
+                },
+                "Initiator": {
+                    "ID": "123",
+                    "DisplayName": "owner"
+                }
+            },
+            {
+                "UploadId": "id-2",
+                "Key": "txt",
+                "Initiated": "2020-01-01 00:00:00",
+                "StorageClass": "STANDARD",
+                "Owner": {
+                    "DisplayName": "owner",
+                    "ID": "123"
+                },
+                "Initiator": {
+                    "ID": "123",
+                    "DisplayName": "owner"
+                }
+            },
+    status: success,
+    message: Operation succeeded
+    }
+
+
+List Part
+---------
+ 
+.. code-block:: bash
+
+    GET api/storage/object/upload/:bucket_name
+
+Query Parameters:
+
+===========  =======   =============================
+Name         Type      Description
+===========  =======   =============================
+access_key   string    user access key 
+secret_key   string    user secret key
+object_name  string    name of object with extension
+upload_id    string    upload id from object
+===========  =======   =============================
+
+Response :
+
+.. code-block:: bash
+
+    {
+    code: 200,
+    count: 0,
+    data: [
+        {
+            "PartNumber": 2,
+            "LastModified": "2020-01-01 00:00:00",
+            "ETag": "\"etagabc123\"",
+            "Size": 2097152
+        }
+    ],
+    status: success,
+    message: Operation succeeded
+    }
+
+
+Abort Multipart Upload
+----------------------
+ 
+.. code-block:: bash
+
+    DELETE api/storage/object/upload/:bucket_name
+
+Query Parameters:
+
+===========  =======   =============================
+Name         Type      Description
+===========  =======   =============================
+access_key   string    user access key 
+secret_key   string    user secret key
+object_name  string    name of object with extension
+upload_id    string    upload id from object
+===========  =======   =============================
+
+Response :
+
+.. code-block:: bash
+
+    {
+    code: 200,
+    count: 0,
+    data: {
+        "ResponseMetadata": {
+            "RequestId": "123",
+            "HostId": "",
+            "HTTPStatusCode": 204,
+            "HTTPHeaders": {
+                "date": "Tue, 01 Jan 2020 00:00:00 GMT",
+                "x-amz-request-id": "123",
+                "server": "CloudianS3"
+            },
+            "RetryAttempts": 0
+        }
+    },
+    status: success,
+    message: Multipart upload for foo.png has been aborted.
+    }
+
+
+Complete Multipart Upload
+-------------------------
+ 
+.. code-block:: bash
+
+    PUT api/storage/object/upload/:bucket_name
+
+Query Parameters:
+
+===========  =======   =============================
+Name         Type      Description
+===========  =======   =============================
+access_key   string    user access key 
+secret_key   string    user secret key
+object_name  string    name of object with extension
+upload_id    string    upload id from object
+===========  =======   =============================
+
+Response :
+
+.. code-block:: bash
+
+    {
+    code: 200,
+    count: 0,
+    data: null,
+    status: success,
+    message: Multipart upload for foo.png has been completed.
+    }
+
 Download Object
 ---------------
  
@@ -332,8 +503,8 @@ Response :
 
     API returned/downloaded object
 
-Move Object
--------------
+Move Object to Another Bucket
+-----------------------------
  
 .. code-block:: bash
 
@@ -362,8 +533,8 @@ Response :
     message: Object foo.png moved successfully.
     }
 
-Copy Object
--------------
+Copy Object to Another Bucket
+-----------------------------
  
 .. code-block:: bash
 

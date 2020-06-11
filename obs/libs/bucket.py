@@ -150,6 +150,7 @@ def upload_bin_object(**kwargs):
 
 
 def list_multipart_upload(resource, bucket_name, prefix=""):
+    """List in-progress multipart uploads"""
     client = resource.meta.client
     mpupload = client.list_multipart_uploads(Bucket=bucket_name, Prefix=prefix)
 
@@ -160,25 +161,27 @@ def list_multipart_upload(resource, bucket_name, prefix=""):
 
 
 def list_part(resource, bucket_name, object_name, upload_id):
+    """List in-progress part in multipart upload"""
     client = resource.meta.client
     mpupload = client.list_parts(
         Bucket=bucket_name, Key=object_name, UploadId=upload_id
     )
-
     return mpupload.get("Parts")
 
 
 def abort_multipart_upload(resource, bucket_name, object_name, upload_id):
+    """Abort in-progress multipart upload"""
     mpupload = resource.MultipartUpload(bucket_name, object_name, upload_id)
     return mpupload.abort()
 
 
 def complete_multipart_upload(resource, bucket_name, object_name, upload_id):
+    """Complete a multipart upload by assembling uploaded parts"""
     mpupload = resource.MultipartUpload(bucket_name, object_name, upload_id)
     parts = list_part(resource, bucket_name, object_name, upload_id)
 
     multipart = []
-    for part in parts["Parts"]:
+    for part in parts:
         multipart.append(
             {"ETag": part.get("ETag"), "PartNumber": part.get("PartNumber")}
         )
