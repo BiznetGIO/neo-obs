@@ -1,7 +1,7 @@
 Unreleased
 ==========
 
-0.2.9 (2020-06-10)
+0.3.0 (2020-06-15)
 ==================
 - Add list multipart uploads function
 - Add list part function
