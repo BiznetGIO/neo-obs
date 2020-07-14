@@ -9,6 +9,7 @@ from obs.libs import bucket
 from obs.libs import gmt
 from obs.libs import auth
 from obs.libs import utils
+from distutils.util import strtobool
 from requests_aws4auth import AWS4Auth
 from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
@@ -112,25 +113,35 @@ class bucket_api(Resource):
         try:
             regex = r"[^a-z0-9.-]"
             bucket_name = re.sub(regex, "", bucket_name)
-            current_app.logger.error(len(bucket_name))
             if not 2 < len(bucket_name) < 64:
                 return response(
                     400, f"'{bucket_name}' too short or too long for bucket name"
                 )
 
-            current_app.logger.error(len(bucket_name))
-            responses = bucket.create_bucket(
-                auth=get_plain_auth(args["access_key"], secret_key),
-                bucket_name=bucket_name,
-                acl=args["acl"],
-                policy_id=args["policy_id"],
-            )
-            if responses.text:
-                error = xmltodict.parse(responses.text)
-                return response(400, error["Error"]["Message"])
-            return response(201, f"Bucket {bucket_name} created successfully.")
+            attr = {
+                "auth": get_plain_auth(args["access_key"], secret_key),
+                "resource": get_resources(args["access_key"], secret_key),
+                "bucket_name": bucket_name,
+                "acl": args["acl"],
+                "policy_id": args["policy_id"],
+            }
+            if utils.compatibility():
+                responses = bucket.neo_create_bucket(**attr)
+                if responses.text:
+                    error = xmltodict.parse(responses.text)
+                    return response(400, error["Error"]["Message"])
+                return response(
+                    201, f"Bucket {bucket_name} created successfully.", responses.text
+                )
+
+            else:
+                responses = bucket.create_bucket(**attr)
+                return response(
+                    201, f"Bucket {bucket_name} created successfully.", responses
+                )
+
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=1)
             return response(500, f"{e}")
 
     def delete(self, bucket_name):

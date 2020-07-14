@@ -1,7 +1,9 @@
+import os
 import sys
 import tzlocal
 import xmltodict
 from datetime import datetime
+from distutils.util import strtobool
 
 
 def get_bucket_key(uri):
@@ -59,3 +61,7 @@ def human_date(unixtime):
     local_time = datetime.fromtimestamp(unix_timestamp, local_timezone)
     human_datetime = local_time.strftime("%Y-%m-%d %H:%M:%S%z (%Z)")
     return human_datetime
+
+
+def compatibility():
+    return strtobool(os.environ.get("NEO_COMPATIBILITY"))
