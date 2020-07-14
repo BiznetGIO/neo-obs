@@ -215,7 +215,7 @@ def test_create_bucket(client, monkeypatch):
         "/api/storage/bucket/bucket-name",
         data={"access_key": "123", "secret_key": "123"},
     )
-    assert result.get_json()["message"] == f"Bucket bucket-name created successfully."
+    assert result.get_json()["message"] == f"Bucket created successfully."
 
 
 def test_copy(client, monkeypatch):

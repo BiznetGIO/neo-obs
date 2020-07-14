@@ -14,7 +14,7 @@ from requests_aws4auth import AWS4Auth
 from obs.api.app.helpers.rest import response
 from werkzeug.utils import secure_filename
 from flask import request, current_app, send_from_directory
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, reqparse, inputs
 
 
 def get_resources(access_key, secret_key):
@@ -107,6 +107,7 @@ class bucket_api(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("acl", type=str, default="private")
         parser.add_argument("policy_id", type=str, default="")
+        parser.add_argument("random_name", type=inputs.boolean, default=False)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
@@ -124,21 +125,18 @@ class bucket_api(Resource):
                 "bucket_name": bucket_name,
                 "acl": args["acl"],
                 "policy_id": args["policy_id"],
+                "random_name": args["random_name"],
             }
             if utils.compatibility():
                 responses = bucket.neo_create_bucket(**attr)
                 if responses.text:
                     error = xmltodict.parse(responses.text)
                     return response(400, error["Error"]["Message"])
-                return response(
-                    201, f"Bucket {bucket_name} created successfully.", responses.text
-                )
+                return response(201, f"Bucket created successfully.", responses.text)
 
             else:
                 responses = bucket.create_bucket(**attr)
-                return response(
-                    201, f"Bucket {bucket_name} created successfully.", responses
-                )
+                return response(201, f"Bucket created successfully.", responses)
 
         except Exception as e:
             current_app.logger.error(f"{e}", exc_info=1)
