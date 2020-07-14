@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   obs-api:
-    image: obs-api:0.0.1
+    image: obs-api
     ports:
         - "5000:5000"
     environment:
@@ -18,4 +18,5 @@ services:
       - OBS_ADMIN_URL=
       - OBS_ADMIN_PORT=
       - OBS_USE_HTTPS=
-    command:  gunicorn 'autoapp:app' -b '0.0.0.0:5000' -w 4
+      - OBS_USE_NEO=
+    command:  ["gunicorn", "autoapp:app", "-b", "0.0.0.0:5000", "-w", "4", "--threads=3"]

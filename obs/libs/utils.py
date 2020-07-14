@@ -64,4 +64,4 @@ def human_date(unixtime):
 
 
 def compatibility():
-    return strtobool(os.environ.get("NEO_COMPATIBILITY"))
+    return strtobool(os.environ.get("OBS_USE_NEO"))
