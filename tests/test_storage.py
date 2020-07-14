@@ -502,6 +502,7 @@ def fake_mb(*args, **kwargs):
 def test_mb(monkeypatch, plain_auth):
     monkeypatch.setattr(obs.libs.auth, "strtobool", lambda http: True)
     monkeypatch.setattr(requests, "put", fake_mb)
+    monkeypatch.setattr(obs.libs.utils, "compatibility", lambda: True)
     monkeypatch.setattr(obs.libs.utils, "check_plain", lambda response: None)
 
     runner = CliRunner()
@@ -516,8 +517,9 @@ def fake_response(**kwargs):
     return response
 
 
-def test_except_mb(monkeypatch, plain_auth):
-    monkeypatch.setattr(obs.libs.bucket, "create_bucket", fake_response)
+def test_except_mb(monkeypatch, plain_auth, resource):
+    monkeypatch.setattr(obs.libs.bucket, "neo_create_bucket", fake_response)
+    monkeypatch.setattr(obs.libs.utils, "compatibility", lambda: True)
     monkeypatch.setattr(
         xmltodict,
         "parse",
