@@ -272,7 +272,7 @@ def archive(dir_name):
 
 
 class download_object(Resource):
-    def get(self, bucket_name, name=""):
+    def get(self, bucket_name):
         parser = reqparse.RequestParser()
         parser.add_argument("access_key", type=str, required=True)
         parser.add_argument("secret_key", type=str, required=True)
