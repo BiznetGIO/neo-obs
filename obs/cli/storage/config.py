@@ -40,6 +40,11 @@ def run_configure():
             "Use HTTPS protocol",
             "All communication is protected when enabled, but it's slower than plain HTTP.",
         ),
+        (
+            "use_neo",
+            "Use NEO compatibility",
+            "Use NEO compatibility for adding specific policy id in Object Storage.",
+        ),
     ]
     try:
         while True:

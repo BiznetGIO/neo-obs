@@ -90,8 +90,10 @@ def remove(uri):
 def make_bucket(bucket_name, acl, policy_id, random_name):
     """Create bucket."""
     plain_auth = get_plain_auth()
+    s3_resource = get_resources()
     bucket.create_bucket(
         auth=plain_auth,
+        resource=s3_resource,
         bucket_name=bucket_name,
         acl=acl,
         policy_id=policy_id,

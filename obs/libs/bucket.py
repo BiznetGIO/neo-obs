@@ -1,6 +1,7 @@
 import uuid
 import os
 import requests
+import logging
 
 from obs.libs import gmt
 from obs.libs import auth as auth_lib
@@ -20,7 +21,20 @@ def gen_random_name(prefix):
 
 
 def create_bucket(**kwargs):
-    """Create a bucket.
+    """Create a bucket."""
+    resource = kwargs.get("resource")
+    acl = kwargs.get("acl", "private")
+    bucket_name = kwargs.get("bucket_name")
+
+    if kwargs.get("random_name"):
+        bucket_name = gen_random_name(bucket_name)
+
+    response = resource.Bucket(bucket_name).create(ACL=acl)
+    return response
+
+
+def neo_create_bucket(**kwargs):
+    """Create a bucket with headers.
 
     :param auth: Tuple, consists of auth object and endpoint string
     :param acl: Input for canned ACL, defaults to "private"

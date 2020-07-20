@@ -20,6 +20,7 @@ class Config:
     admin_username = ""
     admin_password = ""
     use_https = "true"
+    use_neo = "false"
 
     def dump_config(self, options, cfg):
         cfg_file = config_file()

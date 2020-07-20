@@ -134,12 +134,15 @@ Create New Bucket
 
 Query Parameters:
 
-===========  =======   ===========================
+===========  =======   =================================
 Name         Type      Description
-===========  =======   ===========================
+===========  =======   =================================
 access_key   string    user access key 
 secret_key   string    user secret key
-===========  =======   ===========================
+acl          string    bucket ACL status
+policy_id    string    String represent `x-gmt-policyid`
+random_name  boolean   add random string ti bucket name 
+===========  =======   =================================
 
 Response :
 

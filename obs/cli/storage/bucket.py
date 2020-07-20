@@ -17,8 +17,11 @@ def buckets(resource):
 
 def create_bucket(**kwargs):
     try:
-        response = bucket_lib.create_bucket(**kwargs)
-        utils.check_plain(response)
+        if utils.compatibility():
+            response = bucket_lib.neo_create_bucket(**kwargs)
+            utils.check_plain(response)
+        else:
+            response = bucket_lib.create_bucket(**kwargs)
         click.secho(
             f'Bucket "{kwargs.get("bucket_name")}" created successfully', fg="green"
         )

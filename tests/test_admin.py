@@ -189,7 +189,7 @@ def test_qos_info(monkeypatch, client):
     )
 
 
-def fake_bitmath(limit):
+def fake_bitmath(limits):
     limit = mock.Mock()
     limit.to_GiB.return_value.best_prefix.return_value = "0.49234 GiB"
     return limit

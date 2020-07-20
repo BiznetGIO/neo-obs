@@ -9,6 +9,7 @@ install:
 script:
 - black --check .
 - pytest -vv -s
+- docker run -it -v $PWD:/usr/src sonarsource/sonar-scanner-cli sonar-scanner   -Dsonar.projectKey=neo-obs   -Dsonar.sources=.   -Dsonar.host.url=$SONAR_URL   -Dsonar.login=$SONAR_TOKEN
 before_deploy: awk 'NR>23' README.rst > README.tmp && mv README.tmp README.rst
 deploy:
   provider: pypi

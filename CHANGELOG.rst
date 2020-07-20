@@ -1,6 +1,13 @@
 Unreleased
 ==========
 
+0.3.1 (2020-07-14)
+==================
+- Add create bucket function with boto3
+- Add use_neo env to switch create bucket function
+- Add random_name argument to create bucket function in API
+- Update create bucket test
+
 0.3.0 (2020-06-15)
 ==================
 - Add list multipart uploads function
