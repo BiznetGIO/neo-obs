@@ -66,9 +66,24 @@ def create(client):
         click.secho(f"User creation failed. \n{exc}", fg="yellow", bold=True, err=True)
 
 
+def suspend(client, user_id, group_id, status):
+    try:
+        user_info = user_lib.info(client=client, user_id=user_id, group_id=group_id)
+        message = "suspended" if status is True else "unsuspended"
+        data = {key: val for key, val in user_info.items() if "canonical" not in key}
+        data["active"] = not status
+        response = user_lib.update(client, data)
+        utils.check(response)
+        click.secho(f"User {message} successfully", fg="green")
+    except Exception as exc:
+        click.secho(
+            f"User suspension failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
+
+
 def remove(client, user_id, group_id):
     try:
-        response = user_lib.remove(client, user_id=user_id, group_id=group_id)
+        response = user_lib.remove(client=client, user_id=user_id, group_id=group_id)
         utils.check(response)
         click.secho(f"User removed successfully", fg="green")
     except Exception as exc:

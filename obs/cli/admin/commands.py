@@ -70,13 +70,29 @@ def create():
     user_cli.create(client)
 
 
+@user.command("suspend")
+@click.option("--user-id", "user_id", type=str, help="User ID")
+@click.option("--group-id", "group_id", type=str, help="Group ID")
+@click.option(
+    "--suspend/--unsuspend",
+    "suspend",
+    default=True,
+    help="suspend or unsuspend spesific user",
+)
+def suspend(user_id, group_id, suspend):
+    """suspend user"""
+    client = get_admin_client()
+    status = True if suspend else False
+    user_cli.suspend(client=client, user_id=user_id, group_id=group_id, status=status)
+
+
 @user.command("rm")
 @click.option("--user-id", "user_id", type=str, help="User ID")
 @click.option("--group-id", "group_id", type=str, help="Group ID")
 def rm(user_id, group_id):
     """Remove user"""
     client = get_admin_client()
-    user_cli.remove(client, user_id=user_id, group_id=group_id)
+    user_cli.remove(client=client, user_id=user_id, group_id=group_id)
 
 
 @admin.group()
