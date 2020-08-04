@@ -4,6 +4,7 @@ import requests
 import logging
 
 from obs.libs import gmt
+from obs.libs import utils
 from obs.libs import auth as auth_lib
 
 
@@ -345,22 +346,6 @@ def object_info(resource, bucket_name, object_name):
     return info
 
 
-def acl_grantee(**kwargs):
-    """Set permission for grantee"""
-    grants = {
-        "full-control": "GrantFullControl",
-        "read": "GrantRead",
-        "read-ACP": "GrantReadACP",
-        "write": "GrantWrite",
-        "write-ACP": "GrantWriteACP",
-    }
-
-    for acl, grant in grants.items():
-        if kwargs.get("acl") == acl and kwargs.get("ID") != "":
-            return {grant: f"id={kwargs.get('ID')}"}
-    return {"ACL": kwargs.get("acl")}
-
-
 def set_acl(**kwargs):
     """Set ACL of object or object."""
     resource = kwargs.get("resource")
@@ -372,8 +357,14 @@ def set_acl(**kwargs):
     if kwargs.get("acl_type") == "bucket":
         obj = resource.Bucket(bucket_name)
 
-    acl = acl_grantee(acl=kwargs.get("acl"), ID=kwargs.get("canonical_id"))
-    response = obj.Acl().put(**(acl))
+    response = obj.Acl().put(
+        ACL=kwargs.get("acl"),
+        GrantFullControl=utils.set_id(kwargs.get("grant_fullcontrol")),
+        GrantRead=utils.set_id(kwargs.get("grant_read")),
+        GrantReadACP=utils.set_id(kwargs.get("grant_readACP")),
+        GrantWrite=utils.set_id(kwargs.get("grant_write")),
+        GrantWriteACP=utils.set_id(kwargs.get("grant_writeACP")),
+    )
     return response
 
 

@@ -467,26 +467,25 @@ class acl(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
-        parser.add_argument("acl", type=str, default="private")
+        parser.add_argument("acl", type=str, default="")
+        parser.add_argument("grant_fullcontrol", type=str, default="")
+        parser.add_argument("grant_read", type=str, default="")
+        parser.add_argument("grant_readACP", type=str, default="")
+        parser.add_argument("grant_write", type=str, default="")
+        parser.add_argument("grant_writeACP", type=str, default="")
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        acl_type = "object" if args["object_name"] else "bucket"
-        name = args["object_name"] if args["object_name"] else args["bucket_name"]
-
         try:
-            result = bucket.set_acl(
-                resource=get_resources(args["access_key"], secret_key),
-                bucket_name=args["bucket_name"],
-                object_name=args["object_name"],
-                acl_type=acl_type,
-                acl=args["acl"],
-            )
-            return response(
-                200, f"Added {args['acl']} access to {acl_type} {name}.", result
-            )
+            name = args["object_name"] if args["object_name"] else args["bucket_name"]
+            attr = {arg: val for arg, val in args.items() if "key" not in arg}
+            attr["resource"] = get_resources(args["access_key"], secret_key)
+            attr["acl_type"] = "object" if args["object_name"] else "bucket"
+
+            result = bucket.set_acl(**attr)
+            return response(200, f"Added access to {attr['acl_type']} {name}.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=1)
             return response(500, f"{e}")
 
 
