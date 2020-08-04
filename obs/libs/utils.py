@@ -63,5 +63,15 @@ def human_date(unixtime):
     return human_datetime
 
 
+def set_id(ids):
+    """Set ID  for granting access"""
+    if ids != "":
+        ids = [f"id={id}" for id in ids.split(",")]
+        return ",".join(ids)
+    else:
+        return ids
+
+
 def compatibility():
+    """get neo compatibility environment"""
     return strtobool(os.environ.get("OBS_USE_NEO"))
