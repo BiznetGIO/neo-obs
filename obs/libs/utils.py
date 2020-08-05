@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import tzlocal
 import xmltodict
@@ -75,3 +76,19 @@ def set_id(ids):
 def compatibility():
     """get neo compatibility environment"""
     return strtobool(os.environ.get("OBS_USE_NEO"))
+
+
+def user_sanitize(args):
+    """Sanitize input when creating new user"""
+    arg = {}
+    regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
+    regexuid = r"[^\w@#_\-.]"
+
+    for key, value in args.items():
+        if key == "userId":
+            arg[key] = re.sub(regexuid, "", value)
+        elif type(value) == str:
+            arg[key] = re.sub(regex, "", value)
+        else:
+            arg[key] = value
+    return arg

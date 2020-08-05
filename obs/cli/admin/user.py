@@ -59,7 +59,7 @@ def info(client, user_id, group_id):
 def create(client):
     try:
         data = user_profile.prompt_user_profile()
-        response = user_lib.create(client, data)
+        response = user_lib.create(client, utils.user_sanitize(data))
         utils.check(response)
         click.secho(f"User created successfully", fg="green")
     except Exception as exc:
