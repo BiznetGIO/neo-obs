@@ -249,3 +249,44 @@ def mkdir(resource, bucket_name, dir_name):
         click.secho(
             f"Directory creation failed. \n{exc}", fg="yellow", bold=True, err=True
         )
+
+
+def list_multipart_upload(resource, bucket_name, prefix):
+    try:
+        response = bucket_lib.list_multipart_upload(resource, bucket_name, prefix)
+
+        if response["CommonPrefixes"]:
+            for prefix in response["CommonPrefixes"]:
+                dir_ = "DIR".rjust(12)
+                click.secho(f"{dir_} {bucket_name}/{prefix['Prefix']}")
+
+        if response["Uploads"]:
+            for content in response["Uploads"]:
+                key = content["Key"]
+                uid = content["UploadId"]
+                last_modified = content["Initiated"]
+                click.secho(
+                    f"{last_modified:%Y-%m-%d %H:%M:%S}, {uid}, {bucket_name}/{key}"
+                )
+
+    except Exception as exc:
+        click.secho(f"{exc}", fg="yellow", bold=True, err=True)
+
+
+def list_part(resource, bucket_name, object_name, upload_id):
+    try:
+        response = bucket_lib.list_part(resource, bucket_name, object_name, upload_id)
+
+        for part in response:
+            size = utils.sizeof_fmt(part["Size"])
+            last_modified = f"{part['LastModified']:%Y-%m-%d %H:%M:%S}"
+            msg = (
+                f'Number of part: {part["PartNumber"]}\n'
+                f"Last Modified: {last_modified}\n"
+                f'ETag: {part["ETag"]}\n'
+                f"Size: {size}"
+            )
+            click.secho(msg)
+
+    except Exception as exc:
+        click.secho(f"{exc}", fg="yellow", bold=True, err=True)
