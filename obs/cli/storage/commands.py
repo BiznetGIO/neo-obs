@@ -230,3 +230,36 @@ def gmt_cmd(policy_id):
     if policy_id:
         config.load_config_file()
         gmt.show_policies()
+
+
+@storage.group()
+def mpu():
+    """Manage multipart upload function"""
+
+
+@mpu.command("ls")
+@click.argument("uri")
+def list_mpu(uri):
+    """List in-progress multipart uploads"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.list_multipart_upload(
+        resource=s3_resource, bucket_name=bucket_name, prefix=prefix
+    )
+
+
+@mpu.command("part")
+@click.argument("uri")
+@click.argument("upload_id")
+def list_part(uri, upload_id):
+    """List in-progress part in multipart upload"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.list_part(
+        resource=s3_resource,
+        bucket_name=bucket_name,
+        object_name=prefix,
+        upload_id=upload_id,
+    )
