@@ -251,23 +251,11 @@ class copy_object(Resource):
             return response(500, f"{e}")
 
 
-def file_download(resources, bucket_name, prefix):
-    status = bucket.get_objects(resources, bucket_name, prefix)
-    status = list_objects(status)
-    for obj in status:
-        if "Key" in obj and obj["Key"][-1] != "/":
-            bucket.download_object(resources, bucket_name, obj["Key"])
-        if "directory" in obj:
-            file_download(resources, bucket_name, obj["directory"])
-
-
-def archive(dir_name):
-    with zipfile.ZipFile(f"{dir_name[:-1]}.zip", "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for root, dirs, files in os.walk("."):
-            for file in files:
-                file_path = os.path.join(root, file)
-                if "zip" not in file:
-                    zip_file.write(file_path, file_path.replace(dir_name, ""))
+def archive(resources, dir_name, bucket_name, prefix):
+    objects = bucket.list_download(resources, bucket_name, prefix)
+    with zipfile.ZipFile(f"{dir_name[:-1]}.zip", "w") as zip_file:
+        for obj in objects:
+            zip_file.write(obj, bucket.download_object(resources, bucket_name, obj))
     return f"{dir_name[:-1]}.zip"
 
 
@@ -283,15 +271,16 @@ class download_object(Resource):
         with tempfile.TemporaryDirectory() as tempdir:
             try:
                 os.chdir(tempdir)
-
                 resources = get_resources(args["access_key"], secret_key)
-                file_download(resources, bucket_name, args["object_name"])
 
                 if args["object_name"] == "":
-                    name = archive(bucket_name + "/")
+                    name = archive(resources, f"{bucket_name}/", bucket_name, "")
                 elif args["object_name"][-1] == "/":
-                    name = archive(args["object_name"])
+                    name = archive(
+                        resources, args["object_name"], bucket_name, args["object_name"]
+                    )
                 else:
+                    bucket.download_object(resources, bucket_name, args["object_name"])
                     name = args["object_name"]
                 file = send_from_directory(tempdir, name, as_attachment=True)
                 return file
