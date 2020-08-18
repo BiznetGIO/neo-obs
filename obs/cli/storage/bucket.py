@@ -1,4 +1,5 @@
 import re
+import os
 import click
 import bitmath
 
@@ -79,15 +80,20 @@ def remove_object(resource, bucket_name, object_name):
 
 
 def download_object(resource, bucket_name, object_name):
-    if object_name.endswith("/"):
-        click.secho(
-            f"Object download failed. \nExpecting filename", fg="yellow", bold=True
-        )
-        return
-
     try:
-        bucket_lib.download_object(resource, bucket_name, object_name)
-        click.secho(f'Object "{object_name}" downloaded successfully', fg="green")
+        objects = bucket_lib.list_download(resource, bucket_name, object_name)
+        if object_name == "":
+            os.makedirs(bucket_name, exist_ok=True)
+            os.chdir(bucket_name)
+            name = f'Bucket "{bucket_name}"'
+        elif object_name[-1] == "/":
+            name = f'Directory "{object_name}"'
+        else:
+            name = f'Object "{object_name}"'
+
+        for obj in objects:
+            bucket_lib.download_object(resource, bucket_name, obj)
+        click.secho(f"{name} downloaded successfully", fg="green")
     except Exception as exc:
         click.secho(
             f"Object download failed. \n{exc}", fg="yellow", bold=True, err=True
