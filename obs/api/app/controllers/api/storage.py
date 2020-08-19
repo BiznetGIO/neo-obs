@@ -342,7 +342,7 @@ class upload_object(Resource):
             )
             return response(
                 200,
-                f"Multipart upload for {args['object_name']} has been aborted.",
+                f"Multipart upload of {args['object_name']} has been aborted.",
                 mpu,
             )
         except Exception as e:

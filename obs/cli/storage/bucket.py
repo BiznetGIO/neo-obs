@@ -290,3 +290,35 @@ def list_part(resource, bucket_name, object_name, upload_id):
 
     except Exception as exc:
         click.secho(f"{exc}", fg="yellow", bold=True, err=True)
+
+
+def abort_multipart_upload(resource, bucket_name, object_name, upload_id):
+    try:
+        bucket_lib.abort_multipart_upload(resource, bucket_name, object_name, upload_id)
+        click.secho(
+            f'Multipart Upload of "{object_name}" aborted successfully', fg="green"
+        )
+    except Exception as exc:
+        click.secho(
+            f'Aborting multipart upload of "{object_name}" failed.\n{exc}',
+            fg="yellow",
+            bold=True,
+            err=True,
+        )
+
+
+def complete_multipart_upload(resource, bucket_name, object_name, upload_id):
+    try:
+        bucket_lib.complete_multipart_upload(
+            resource, bucket_name, object_name, upload_id
+        )
+        click.secho(
+            f'Multipart Upload of "{object_name}" completed successfully', fg="green"
+        )
+    except Exception as exc:
+        click.secho(
+            f'Completing multipart upload of "{object_name}" failed.\n{exc}',
+            fg="yellow",
+            bold=True,
+            err=True,
+        )
