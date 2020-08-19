@@ -263,3 +263,35 @@ def list_part(uri, upload_id):
         object_name=prefix,
         upload_id=upload_id,
     )
+
+
+@mpu.command("abort")
+@click.argument("uri")
+@click.argument("upload_id")
+def abort_mpu(uri, upload_id):
+    """Abort in-progress multipart upload"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.abort_multipart_upload(
+        resource=s3_resource,
+        bucket_name=bucket_name,
+        object_name=prefix,
+        upload_id=upload_id,
+    )
+
+
+@mpu.command("complete")
+@click.argument("uri")
+@click.argument("upload_id")
+def abort_mpu(uri, upload_id):
+    """Complete a multipart upload by assembling uploaded parts"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.complete_multipart_upload(
+        resource=s3_resource,
+        bucket_name=bucket_name,
+        object_name=prefix,
+        upload_id=upload_id,
+    )
