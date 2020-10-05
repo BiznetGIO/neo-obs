@@ -29,9 +29,7 @@ def create_bucket(**kwargs):
             utils.check_plain(response)
         else:
             response = bucket_lib.create_bucket(**kwargs, bucket_name=name)
-        click.secho(
-            f'Bucket "{kwargs.get("bucket_name")}" created successfully', fg="green"
-        )
+        click.secho(f'Bucket "{name}" created successfully', fg="green")
     except Exception as exc:
         click.secho(
             f"Bucket creation failed. \n{exc}", fg="yellow", bold=True, err=True
@@ -90,7 +88,7 @@ def download_object(resource, bucket_name, object_name):
             name = f'Directory "{object_name}"'
         else:
             name = f'Object "{object_name}"'
-
+            objects = [object_name]
         for obj in objects:
             bucket_lib.download_object(resource, bucket_name, obj)
         click.secho(f"{name} downloaded successfully", fg="green")
