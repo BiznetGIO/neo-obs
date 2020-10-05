@@ -179,24 +179,39 @@ def info(uri):
 
 @storage.command("acl")
 @click.argument("uri")
-@click.argument("acl", default="private")
-def set_acl(uri, acl):
+@click.argument("acl", default="")
+@click.option("--read", "read", default="", help="user granted for read access")
+@click.option("--write", "write", default="", help="user granted for write access")
+@click.option(
+    "--read-acp", "readACP", default="", help="user granted for readACP access"
+)
+@click.option(
+    "--write-acp", "writeACP", default="", help="user granted for writeACP access"
+)
+@click.option(
+    "--full-control", "fullcontrol", default="", help="user granted for full access"
+)
+def set_acl(uri, acl, fullcontrol, read, readACP, write, writeACP):
     """Set ACL for bucket or object."""
     s3_resource = get_resources()
 
     bucket_name, prefix = utils.get_bucket_key(uri)
+
+    opt = {
+        "resource": s3_resource,
+        "bucket_name": bucket_name,
+        "acl": acl,
+        "grant_fullcontrol": fullcontrol,
+        "grant_read": read,
+        "grant_readACP": readACP,
+        "grant_write": write,
+        "grant_writeACP": writeACP,
+    }
+
     if not prefix:
-        bucket.set_acl(
-            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type="bucket"
-        )
+        bucket.set_acl(**opt, acl_type="bucket")
     if bucket_name and prefix:
-        bucket.set_acl(
-            resource=s3_resource,
-            bucket_name=bucket_name,
-            object_name=prefix,
-            acl=acl,
-            acl_type="object",
-        )
+        bucket.set_acl(**opt, object_name=prefix, acl_type="object")
 
 
 @storage.command("presign")
