@@ -180,16 +180,32 @@ def info(uri):
 @storage.command("acl")
 @click.argument("uri")
 @click.argument("acl", default="")
-@click.option("--read", "read", default="", help="user granted for read access")
-@click.option("--write", "write", default="", help="user granted for write access")
 @click.option(
-    "--read-acp", "readACP", default="", help="user granted for readACP access"
+    "--read", "read", default=None, metavar="", help="granted read access to user id"
 )
 @click.option(
-    "--write-acp", "writeACP", default="", help="user granted for writeACP access"
+    "--write", "write", default=None, metavar="", help="granted write access to user id"
 )
 @click.option(
-    "--full-control", "fullcontrol", default="", help="user granted for full access"
+    "--read-acp",
+    "readACP",
+    default=None,
+    metavar="",
+    help="granted readACP access to user id",
+)
+@click.option(
+    "--write-acp",
+    "writeACP",
+    default=None,
+    metavar="",
+    help="granted writeACP access to user id",
+)
+@click.option(
+    "--full-control",
+    "fullcontrol",
+    default=None,
+    metavar="",
+    help="granted full access to user id",
 )
 def set_acl(uri, acl, fullcontrol, read, readACP, write, writeACP):
     """Set ACL for bucket or object."""
