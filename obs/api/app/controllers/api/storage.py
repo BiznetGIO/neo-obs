@@ -139,7 +139,7 @@ class bucket_api(Resource):
                 return response(201, f"Bucket created successfully.", responses)
 
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=1)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
@@ -341,9 +341,7 @@ class upload_object(Resource):
                 args["upload_id"],
             )
             return response(
-                200,
-                f"Multipart upload of {args['object_name']} has been aborted.",
-                mpu,
+                200, f"Multipart upload of {args['object_name']} has been aborted.", mpu
             )
         except Exception as e:
             current_app.logger.error(f"{e}")
@@ -457,11 +455,11 @@ class acl(Resource):
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str, default="")
-        parser.add_argument("grant_fullcontrol", type=str, default="")
-        parser.add_argument("grant_read", type=str, default="")
-        parser.add_argument("grant_readACP", type=str, default="")
-        parser.add_argument("grant_write", type=str, default="")
-        parser.add_argument("grant_writeACP", type=str, default="")
+        parser.add_argument("grant_fullcontrol", type=str)
+        parser.add_argument("grant_read", type=str)
+        parser.add_argument("grant_readACP", type=str)
+        parser.add_argument("grant_write", type=str)
+        parser.add_argument("grant_writeACP", type=str)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 

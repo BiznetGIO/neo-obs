@@ -66,11 +66,11 @@ def human_date(unixtime):
 
 def set_id(ids):
     """Set ID  for granting access"""
-    if ids != "":
+    if ids != None:
         ids = [f"id={id}" for id in ids.split(",")]
         return ",".join(ids)
     else:
-        return ids
+        return ""
 
 
 def compatibility():
