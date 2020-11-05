@@ -112,8 +112,7 @@ class bucket_api(Resource):
         secret_key = args["secret_key"].replace(" ", "+")
 
         try:
-            regex = r"[^a-z0-9.-]"
-            bucket_name = re.sub(regex, "", bucket_name)
+            bucket_name = utils.sanitize("bucket", bucket_name)
             if not 2 < len(bucket_name) < 64:
                 return response(
                     400, f"'{bucket_name}' too short or too long for bucket name"
@@ -318,7 +317,7 @@ class upload_object(Resource):
                 bucket_name,
                 args["object_name"],
             )
-            lmpu = list_objects(mpu, "Uploads", "Initiated")
+            list_objects(mpu, "Uploads", "Initiated")
             return response(200, data=mpu)
         except Exception as e:
             current_app.logger.error(f"{e}")
@@ -384,9 +383,7 @@ class upload_object(Resource):
         object_name = args["object_name"] if args["object_name"] else filename
 
         try:
-            regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
-            object_name = re.sub(regex, "", object_name)
-
+            object_name = utils.sanitize("upload", object_name)
             result = bucket.upload_bin_object(
                 resource=get_resources(args["access_key"], secret_key),
                 bucket_name=bucket_name,

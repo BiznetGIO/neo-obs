@@ -92,3 +92,10 @@ def user_sanitize(uIDs):
         else:
             uID[key] = value
     return uID
+
+
+def sanitize(type, inp):
+    """Sanitize input with spesific type"""
+    regex = {"bucket": r"[^a-z0-9.-]", "upload": r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"}
+
+    return re.sub(regex[type], "", inp)
