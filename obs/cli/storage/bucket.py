@@ -19,8 +19,7 @@ def buckets(resource):
 
 def create_bucket(**kwargs):
     try:
-        regex = r"[^a-z0-9.-]"
-        name = re.sub(regex, "", kwargs.pop("bucket_name"))
+        name = utils.sanitize("bucket", kwargs.pop("bucket_name"))
         if not 2 < len(name) < 64:
             raise ValueError(f"'{name}' too short or too long for bucket name")
 
@@ -101,9 +100,7 @@ def download_object(resource, bucket_name, object_name):
 def upload_object(**kwargs):
     filename = kwargs.get("local_path")
     try:
-        regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
-        name = re.sub(regex, "", kwargs.pop("object_name"))
-
+        name = utils.sanitize("upload", kwargs.pop("object_name"))
         bucket_lib.upload_object(**kwargs, object_name=name)
         click.secho(f'Object "{filename}" uploaded successfully', fg="green")
     except Exception as exc:
