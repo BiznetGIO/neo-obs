@@ -506,7 +506,7 @@ def test_mb(monkeypatch, plain_auth):
     monkeypatch.setattr(obs.libs.utils, "check_plain", lambda response: None)
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["storage", "mb", "bucket-one", "--random"])
+    result = runner.invoke(cli, ["storage", "mb", "bucket-one"])
 
     assert result.output == f'Bucket "bucket-one" created successfully\n'
 
@@ -613,6 +613,11 @@ def test_get(monkeypatch, fs, resource):
 
     monkeypatch.setattr(obs.cli.storage.commands, "get_resources", donwload)
     monkeypatch.setattr(
+        obs.libs.bucket,
+        "list_download",
+        lambda bucket_name, prefix, list_objects: "obj1.png",
+    )
+    monkeypatch.setattr(
         obs.libs.bucket, "is_exists", lambda resource, bucket, object: True
     )
 
@@ -624,6 +629,11 @@ def test_get(monkeypatch, fs, resource):
 
 
 def test_except_get(monkeypatch, resource):
+    monkeypatch.setattr(
+        obs.libs.bucket,
+        "list_download",
+        lambda bucket_name, prefix, list_objects: ["obj1.png"],
+    )
     monkeypatch.setattr(
         obs.libs.bucket, "is_exists", lambda resource, bucket, object: False
     )

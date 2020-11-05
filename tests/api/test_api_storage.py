@@ -19,7 +19,9 @@ def fake_resource(access_key, secret_key):
         "ResponseMetaData": {"RequestId": "e12"}
     }
     resouce.Object.return_value.download_file.side_effect = lambda: ""
-    resouce.Object.return_value.upload_file.side_effect = lambda Filename, ExtraArgs: ""
+    resouce.Object.return_value.upload_fileobj.side_effect = (
+        lambda Fileobj, ExtraArgs: ""
+    )
     resouce.Object.return_value.copy.side_effect = lambda source: ""
     return resouce
 
@@ -97,34 +99,15 @@ def test_remove_object(client, monkeypatch):
     assert result.get_json()["message"] == f"Object object.png deleted successfully."
 
 
-def fake_object(resource, bucket_name, prefix=""):
-    content = {
-        "Contents": [
-            {
-                "Key": "obj1.jpg",
-                "LastModified": datetime(2019, 9, 24, 1, 1, 0, 0),
-                "ETag": '"d41d8cd98f00b204e9800998ecffake"',
-                "Size": 36,
-                "StorageClass": "STANDARD",
-            }
-        ],
-        "CommonPrefixes": None,
-    }
-    return content
-
-
 def test_download(client, monkeypatch, fs):
     def download(access_key, secret_key):
+        fs.create_file("obj1.jpg")
         resource = mock.Mock()
         resource.Object.return_value.download_file.side_effect = lambda name: None
         return resource
 
-    def fake_download(resource, bucket_name, prefix):
-        fs.create_file("obj1.jpg")
-
-    monkeypatch.setattr(bucket, "get_objects", fake_object)
-    monkeypatch.setattr(storage, "file_download", fake_download)
     monkeypatch.setattr(storage, "get_resources", download)
+    monkeypatch.setattr(bucket, "is_exists", lambda res, bucket, object: True)
 
     result = client.get(
         "/api/storage/object/download/tes_bucket",

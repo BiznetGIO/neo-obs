@@ -2,8 +2,10 @@ import uuid
 import os
 import requests
 import logging
+import zipfile
 
 from obs.libs import gmt
+from obs.libs import utils
 from obs.libs import auth as auth_lib
 
 
@@ -124,6 +126,20 @@ def download_object(resource, bucket_name, object_name):
         # if object contains '/'
         os.makedirs(os.path.dirname(object_name), exist_ok=True)
     resource.Object(bucket_name, object_name).download_file(f"{object_name}")
+
+
+def list_download(resources, bucket_name, prefix, list_objects=None):
+    """List of objects to download"""
+    if list_objects is None:
+        list_objects = []
+
+    status = get_objects(resources, bucket_name, prefix)
+    for obj in status["Contents"]:
+        if obj["Key"][-1] != "/":
+            list_objects.append(obj["Key"])
+    for dir in status["CommonPrefixes"]:
+        list_download(resources, bucket_name, dir["Prefix"], list_objects)
+    return list_objects
 
 
 def upload_object(**kwargs):
@@ -356,7 +372,14 @@ def set_acl(**kwargs):
     if kwargs.get("acl_type") == "bucket":
         obj = resource.Bucket(bucket_name)
 
-    response = obj.Acl().put(ACL=kwargs.get("acl"))
+    response = obj.Acl().put(
+        ACL=kwargs.get("acl"),
+        GrantFullControl=utils.set_id(kwargs.get("grant_fullcontrol")),
+        GrantRead=utils.set_id(kwargs.get("grant_read")),
+        GrantReadACP=utils.set_id(kwargs.get("grant_readACP")),
+        GrantWrite=utils.set_id(kwargs.get("grant_write")),
+        GrantWriteACP=utils.set_id(kwargs.get("grant_writeACP")),
+    )
     return response
 
 

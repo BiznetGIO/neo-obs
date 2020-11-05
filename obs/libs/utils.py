@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import tzlocal
 import xmltodict
@@ -63,5 +64,38 @@ def human_date(unixtime):
     return human_datetime
 
 
+def set_id(ids):
+    """Set ID  for granting access"""
+    if ids != None:
+        ids = [f"id={id}" for id in ids.split(",")]
+        return ",".join(ids)
+    else:
+        return ""
+
+
 def compatibility():
+    """get neo compatibility environment"""
     return strtobool(os.environ.get("OBS_USE_NEO"))
+
+
+def user_sanitize(uIDs):
+    """Sanitize input when creating new user"""
+    uID = {}
+    regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
+    regexuid = r"[^\w@#_\-.]"
+
+    for key, value in uIDs.items():
+        if key == "userId":
+            uID[key] = re.sub(regexuid, "", value)
+        elif type(value) == str:
+            uID[key] = re.sub(regex, "", value)
+        else:
+            uID[key] = value
+    return uID
+
+
+def sanitize(type, inp):
+    """Sanitize input with spesific type"""
+    regex = {"bucket": r"[^a-z0-9.-]", "upload": r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"}
+
+    return re.sub(regex[type], "", inp)

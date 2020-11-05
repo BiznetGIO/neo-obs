@@ -112,8 +112,7 @@ class bucket_api(Resource):
         secret_key = args["secret_key"].replace(" ", "+")
 
         try:
-            regex = r"[^a-z0-9.-]"
-            bucket_name = re.sub(regex, "", bucket_name)
+            bucket_name = utils.sanitize("bucket", bucket_name)
             if not 2 < len(bucket_name) < 64:
                 return response(
                     400, f"'{bucket_name}' too short or too long for bucket name"
@@ -139,7 +138,7 @@ class bucket_api(Resource):
                 return response(201, f"Bucket created successfully.", responses)
 
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=1)
+            current_app.logger.error(f"{e}")
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
@@ -251,23 +250,11 @@ class copy_object(Resource):
             return response(500, f"{e}")
 
 
-def file_download(resources, bucket_name, prefix):
-    status = bucket.get_objects(resources, bucket_name, prefix)
-    status = list_objects(status)
-    for obj in status:
-        if "Key" in obj and obj["Key"][-1] != "/":
-            bucket.download_object(resources, bucket_name, obj["Key"])
-        if "directory" in obj:
-            file_download(resources, bucket_name, obj["directory"])
-
-
-def archive(dir_name):
-    with zipfile.ZipFile(f"{dir_name[:-1]}.zip", "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for root, dirs, files in os.walk("."):
-            for file in files:
-                file_path = os.path.join(root, file)
-                if "zip" not in file:
-                    zip_file.write(file_path, file_path.replace(dir_name, ""))
+def archive(resources, dir_name, bucket_name, prefix):
+    objects = bucket.list_download(resources, bucket_name, prefix)
+    with zipfile.ZipFile(f"{dir_name[:-1]}.zip", "w") as zip_file:
+        for obj in objects:
+            zip_file.write(obj, bucket.download_object(resources, bucket_name, obj))
     return f"{dir_name[:-1]}.zip"
 
 
@@ -283,15 +270,16 @@ class download_object(Resource):
         with tempfile.TemporaryDirectory() as tempdir:
             try:
                 os.chdir(tempdir)
-
                 resources = get_resources(args["access_key"], secret_key)
-                file_download(resources, bucket_name, args["object_name"])
 
                 if args["object_name"] == "":
-                    name = archive(bucket_name + "/")
+                    name = archive(resources, f"{bucket_name}/", bucket_name, "")
                 elif args["object_name"][-1] == "/":
-                    name = archive(args["object_name"])
+                    name = archive(
+                        resources, args["object_name"], bucket_name, args["object_name"]
+                    )
                 else:
+                    bucket.download_object(resources, bucket_name, args["object_name"])
                     name = args["object_name"]
                 file = send_from_directory(tempdir, name, as_attachment=True)
                 return file
@@ -329,7 +317,7 @@ class upload_object(Resource):
                 bucket_name,
                 args["object_name"],
             )
-            lmpu = list_objects(mpu, "Uploads", "Initiated")
+            list_objects(mpu, "Uploads", "Initiated")
             return response(200, data=mpu)
         except Exception as e:
             current_app.logger.error(f"{e}")
@@ -352,9 +340,7 @@ class upload_object(Resource):
                 args["upload_id"],
             )
             return response(
-                200,
-                f"Multipart upload for {args['object_name']} has been aborted.",
-                mpu,
+                200, f"Multipart upload of {args['object_name']} has been aborted.", mpu
             )
         except Exception as e:
             current_app.logger.error(f"{e}")
@@ -397,9 +383,7 @@ class upload_object(Resource):
         object_name = args["object_name"] if args["object_name"] else filename
 
         try:
-            regex = r"[\"\{}^%`\]\[~<>|#]|[^\x00-\x7F]"
-            object_name = re.sub(regex, "", object_name)
-
+            object_name = utils.sanitize("upload", object_name)
             result = bucket.upload_bin_object(
                 resource=get_resources(args["access_key"], secret_key),
                 bucket_name=bucket_name,
@@ -467,26 +451,25 @@ class acl(Resource):
         parser.add_argument("secret_key", type=str, required=True)
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
-        parser.add_argument("acl", type=str, default="private")
+        parser.add_argument("acl", type=str, default="")
+        parser.add_argument("grant_fullcontrol", type=str)
+        parser.add_argument("grant_read", type=str)
+        parser.add_argument("grant_readACP", type=str)
+        parser.add_argument("grant_write", type=str)
+        parser.add_argument("grant_writeACP", type=str)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
-        acl_type = "object" if args["object_name"] else "bucket"
-        name = args["object_name"] if args["object_name"] else args["bucket_name"]
-
         try:
-            result = bucket.set_acl(
-                resource=get_resources(args["access_key"], secret_key),
-                bucket_name=args["bucket_name"],
-                object_name=args["object_name"],
-                acl_type=acl_type,
-                acl=args["acl"],
-            )
-            return response(
-                200, f"Added {args['acl']} access to {acl_type} {name}.", result
-            )
+            name = args["object_name"] if args["object_name"] else args["bucket_name"]
+            attr = {arg: val for arg, val in args.items() if "key" not in arg}
+            attr["resource"] = get_resources(args["access_key"], secret_key)
+            attr["acl_type"] = "object" if args["object_name"] else "bucket"
+
+            result = bucket.set_acl(**attr)
+            return response(200, f"Added access to {attr['acl_type']} {name}.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=1)
             return response(500, f"{e}")
 
 
