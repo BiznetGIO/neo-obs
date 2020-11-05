@@ -78,17 +78,17 @@ def compatibility():
     return strtobool(os.environ.get("OBS_USE_NEO"))
 
 
-def user_sanitize(args):
+def user_sanitize(uIDs):
     """Sanitize input when creating new user"""
-    arg = {}
+    uID = {}
     regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
     regexuid = r"[^\w@#_\-.]"
 
-    for key, value in args.items():
+    for key, value in uIDs.items():
         if key == "userId":
-            arg[key] = re.sub(regexuid, "", value)
+            uID[key] = re.sub(regexuid, "", value)
         elif type(value) == str:
-            arg[key] = re.sub(regex, "", value)
+            uID[key] = re.sub(regex, "", value)
         else:
-            arg[key] = value
-    return arg
+            uID[key] = value
+    return uID
