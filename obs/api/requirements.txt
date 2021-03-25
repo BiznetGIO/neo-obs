@@ -2,7 +2,7 @@ boto3==1.9.227
 requests==2.22.0
 requests-aws4auth==0.9
 Werkzeug==0.16.0
-PyYAML==5.1.2
+PyYAML==5.4
 Flask_Script==2.0.6
 Flask==1.0.2
 Flask_Cors==3.0.7
