@@ -5,7 +5,7 @@ Werkzeug==0.16.0
 PyYAML==5.4
 Flask_Script==2.0.6
 Flask==1.0.2
-Flask_Cors==3.0.7
+Flask_Cors==3.0.9
 Flask_RESTful==0.3.7
 python-dotenv==0.10.3
 cloudianapi==0.2.4
