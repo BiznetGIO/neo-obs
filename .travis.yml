@@ -9,6 +9,7 @@ install:
 script:
 - black --check .
 - pytest -vv -s
+- echo $DOCKERHUB_PULL_PASSWORD | docker login -u DOCKERHUB_PULL_USERNAME --password-stdin
 - docker run -it -v $PWD:/usr/src sonarsource/sonar-scanner-cli sonar-scanner   -Dsonar.projectKey=neo-obs   -Dsonar.sources=.   -Dsonar.host.url=$SONAR_URL   -Dsonar.login=$SONAR_TOKEN
 before_deploy: awk 'NR>23' README.rst > README.tmp && mv README.tmp README.rst
 deploy:
