@@ -1,6 +1,21 @@
 Unreleased
 ==========
 
+0.3.2 (2021-06-03)
+==================
+- Add add function to give permission for grantee
+- Update add grantee function to spesific user
+- Add add suspend/unsuspend user function in CLI
+- Update add sanitize function in neo obs CLI
+- Add list download function in libs
+- Update add bulk download in CLI
+- Update bulk download in APIh
+- Add Add multipart upload function to CLI
+- Add abort & complete multipart upload function
+- Update fix respond when download empty object
+- Add granted access to user in cli
+- Update change default value to empty string 
+
 0.3.1 (2020-07-14)
 ==================
 - Add create bucket function with boto3

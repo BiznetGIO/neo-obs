@@ -179,24 +179,55 @@ def info(uri):
 
 @storage.command("acl")
 @click.argument("uri")
-@click.argument("acl", default="private")
-def set_acl(uri, acl):
+@click.argument("acl", default="")
+@click.option(
+    "--read", "read", default=None, metavar="", help="granted read access to user id"
+)
+@click.option(
+    "--write", "write", default=None, metavar="", help="granted write access to user id"
+)
+@click.option(
+    "--read-acp",
+    "readACP",
+    default=None,
+    metavar="",
+    help="granted readACP access to user id",
+)
+@click.option(
+    "--write-acp",
+    "writeACP",
+    default=None,
+    metavar="",
+    help="granted writeACP access to user id",
+)
+@click.option(
+    "--full-control",
+    "fullcontrol",
+    default=None,
+    metavar="",
+    help="granted full access to user id",
+)
+def set_acl(uri, acl, fullcontrol, read, readACP, write, writeACP):
     """Set ACL for bucket or object."""
     s3_resource = get_resources()
 
     bucket_name, prefix = utils.get_bucket_key(uri)
+
+    opt = {
+        "resource": s3_resource,
+        "bucket_name": bucket_name,
+        "acl": acl,
+        "grant_fullcontrol": fullcontrol,
+        "grant_read": read,
+        "grant_readACP": readACP,
+        "grant_write": write,
+        "grant_writeACP": writeACP,
+    }
+
     if not prefix:
-        bucket.set_acl(
-            resource=s3_resource, bucket_name=bucket_name, acl=acl, acl_type="bucket"
-        )
+        bucket.set_acl(**opt, acl_type="bucket")
     if bucket_name and prefix:
-        bucket.set_acl(
-            resource=s3_resource,
-            bucket_name=bucket_name,
-            object_name=prefix,
-            acl=acl,
-            acl_type="object",
-        )
+        bucket.set_acl(**opt, object_name=prefix, acl_type="object")
 
 
 @storage.command("presign")
@@ -230,3 +261,68 @@ def gmt_cmd(policy_id):
     if policy_id:
         config.load_config_file()
         gmt.show_policies()
+
+
+@storage.group()
+def mpu():
+    """Manage multipart upload function"""
+
+
+@mpu.command("ls")
+@click.argument("uri")
+def list_mpu(uri):
+    """List in-progress multipart uploads"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.list_multipart_upload(
+        resource=s3_resource, bucket_name=bucket_name, prefix=prefix
+    )
+
+
+@mpu.command("part")
+@click.argument("uri")
+@click.argument("upload_id")
+def list_part(uri, upload_id):
+    """List in-progress part in multipart upload"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.list_part(
+        resource=s3_resource,
+        bucket_name=bucket_name,
+        object_name=prefix,
+        upload_id=upload_id,
+    )
+
+
+@mpu.command("abort")
+@click.argument("uri")
+@click.argument("upload_id")
+def abort_mpu(uri, upload_id):
+    """Abort in-progress multipart upload"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.abort_multipart_upload(
+        resource=s3_resource,
+        bucket_name=bucket_name,
+        object_name=prefix,
+        upload_id=upload_id,
+    )
+
+
+@mpu.command("complete")
+@click.argument("uri")
+@click.argument("upload_id")
+def abort_mpu(uri, upload_id):
+    """Complete a multipart upload by assembling uploaded parts"""
+    s3_resource = get_resources()
+    bucket_name, prefix = utils.get_bucket_key(uri)
+
+    bucket.complete_multipart_upload(
+        resource=s3_resource,
+        bucket_name=bucket_name,
+        object_name=prefix,
+        upload_id=upload_id,
+    )

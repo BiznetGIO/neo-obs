@@ -1,10 +1,9 @@
-import re
-
 from obs.libs import qos
 from obs.libs import user
 from obs.libs import credential
 from obs.libs import auth as client
 from obs.libs import admin as admin_usage
+from obs.libs import utils
 from obs.api.app.helpers.rest import response
 from flask import current_app
 from flask_restful import Resource, reqparse, inputs
@@ -12,21 +11,6 @@ from flask_restful import Resource, reqparse, inputs
 
 def get_client():
     return client.admin_client()
-
-
-def sanitize(args):
-    arg = {}
-    regex = r"[<>`;|&#]|[\\n]{2}|[%26]{3}|\n"
-    regexuid = r"[^\w@#_\-.]"
-
-    for key, value in args.items():
-        if key == "userId":
-            arg[key] = re.sub(regexuid, "", value)
-        elif type(value) == str:
-            arg[key] = re.sub(regex, "", value)
-        else:
-            arg[key] = value
-    return arg
 
 
 class user_api(Resource):
@@ -101,7 +85,7 @@ class user_api(Resource):
             for index, option in options.items():
                 if args[index] not in (option, None):
                     options[index] = args[index]
-            options = sanitize(options)
+            options = utils.user_sanitize(options)
             status = user.create(get_client(), options)
             if args["quotaLimit"]:
                 status = qos.set(
@@ -111,7 +95,7 @@ class user_api(Resource):
                 current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
             else:
-                return response(201, f"User {args['userId']} created successfully.")
+                return response(201, f"User {options['userId']} created successfully.")
         except Exception as e:
             current_app.logger.error(f"{e}")
             return response(500, f"{e}")

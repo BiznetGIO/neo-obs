@@ -1,3 +1,5 @@
+import re
+import os
 import click
 import bitmath
 
@@ -17,14 +19,16 @@ def buckets(resource):
 
 def create_bucket(**kwargs):
     try:
+        name = utils.sanitize("bucket", kwargs.pop("bucket_name"))
+        if not 2 < len(name) < 64:
+            raise ValueError(f"'{name}' too short or too long for bucket name")
+
         if utils.compatibility():
-            response = bucket_lib.neo_create_bucket(**kwargs)
+            response = bucket_lib.neo_create_bucket(**kwargs, bucket_name=name)
             utils.check_plain(response)
         else:
-            response = bucket_lib.create_bucket(**kwargs)
-        click.secho(
-            f'Bucket "{kwargs.get("bucket_name")}" created successfully', fg="green"
-        )
+            response = bucket_lib.create_bucket(**kwargs, bucket_name=name)
+        click.secho(f'Bucket "{name}" created successfully', fg="green")
     except Exception as exc:
         click.secho(
             f"Bucket creation failed. \n{exc}", fg="yellow", bold=True, err=True
@@ -73,15 +77,20 @@ def remove_object(resource, bucket_name, object_name):
 
 
 def download_object(resource, bucket_name, object_name):
-    if object_name.endswith("/"):
-        click.secho(
-            f"Object download failed. \nExpecting filename", fg="yellow", bold=True
-        )
-        return
-
     try:
-        bucket_lib.download_object(resource, bucket_name, object_name)
-        click.secho(f'Object "{object_name}" downloaded successfully', fg="green")
+        objects = bucket_lib.list_download(resource, bucket_name, object_name)
+        if object_name == "":
+            os.makedirs(bucket_name, exist_ok=True)
+            os.chdir(bucket_name)
+            name = f'Bucket "{bucket_name}"'
+        elif object_name[-1] == "/":
+            name = f'Directory "{object_name}"'
+        else:
+            name = f'Object "{object_name}"'
+            objects = [object_name]
+        for obj in objects:
+            bucket_lib.download_object(resource, bucket_name, obj)
+        click.secho(f"{name} downloaded successfully", fg="green")
     except Exception as exc:
         click.secho(
             f"Object download failed. \n{exc}", fg="yellow", bold=True, err=True
@@ -91,7 +100,8 @@ def download_object(resource, bucket_name, object_name):
 def upload_object(**kwargs):
     filename = kwargs.get("local_path")
     try:
-        bucket_lib.upload_object(**kwargs)
+        name = utils.sanitize("upload", kwargs.pop("object_name"))
+        bucket_lib.upload_object(**kwargs, object_name=name)
         click.secho(f'Object "{filename}" uploaded successfully', fg="green")
     except Exception as exc:
         click.secho(
@@ -233,4 +243,77 @@ def mkdir(resource, bucket_name, dir_name):
     except Exception as exc:
         click.secho(
             f"Directory creation failed. \n{exc}", fg="yellow", bold=True, err=True
+        )
+
+
+def list_multipart_upload(resource, bucket_name, prefix):
+    try:
+        response = bucket_lib.list_multipart_upload(resource, bucket_name, prefix)
+
+        if response["CommonPrefixes"]:
+            for prefix in response["CommonPrefixes"]:
+                dir_ = "DIR".rjust(12)
+                click.secho(f"{dir_} {bucket_name}/{prefix['Prefix']}")
+
+        if response["Uploads"]:
+            for content in response["Uploads"]:
+                key = content["Key"]
+                uid = content["UploadId"]
+                last_modified = content["Initiated"]
+                click.secho(
+                    f"{last_modified:%Y-%m-%d %H:%M:%S}, {uid}, {bucket_name}/{key}"
+                )
+
+    except Exception as exc:
+        click.secho(f"{exc}", fg="yellow", bold=True, err=True)
+
+
+def list_part(resource, bucket_name, object_name, upload_id):
+    try:
+        response = bucket_lib.list_part(resource, bucket_name, object_name, upload_id)
+
+        for part in response:
+            size = utils.sizeof_fmt(part["Size"])
+            last_modified = f"{part['LastModified']:%Y-%m-%d %H:%M:%S}"
+            msg = (
+                f'Number of part: {part["PartNumber"]}\n'
+                f"Last Modified: {last_modified}\n"
+                f'ETag: {part["ETag"]}\n'
+                f"Size: {size}"
+            )
+            click.secho(msg)
+
+    except Exception as exc:
+        click.secho(f"{exc}", fg="yellow", bold=True, err=True)
+
+
+def abort_multipart_upload(resource, bucket_name, object_name, upload_id):
+    try:
+        bucket_lib.abort_multipart_upload(resource, bucket_name, object_name, upload_id)
+        click.secho(
+            f'Multipart Upload of "{object_name}" aborted successfully', fg="green"
+        )
+    except Exception as exc:
+        click.secho(
+            f'Aborting multipart upload of "{object_name}" failed.\n{exc}',
+            fg="yellow",
+            bold=True,
+            err=True,
+        )
+
+
+def complete_multipart_upload(resource, bucket_name, object_name, upload_id):
+    try:
+        bucket_lib.complete_multipart_upload(
+            resource, bucket_name, object_name, upload_id
+        )
+        click.secho(
+            f'Multipart Upload of "{object_name}" completed successfully', fg="green"
+        )
+    except Exception as exc:
+        click.secho(
+            f'Completing multipart upload of "{object_name}" failed.\n{exc}',
+            fg="yellow",
+            bold=True,
+            err=True,
         )
