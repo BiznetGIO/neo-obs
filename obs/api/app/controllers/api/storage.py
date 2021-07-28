@@ -72,6 +72,7 @@ class list(Resource):
                     {
                         "name": buck.name,
                         "creation_date": f"{buck.creation_date:%Y-%m-%d %H:%M:%S}",
+                        "ACL": buck.Acl().grants
                     }
                 )
             if not all_bucket:
