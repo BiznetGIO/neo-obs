@@ -114,9 +114,7 @@ class bucket_api(Resource):
         try:
             bucket_name = utils.sanitize("bucket", bucket_name)
             if not 2 < len(bucket_name) < 64:
-                return response(
-                    400, f"'{bucket_name}' too short or too long for bucket name"
-                )
+                raise ValueError(f"'{bucket_name}' too short or too long for bucket name")
 
             attr = {
                 "auth": get_plain_auth(args["access_key"], secret_key),
@@ -130,7 +128,7 @@ class bucket_api(Resource):
                 responses = bucket.neo_create_bucket(**attr)
                 if responses.text:
                     error = xmltodict.parse(responses.text)
-                    return response(400, error["Error"]["Message"])
+                    raise ValueError(error["Error"]["Message"])
                 return response(201, f"Bucket created successfully.", responses.text)
 
             else:
