@@ -42,11 +42,17 @@ def list_objects(buckets, contents="Contents", date="LastModified"):
     return objects
 
 
+def init_parser():
+    parser = reqparse.RequestParser()
+    parser.add_argument("access_key", type=str, required=True)
+    parser.add_argument("secret_key", type=str, required=True)
+    parser.add_argument("debug", type=inputs.boolean, default=False)
+    return parser
+
+
 class list(Resource):
     def get(self, prefix=""):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
@@ -72,22 +78,20 @@ class list(Resource):
                     {
                         "name": buck.name,
                         "creation_date": f"{buck.creation_date:%Y-%m-%d %H:%M:%S}",
-                        "ACL": buck.Acl().grants
+                        "ACL": buck.Acl().grants,
                     }
                 )
             if not all_bucket:
                 return response(200, f"Storage is Empty.")
             return response(200, data=all_bucket)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class bucket_api(Resource):
     def get(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
@@ -99,13 +103,11 @@ class bucket_api(Resource):
             )
             return response(200, data=bucket_info)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
     def post(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("acl", type=str, default="private")
         parser.add_argument("policy_id", type=str, default="")
         parser.add_argument("random_name", type=inputs.boolean, default=False)
@@ -115,7 +117,9 @@ class bucket_api(Resource):
         try:
             bucket_name = utils.sanitize("bucket", bucket_name)
             if not 2 < len(bucket_name) < 64:
-                raise ValueError(f"'{bucket_name}' too short or too long for bucket name")
+                raise ValueError(
+                    f"'{bucket_name}' too short or too long for bucket name"
+                )
 
             attr = {
                 "auth": get_plain_auth(args["access_key"], secret_key),
@@ -137,13 +141,11 @@ class bucket_api(Resource):
                 return response(201, f"Bucket created successfully.", responses)
 
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
@@ -153,15 +155,13 @@ class bucket_api(Resource):
             )
             return response(200, f"Bucket {bucket_name} deleted successfully.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class object_api(Resource):
     def get(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
@@ -176,13 +176,11 @@ class object_api(Resource):
                 object_info[key] = f"{value}"
             return response(200, data=object_info)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, required=True)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
@@ -197,15 +195,13 @@ class object_api(Resource):
                 200, f"Object {args['object_name']} deleted successfully.", result
             )
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class move_object(Resource):
     def post(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, required=True)
         parser.add_argument("move_to", type=str, required=True)
         args = parser.parse_args()
@@ -221,15 +217,13 @@ class move_object(Resource):
             )
             return response(201, f"Object {args['object_name']} moved successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class copy_object(Resource):
     def post(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, required=True)
         parser.add_argument("copy_to", type=str, required=True)
         args = parser.parse_args()
@@ -245,7 +239,7 @@ class copy_object(Resource):
             )
             return response(201, f"Object {args['object_name']} copied successfully.")
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
@@ -259,9 +253,7 @@ def archive(resources, dir_name, bucket_name, prefix):
 
 class download_object(Resource):
     def get(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, default="")
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
@@ -283,15 +275,13 @@ class download_object(Resource):
                 file = send_from_directory(tempdir, name, as_attachment=True)
                 return file
             except Exception as e:
-                current_app.logger.error(f"{e}")
+                current_app.logger.error(f"{e}", exc_info=args["debug"])
                 return response(500, f"{e}")
 
 
 class upload_object(Resource):
     def get(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, default="")
         parser.add_argument("upload_id", type=str)
         args = parser.parse_args()
@@ -319,13 +309,11 @@ class upload_object(Resource):
             list_objects(mpu, "Uploads", "Initiated")
             return response(200, data=mpu)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
     def delete(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, required=True)
         parser.add_argument("upload_id", type=str, required=True)
         args = parser.parse_args()
@@ -342,13 +330,11 @@ class upload_object(Resource):
                 200, f"Multipart upload of {args['object_name']} has been aborted.", mpu
             )
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
     def put(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str, required=True)
         parser.add_argument("upload_id", type=str, required=True)
         args = parser.parse_args()
@@ -365,13 +351,11 @@ class upload_object(Resource):
                 200, f"Multipart upload for {args['object_name']} has been completed."
             )
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
     def post(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str)
         args = parser.parse_args()
@@ -400,15 +384,13 @@ class upload_object(Resource):
                 )
             return response(201, f"Object {object_name} uploaded successfully.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class usage(Resource):
     def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("bucket_name", type=str)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
@@ -439,15 +421,13 @@ class usage(Resource):
             disk_usage["total_usage"] = f"{disk_usage['total_usage']}"
             return response(200, data=disk_usage)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class acl(Resource):
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("bucket_name", type=str, required=True)
         parser.add_argument("object_name", type=str)
         parser.add_argument("acl", type=str, default="")
@@ -468,16 +448,14 @@ class acl(Resource):
             result = bucket.set_acl(**attr)
             return response(200, f"Added access to {attr['acl_type']} {name}.", result)
         except Exception as e:
-            current_app.logger.error(f"{e}", exc_info=1)
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class presign(Resource):
     def get(self, bucket_name, object_name):
-        parser = reqparse.RequestParser()
+        parser = init_parser().copy()
         parser.add_argument("expire", type=int)
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
 
@@ -490,15 +468,13 @@ class presign(Resource):
             )
             return response(200, data=url)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
 class mkdir(Resource):
     def post(self, bucket_name):
-        parser = reqparse.RequestParser()
-        parser.add_argument("access_key", type=str, required=True)
-        parser.add_argument("secret_key", type=str, required=True)
+        parser = init_parser().copy()
         parser.add_argument("directory", type=str, required=True)
         args = parser.parse_args()
         secret_key = args["secret_key"].replace(" ", "+")
@@ -513,7 +489,7 @@ class mkdir(Resource):
                 201, f"Directory {args['directory']} added successfully.", result
             )
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
 
 
@@ -530,5 +506,5 @@ class gmt_policy(Resource):
                 msg.append({"Name": zone, "Id": policy_id, "Description": description})
             return response(200, data=msg)
         except Exception as e:
-            current_app.logger.error(f"{e}")
+            current_app.logger.error(f"{e}", exc_info=request.args.get("debug"))
             return response(500, f"{e}")
