@@ -1,6 +1,14 @@
 Unreleased
 ==========
 
+0.3.3 (2021-08-31)
+==================
+- Update Use raise instead return for response with error
+- Update list bucket function to show grantee info
+- Add debug function in storage
+- Add debug function in admin
+
+
 0.3.2 (2021-06-03)
 ==================
 - Add add function to give permission for grantee
