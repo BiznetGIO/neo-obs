@@ -55,7 +55,10 @@ def neo_create_bucket(**kwargs):
     endpoint = auth_lib.get_endpoint("storage", bucket_name)
     headers = {"x-gmt-policyid": policy_id, "x-amz-acl": acl}
 
-    response = requests.put(endpoint, auth=auth, headers=headers)
+    if "." in bucket_name:
+        response = requests.put(endpoint, auth=auth, headers=headers, verify=False)
+    else:
+        response = requests.put(endpoint, auth=auth, headers=headers)
     return response
 
 
