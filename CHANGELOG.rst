@@ -1,6 +1,11 @@
 Unreleased
 ==========
 
+0.3.4 (2021-10-29)
+==================
+- Update turn off verify ssl when bucket name have dot
+
+
 0.3.3 (2021-08-31)
 ==================
 - Update Use raise instead return for response with error
