@@ -1,6 +1,11 @@
 Unreleased
 ==========
 
+0.3.5 (2024-07-18)
+==================
+- Update create credential request to return new credential info in response
+
+
 0.3.4 (2021-10-29)
 ==================
 - Update turn off verify ssl when bucket name have dot
