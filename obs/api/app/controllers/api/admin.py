@@ -235,9 +235,7 @@ class cred_api(Resource):
                 current_app.logger.error(status["reason"])
                 return response(status["status_code"], message=status["reason"])
 
-            return response(
-                201, f"User {args['userId']} new credential created successfully."
-            )
+            return response(200, data = status)
         except Exception as e:
             current_app.logger.error(f"{e}", exc_info=args["debug"])
             return response(500, f"{e}")
