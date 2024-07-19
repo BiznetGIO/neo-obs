@@ -1,6 +1,11 @@
 Unreleased
 ==========
 
+0.3.6 (2024-07-19)
+==================
+- Upgrade library in api requirements
+
+
 0.3.5 (2024-07-18)
 ==================
 - Update create credential request to return new credential info in response
