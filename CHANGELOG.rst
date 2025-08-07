@@ -1,6 +1,11 @@
 Unreleased
 ==========
 
+0.3.7 (2025-08-07)
+==================
+- Change variable type in endpoint presign to path
+
+
 0.3.6 (2024-07-19)
 ==================
 - Upgrade library in api requirements
